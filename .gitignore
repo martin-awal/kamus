@@ -1,0 +1,27 @@
+# personal data and caches (never commit: cards.db holds the user's own cards)
+cards.db
+cards.db-*
+cache.db
+cache.db-*
+tts_cache/
+*.apkg
+
+# Python environments and caches (recreated by the install scripts)
+.venv/
+.tts-env/
+.argos-env/
+__pycache__/
+*.pyc
+
+# large downloads (recreated by scripts/download_opus_mt.sh, install_wikidepia.sh, export_wikidepia_onnx.py)
+models/
+
+# vendored browser runtimes (recreated by scripts/fetch_vendor.sh)
+static/vendor/
+
+# TLS keys and local settings
+*.pem
+*.key
+*.crt
+.env
+.claude/

@@ -1,0 +1,1789 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#6750a4">
+<title>Kamus</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Material Design 3 baseline tokens */
+:root{
+  color-scheme:light dark;
+  --primary:#6750a4;--on-primary:#fff;--primary-container:#eaddff;--on-primary-container:#21005d;
+  --secondary-container:#e8def8;--on-secondary-container:#1d192b;
+  --tertiary-container:#ffd8e4;--on-tertiary-container:#31111d;
+  --surface:#fef7ff;--surface-container:#f3edf7;--surface-container-high:#ece6f0;--surface-container-highest:#e6e0e9;
+  --on-surface:#1d1b20;--on-surface-variant:#49454f;--outline:#79747e;--outline-variant:#cac4d0;--error:#b3261e;
+  --shape-s:8px;--shape-m:12px;--shape-l:16px;--shape-xl:28px;
+  --warn-container:#ffdcbe;--on-warn-container:#2c1600;
+  --rail:80px;
+  --elev1:0 1px 2px rgba(0,0,0,.3),0 1px 3px 1px rgba(0,0,0,.15);
+  --elev2:0 1px 2px rgba(0,0,0,.3),0 2px 6px 2px rgba(0,0,0,.15);
+  --elev3:0 1px 3px rgba(0,0,0,.3),0 4px 8px 3px rgba(0,0,0,.15);   /* the search bar only */
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --primary:#d0bcff;--on-primary:#381e72;--primary-container:#4f378b;--on-primary-container:#eaddff;
+  --secondary-container:#4a4458;--on-secondary-container:#e8def8;
+  --tertiary-container:#633b48;--on-tertiary-container:#ffd8e4;
+  --surface:#141218;--surface-container:#211f26;--surface-container-high:#2b2930;--surface-container-highest:#36343b;
+  --on-surface:#e6e0e9;--on-surface-variant:#cac4d0;--outline:#938f99;--outline-variant:#49454f;--error:#f2b8b5;
+
+  --warn-container:#693c00;--on-warn-container:#ffdcbe;
+}}
+:root[data-theme=dark]{
+  --primary:#d0bcff;--on-primary:#381e72;--primary-container:#4f378b;--on-primary-container:#eaddff;
+  --secondary-container:#4a4458;--on-secondary-container:#e8def8;
+  --tertiary-container:#633b48;--on-tertiary-container:#ffd8e4;
+  --surface:#141218;--surface-container:#211f26;--surface-container-high:#2b2930;--surface-container-highest:#36343b;
+  --on-surface:#e6e0e9;--on-surface-variant:#cac4d0;--outline:#938f99;--outline-variant:#49454f;--error:#f2b8b5;
+
+  --warn-container:#693c00;--on-warn-container:#ffdcbe;
+}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface);color:var(--on-surface);font:400 16px/24px Roboto,system-ui,sans-serif;letter-spacing:.5px}
+header{background:var(--surface-container);padding:20px 16px 16px calc(var(--rail) + 16px)}
+.wrap{max-width:720px;margin:0 auto}
+.title{font:400 28px/36px Roboto,sans-serif;letter-spacing:0;margin:0;display:flex;align-items:baseline;gap:12px}
+.title small{font:500 14px/20px Roboto;letter-spacing:.1px;color:var(--on-surface-variant)}
+/* search bar */
+form{display:flex;align-items:center;height:56px;border-radius:28px;background:var(--surface-container-high);padding:0 8px 0 20px;box-shadow:var(--elev1);gap:8px;transition:height .25s,padding .25s,border-radius .25s,box-shadow .2s,outline-color .2s;outline:2px solid transparent}
+form:focus-within{box-shadow:var(--elev3)}
+form:focus-within:has(input:not(:placeholder-shown)){outline-color:var(--primary)}
+form input{flex:1;min-width:0;border:0;background:none;color:var(--on-surface);font:400 16px/24px Roboto,sans-serif;letter-spacing:.5px;outline:none}
+form input::placeholder{color:var(--on-surface-variant)}
+svg{width:24px;height:24px;fill:currentColor;flex:none}
+input[type=search]::-webkit-search-cancel-button{filter:grayscale(1) opacity(.6);cursor:pointer}
+#q::-webkit-search-cancel-button,#q::-webkit-search-decoration{-webkit-appearance:none;display:none}   /* the search bar has no clear (x) button */
+.card:not(.hero) h2{font-size:28px;line-height:36px}
+.lead{color:var(--on-surface-variant)}
+.dock{position:fixed;left:var(--rail);right:0;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:45;padding:0 16px;pointer-events:none}   /* above every other floating element (sheets 30-37, contents 25, selection chip 44) */
+.dock-in{width:100%;max-width:var(--idle-w,128px);margin:0 auto;display:flex;flex-direction:column;pointer-events:auto;transition:max-width .25s cubic-bezier(.2,0,0,1)}
+.dock-in.open{max-width:640px}   /* .open = mouse over it or focus inside (set in JS, so touch screens have no sticky-hover) */
+@media(max-width:480px){.dock-in.open{max-width:100%}}
+form{box-shadow:var(--elev3)}
+.dock-in:not(.open) form{height:36px;border-radius:18px;padding:0 16px}
+.dock-in:not(.open) form .icon-btn{display:none}
+.dock-in:not(.open) input::-webkit-search-cancel-button{display:none}
+form{position:relative}
+.idle-icon{display:none;position:absolute;left:50%;top:50%;width:20px;height:20px;transform:translate(-50%,-50%);color:var(--on-surface-variant);pointer-events:none}
+.dock-in:not(.open) form:has(input:placeholder-shown) .idle-icon{display:block}
+.dock-in:not(.open) input:placeholder-shown::placeholder{color:transparent}
+.dock-in:not(.open) input{text-align:center;font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px}
+/* buttons */
+.icon-btn{position:relative;width:40px;height:40px;border:0;border-radius:50%;background:none;color:var(--on-surface-variant);display:inline-grid;place-items:center;cursor:pointer;flex:none;overflow:hidden}
+.icon-btn.tonal{background:var(--secondary-container);color:var(--on-secondary-container)}
+.icon-btn.filled{background:var(--primary);color:var(--on-primary)}
+.icon-btn.sm{width:32px;height:32px}.icon-btn.sm svg{width:20px;height:20px}
+.btn-filled{height:40px;padding:0 24px;border:0;border-radius:20px;background:var(--primary);color:var(--on-primary);font:500 14px/20px Roboto;letter-spacing:.1px;cursor:pointer;position:relative;overflow:hidden}
+:is(.icon-btn,.btn-filled,.text-btn,.hcard)::after{content:"";position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity .15s}
+:is(.icon-btn,.btn-filled,.text-btn,.hcard):hover::after{opacity:.08}
+:is(.icon-btn,.btn-filled,.text-btn,.hcard):focus-visible::after{opacity:.12}
+:is(.icon-btn,.btn-filled,.text-btn,.hcard):active::after{opacity:.12}
+:is(.icon-btn,.btn-filled,.text-btn,.hcard):focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.hero .icon-btn.tonal{background:var(--primary);color:var(--on-primary)}
+.btn-filled.speaking,.icon-btn.speaking{background:var(--primary);color:var(--on-primary)}
+.bar{height:56px;display:flex;justify-content:center;align-items:center}
+.bar form{width:100%}
+
+/* navigation rail */
+.rail{position:fixed;left:0;top:0;bottom:0;width:var(--rail);z-index:40;background:var(--surface);border-right:1px solid var(--outline-variant);display:flex;flex-direction:column;align-items:center;padding-top:44px;gap:12px}
+.rail-item{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;border:0;background:none;color:var(--on-surface-variant);font:500 12px/16px Roboto,sans-serif;letter-spacing:.5px;cursor:pointer;padding:0}
+.rail-ind{width:56px;height:32px;border-radius:16px;display:grid;place-items:center;transition:background .2s}
+.rail-item:hover .rail-ind{background:color-mix(in srgb,var(--on-surface) 8%,transparent)}
+.rail-item[aria-expanded=true] .rail-ind{background:var(--secondary-container);color:var(--on-secondary-container)}
+.rail-item[aria-expanded=true]{color:var(--on-surface)}
+.rail-item:focus-visible{outline:none}.rail-item:focus-visible .rail-ind{outline:2px solid var(--primary);outline-offset:2px}
+/* side sheet */
+.sheet{position:fixed;left:var(--rail);top:0;bottom:0;width:min(360px,calc(100vw - var(--rail)));z-index:30;background:var(--surface-container);border-radius:0 var(--shape-l) var(--shape-l) 0;box-shadow:var(--elev2);display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateX(-24px);transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s .25s}
+.sheet.open{opacity:1;visibility:visible;transform:none;transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s}
+.sheet-head{display:flex;align-items:center;gap:4px;padding:12px 8px 8px 24px}
+.sheet-head h2{font:400 22px/28px Roboto,sans-serif;letter-spacing:0;flex:1}
+.sheet-body{overflow-y:auto;padding:8px 16px 24px;display:grid;grid-auto-rows:max-content;gap:8px;align-content:start}
+.text-btn{height:40px;padding:0 12px;border:0;border-radius:20px;background:none;color:var(--primary);font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px;cursor:pointer;position:relative;overflow:hidden}
+.hcard{display:block;width:100%;height:auto;min-height:max-content;flex:none;text-align:left;border:0;border-radius:var(--shape-m);background:var(--surface-container-high);color:var(--on-surface);padding:12px 16px;cursor:pointer;font:inherit;position:relative;overflow:hidden}
+.hcard .w{font:500 18px/24px Roboto,sans-serif;letter-spacing:0}
+.hcard .g{font:400 14px/20px Roboto,sans-serif;letter-spacing:.25px;color:var(--on-surface-variant);margin-top:2px;overflow-wrap:anywhere}
+.hempty{text-align:center;padding:48px 16px;color:var(--on-surface-variant)}
+.hempty svg{width:48px;height:48px;opacity:.6}
+@media(max-width:600px){:root{--rail:56px}.rail-ind{width:40px}}
+@media(prefers-reduced-motion:reduce){.dock-in,form,.sheet,.rail-ind{transition:none!important}}
+[hidden]{display:none!important}
+.icon-btn.filled:disabled{background:color-mix(in srgb,var(--on-surface) 12%,transparent);color:color-mix(in srgb,var(--on-surface) 38%,transparent);cursor:default}
+.icon-btn:disabled::after{display:none}
+/* suggestions */
+.suggest{background:var(--surface-container);border-radius:var(--shape-l);box-shadow:var(--elev2);padding:8px 0;margin-bottom:8px;max-height:min(320px,45vh);overflow-y:auto}
+.sg{display:flex;align-items:center;gap:12px;height:48px;padding:0 16px;cursor:pointer;position:relative;font:400 16px/24px Roboto,sans-serif;letter-spacing:.5px}
+.sg::after{content:"";position:absolute;inset:0;background:var(--on-surface);opacity:0;transition:opacity .15s;pointer-events:none}
+.sg:hover::after{opacity:.08}.sg.active::after{opacity:.12}
+.sg svg{width:20px;height:20px;color:var(--on-surface-variant)}
+.sg b{font-weight:700}
+.sg .tag{margin-left:auto;font:500 12px/16px Roboto,sans-serif;letter-spacing:.5px;color:var(--on-surface-variant)}
+/* table of contents */
+.toc-wrap{position:fixed;top:12px;right:16px;z-index:25;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.toc-btn{box-shadow:var(--elev1)}
+.toc{display:none;width:232px;background:var(--surface-container);border-radius:var(--shape-l);box-shadow:var(--elev2);padding:12px 8px 8px}
+.toc-wrap.open .toc{display:block}
+.toc h4{margin:0 0 4px;padding:0 16px;font:500 12px/16px Roboto,sans-serif;letter-spacing:.5px;color:var(--on-surface-variant);text-transform:uppercase}
+.toc a{display:flex;align-items:center;height:40px;padding:0 16px;border-radius:20px;color:var(--on-surface-variant);text-decoration:none;font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toc a:hover{background:color-mix(in srgb,var(--on-surface) 8%,transparent)}
+.toc a.active{background:var(--secondary-container);color:var(--on-secondary-container)}
+.card{scroll-margin-top:16px}
+@media(min-width:1280px){.toc-btn{display:none}.toc{display:block}}
+/* quick look: chip beside a selected word + right side sheet */
+.qchip{position:fixed;z-index:44;display:inline-flex;align-items:center;gap:6px;height:32px;max-width:min(280px,calc(100vw - 16px));padding:0 12px 0 8px;border:0;border-radius:var(--shape-s);background:var(--tertiary-container);color:var(--on-tertiary-container);box-shadow:var(--elev2);font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px;cursor:pointer;white-space:nowrap}
+.qchip span{overflow:hidden;text-overflow:ellipsis}
+.qchip svg{width:18px;height:18px}
+.qchip.muted{background:var(--surface-container-highest);color:var(--on-surface-variant)}
+.qsheet{position:fixed;right:0;top:0;bottom:0;width:min(380px,100vw);z-index:35;background:var(--surface-container);border-radius:var(--shape-l) 0 0 var(--shape-l);box-shadow:var(--elev2);display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateX(24px);transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s .25s}
+.qsheet.open{opacity:1;visibility:visible;transform:none;transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s}
+.qhead{display:flex;align-items:center;gap:4px;padding:12px 8px 8px 24px}
+.qhead .qw{font:400 28px/36px Roboto,sans-serif;letter-spacing:0;flex:1;overflow-wrap:anywhere}
+.qbody{overflow-y:auto;padding:0 24px 24px}
+.qbody h3{margin:20px 0 0}
+.qbody .btn-filled{margin-top:20px}
+@media(prefers-reduced-motion:reduce){.qsheet{transition:none!important}}
+/* views, rail layout */
+.rail{padding-bottom:16px}.rail-spacer{flex:1}
+.rail-div{width:40px;height:1px;border:0;background:var(--outline-variant);margin:4px 0}
+body:not([data-view=kamus]) #railDiv{display:none}   /* only Kamus has page functions, so no divider elsewhere */
+.rail-item[aria-current=page] .rail-ind{background:var(--secondary-container);color:var(--on-secondary-container)}
+.rail-item[aria-current=page]{color:var(--on-surface)}
+body:not([data-view=kamus]) :is(.dock,.toc-wrap,#sheet,#histBtn,.progress,#mineFloat){display:none!important}
+/* settings */
+.muted{color:var(--on-surface-variant);font:400 14px/20px Roboto,sans-serif;letter-spacing:.25px;margin:4px 0 0}
+code{font:13px/18px ui-monospace,Menlo,monospace;background:var(--surface-container-highest);padding:1px 6px;border-radius:4px}
+.opt{display:flex;gap:16px;align-items:flex-start;padding:16px;border:1px solid var(--outline-variant);border-radius:var(--shape-m);margin-top:12px;cursor:pointer;position:relative}
+.opt.sel{background:var(--secondary-container);color:var(--on-secondary-container);border-color:transparent}
+.opt.disabled{opacity:.62;cursor:not-allowed}
+.radio{width:20px;height:20px;border:2px solid var(--outline);border-radius:50%;flex:none;margin-top:2px;display:grid;place-items:center}
+.opt.sel .radio{border-color:var(--primary)}.opt.sel .radio::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--primary)}
+.opt-main{flex:1;min-width:0}
+.opt-title{font:500 16px/24px Roboto,sans-serif;letter-spacing:.15px}
+.opt-desc{font:400 14px/20px Roboto,sans-serif;letter-spacing:.25px;opacity:.85;margin-top:2px}
+.vchips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.vchip{height:32px;padding:0 14px;border:1px solid var(--outline);border-radius:var(--shape-s);background:none;color:inherit;font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px;cursor:pointer}
+.vchip.on{background:var(--primary);color:var(--on-primary);border-color:transparent}
+.opt-status{font:400 12px/16px Roboto,sans-serif;letter-spacing:.4px;margin-top:10px;opacity:.85}
+.opt .text-btn{align-self:center;color:inherit;border:1px solid var(--outline)}
+.opt-status .text-btn{height:32px;margin:2px 0 2px 8px}
+.opt .text-btn.speaking{background:var(--primary);color:var(--on-primary);border-color:transparent}
+.cred-group{font:500 12px/16px Roboto,sans-serif;letter-spacing:.5px;text-transform:uppercase;color:var(--on-surface-variant);margin:20px 0 4px}
+.cred{padding:12px 0;border-top:1px solid var(--outline-variant)}
+.cred-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cred-name{font:500 16px/24px Roboto,sans-serif;letter-spacing:.15px;color:var(--on-surface);text-decoration:none}
+a.cred-name:hover{text-decoration:underline;color:var(--primary)}
+.cred-role{font:400 14px/20px Roboto,sans-serif;letter-spacing:.25px;color:var(--on-surface-variant)}
+.cred-note{font:400 12px/16px Roboto,sans-serif;letter-spacing:.4px;color:var(--on-surface-variant);margin-top:4px}
+.toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:60;background:var(--surface-container-highest);color:var(--on-surface);padding:12px 20px;border-radius:var(--shape-s);box-shadow:var(--elev2);font:400 14px/20px Roboto,sans-serif;max-width:min(520px,calc(100vw - 32px))}
+/* anki cards */
+.addcard{position:absolute;right:0;top:8px}
+li.has-add{padding-right:44px}
+.csheet{width:min(440px,100vw);z-index:37}
+.cfoot{display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:12px 20px;border-top:1px solid var(--outline-variant)}
+.cfoot .grow{flex:1;font:400 12px/16px Roboto,sans-serif;color:var(--on-surface-variant)}
+.fld{display:block;margin-top:14px}
+.fld>span{display:block;font:500 12px/16px Roboto,sans-serif;letter-spacing:.5px;color:var(--on-surface-variant);margin-bottom:4px}
+.fld input,.fld textarea{width:100%;font:400 15px/22px Roboto,sans-serif;letter-spacing:.25px;color:var(--on-surface);background:var(--surface-container-highest);border:0;border-bottom:1px solid var(--on-surface-variant);border-radius:4px 4px 0 0;padding:10px 12px 8px}   /* Material filled text field */
+.fld input:focus,.fld textarea:focus{outline:0;border-bottom:2px solid var(--primary);padding-bottom:7px}
+.fld textarea{resize:vertical}
+.sdiv{border:0;border-top:1px solid var(--outline-variant);margin:20px 0 0}
+.frow.top{align-items:center}.frow .fld.w2{flex:2}
+.sect{margin-top:18px}.qbody .sect h4{margin:0}
+.fld-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}.fld-head>span{font:500 12px/16px Roboto,sans-serif;letter-spacing:.5px;color:var(--on-surface-variant)}
+.pick-wrap{position:relative;display:inline-flex;max-width:62%}   /* menu trigger: outlined pill with an arrow, clearly not a text field */
+.pick{appearance:none;-webkit-appearance:none;max-width:100%;height:30px;padding:0 28px 0 14px;border:1px solid var(--outline);border-radius:15px;background:transparent;color:var(--primary);font:500 13px/18px Roboto,sans-serif;letter-spacing:.1px;cursor:pointer;text-overflow:ellipsis}
+.pick:hover{background:color-mix(in srgb,var(--primary) 8%,transparent)}.pick:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.pick-wrap svg{position:absolute;right:6px;top:50%;margin-top:-10px;width:20px;height:20px;color:var(--primary);pointer-events:none}
+.a-tools input{width:100%;font:400 15px/22px Roboto,sans-serif;letter-spacing:.25px;color:var(--on-surface);background:var(--surface-container-high);border:1px solid var(--outline-variant);border-radius:20px;padding:8px 14px}
+.a-tools input:focus{outline:2px solid var(--primary);border-color:transparent}
+.frow{display:flex;gap:12px}.frow .fld{flex:1;min-width:0}
+.qbody h4{margin:22px 0 0;font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px}
+.face{margin-top:12px;border:1px solid var(--outline-variant);border-radius:var(--shape-m);overflow:hidden}
+.face-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 12px;background:var(--surface-container-high)}
+.face-name{font:500 13px/18px Roboto,sans-serif}
+.face-tabs{display:flex;gap:6px}
+.face-tabs .vchip{height:26px;padding:0 10px;font-size:12px;line-height:16px}
+.face .acard{padding:14px}
+.face.off .face-name{text-decoration:line-through;opacity:.7}.face.off{opacity:.75}
+.face-on{display:inline-flex;align-items:center;gap:8px;cursor:pointer}.face-on input{width:18px;height:18px;accent-color:var(--primary)}
+.face-none{padding:12px;font:400 13px/18px Roboto,sans-serif;color:var(--on-surface-variant)}
+.btn-filled:disabled{background:color-mix(in srgb,var(--on-surface) 12%,transparent);color:color-mix(in srgb,var(--on-surface) 38%,transparent);cursor:default}
+.btn-filled:disabled::after{display:none}
+.btn-tonal{height:40px;padding:0 20px;border:0;border-radius:20px;background:var(--secondary-container);color:var(--on-secondary-container);font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn-tonal:disabled{opacity:.45;cursor:default}
+.btn-tonal svg,.btn-filled svg{width:20px;height:20px}
+.a-status{display:flex;align-items:center;gap:10px;font:500 16px/24px Roboto,sans-serif}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--outline);flex:none}.dot.ok{background:#2e7d32}.dot.bad{background:var(--error)}
+.a-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+details.setup{margin-top:16px}details.setup summary{cursor:pointer;font:500 14px/20px Roboto,sans-serif;color:var(--primary)}
+details.setup ol{margin:10px 0 0}details.setup li{padding:6px 0 6px 36px}
+pre.cfg{margin:8px 0 0;padding:10px 12px;background:var(--surface-container-highest);border-radius:var(--shape-s);font:13px/18px ui-monospace,Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+.a-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.a-tools input{flex:1;min-width:160px;border-radius:20px}
+.a-tools .vchip.on{background:var(--secondary-container);color:var(--on-secondary-container)}
+.sum{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 2px}
+.crow{border-top:1px solid var(--outline-variant);padding:14px 0}.crow:first-child{border-top:0}
+.crow-top{display:flex;gap:12px;align-items:flex-start}
+.crow-main{flex:1;min-width:0}
+.crow-ex{display:flex;align-items:flex-start;gap:4px;margin-left:-8px}.crow-ex .crow-kbbi{flex:1;min-width:0;padding-top:4px}
+.cw{font:400 24px/32px Roboto,sans-serif;letter-spacing:0}
+.crow-meaning{font:500 15px/22px Roboto,sans-serif}
+.crow-kbbi{font:400 14px/20px Roboto,sans-serif;color:var(--on-surface-variant);margin-top:2px;overflow-wrap:anywhere}
+.crow-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none;max-width:45%}
+.crow-stats{font:400 12px/16px Roboto,sans-serif;letter-spacing:.4px;color:var(--on-surface-variant);text-align:right}
+.crow-act{display:flex;gap:2px}
+.crow-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+button.cw,span.cw{border:0;background:none;color:inherit;padding:0;cursor:pointer;text-align:left}
+.cw:hover{text-decoration:underline;text-decoration-color:var(--primary);text-underline-offset:4px}
+span.cw:focus-visible,button.cw:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:4px}
+.crow-div{border:0;border-top:1px solid var(--outline-variant);margin:10px 0 8px}
+.statwrap{position:relative;display:inline-block}
+button.badge.stat{border:0;cursor:help}
+.statpop{display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:6;padding:10px 14px;border-radius:12px;background:var(--surface-container-highest);color:var(--on-surface);box-shadow:var(--elev2);font:400 12px/18px Roboto,sans-serif;letter-spacing:.3px;text-align:left;white-space:nowrap}
+.statwrap:hover .statpop,.statwrap:focus-within .statpop{display:block}
+.crow-act [data-act=prev] svg{transition:transform .2s}.crow.open [data-act=prev] svg{transform:rotate(180deg)}
+.badge.warn{background:var(--warn-container);color:var(--on-warn-container)}
+.mine .badge.warn{background:var(--warn-container);color:var(--on-warn-container)}
+.badge.ok{background:var(--secondary-container);color:var(--on-secondary-container)}
+.crow-prev{margin-top:6px}
+.snd{font-size:.8em}
+@media(max-width:600px){.crow-top{flex-direction:column}.crow-side{align-items:flex-start;max-width:none}.crow-stats{text-align:left}}
+/* loading spinner on audio buttons while the voice is being prepared */
+.icon-btn.loading>svg:not(.li){opacity:0}
+.icon-btn.loading{background:transparent!important;color:var(--primary)!important}   /* the indicator is the shape itself, in the primary colour (it was invisible on a primary-coloured button) */
+.icon-btn .li{position:absolute;left:50%;top:50%;width:32px;height:32px;margin:-16px 0 0 -16px;pointer-events:none}
+.icon-btn.sm .li{width:26px;height:26px;margin:-13px 0 0 -13px}
+/* settings: appearance + speed */
+.a-backup{margin-top:16px;border-top:1px solid var(--outline-variant);padding-top:8px}.a-backup h4{margin:8px 0 4px;font:500 14px/20px Roboto,sans-serif}
+.seg{display:inline-flex;border:1px solid var(--outline);border-radius:20px;overflow:hidden}
+.seg button{height:40px;padding:0 16px;border:0;border-left:1px solid var(--outline);background:none;color:var(--on-surface);font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.seg button:first-child{border-left:0}.seg button.on{background:var(--secondary-container);color:var(--on-secondary-container)}.seg svg{width:18px;height:18px}
+.seg button:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+.swatches{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+.swatch{width:44px;height:44px;border-radius:50%;border:2px solid var(--outline-variant);background:var(--sw);cursor:pointer;display:grid;place-items:center;color:#fff;position:relative}
+.swatch.on{border-color:var(--on-surface);box-shadow:0 0 0 2px var(--surface-container) inset}
+.swatch svg{width:22px;height:22px;filter:drop-shadow(0 0 2px rgba(0,0,0,.5))}
+.swatch:focus-visible{outline:2px solid var(--primary);outline-offset:3px}
+.theme-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
+.swatch.custom{background:var(--sw,conic-gradient(#ea4335,#fbbc04,#34a853,#4285f4,#a142f4,#ea4335))}
+.swatch.custom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
+.speed{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+.speed label{font:500 14px/20px Roboto,sans-serif;min-width:96px}
+.speed input[type=range]{flex:1;min-width:160px;accent-color:var(--primary)}
+.speed output{font:500 14px/20px Roboto,sans-serif;min-width:56px;text-align:right}
+/* table of contents: on wide screens it sits just under the title row without a container, and gets a floating container once content scrolls beneath it */
+@media(min-width:1280px){
+  .toc-wrap{top:var(--toc-top,80px)}
+  .toc{background:transparent;box-shadow:none;transition:background .2s,box-shadow .2s}
+  .toc-wrap.stuck .toc{background:var(--surface-container);box-shadow:var(--elev1)}
+}
+.mine{background:var(--tertiary-container);color:var(--on-tertiary-container)}
+.mine-float{overflow:hidden;background:var(--tertiary-container);border-radius:20px;box-shadow:var(--elev2);transition:width .35s cubic-bezier(.2,0,0,1),height .35s cubic-bezier(.2,0,0,1),border-radius .35s cubic-bezier(.2,0,0,1);position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:28;animation:rise .25s ease-out both}   /* floats over the content, below the search bar (elevation 3, z 45) */
+.mine-chip{display:inline-flex;align-items:center;gap:8px;height:40px;max-width:240px;padding:0 16px 0 12px;border:0;border-radius:20px;background:none;color:var(--on-tertiary-container);position:absolute;right:0;bottom:0;transition:opacity .15s ease .12s,visibility 0s .12s;font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px;cursor:pointer;white-space:nowrap}
+.mine-chip span{overflow:hidden;text-overflow:ellipsis}.mine-chip svg{width:20px;height:20px;flex:none}
+.mine-body{position:absolute;right:0;bottom:0;box-sizing:border-box;width:min(340px,calc(100vw - var(--rail) - 32px));max-height:40vh;overflow-y:auto;padding:10px 8px 8px 12px;background:none;opacity:0;visibility:hidden;transition:opacity .12s ease,visibility 0s .12s}
+.mine-float.open{border-radius:var(--shape-l)}
+.mine-float.open .mine-body{opacity:1;visibility:visible;transition:opacity .2s ease .12s,visibility 0s}.mine-float.open .mine-chip{opacity:0;visibility:hidden;transition:opacity .1s ease,visibility 0s .1s}
+@media(prefers-reduced-motion:reduce){.mine-float,.mine-body,.mine-chip{transition:none!important}}
+.mine-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mine-go{display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 10px 0 14px;border:0;border-radius:16px;background:color-mix(in srgb,var(--on-tertiary-container) 14%,transparent);color:inherit;font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px;cursor:pointer}
+.mine-go:hover{background:color-mix(in srgb,var(--on-tertiary-container) 22%,transparent)}.mine-go svg{width:18px;height:18px}
+.mine-go:focus-visible,.mine-chip:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.crow.focus{animation:crowflash 2.4s ease-out}
+@keyframes crowflash{0%,40%{background:var(--tertiary-container)}100%{background:transparent}}
+@media(max-width:1100px){.mine-float{bottom:calc(84px + env(safe-area-inset-bottom,0px))}}   /* narrow screens: sit above the search bar instead of beside it */
+.mine h3{margin-bottom:2px}
+.mine-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:6px 0}
+.mine-m{font:500 18px/24px Roboto,sans-serif;letter-spacing:0}
+.mine .pos{background:color-mix(in srgb,var(--on-tertiary-container) 12%,transparent);color:inherit;margin:0}
+.mine .badge{background:color-mix(in srgb,var(--on-tertiary-container) 14%,transparent);color:inherit}
+.mine .muted{color:inherit;opacity:.8}
+.tile{display:flex;align-items:center;gap:16px;width:100%;padding:16px 12px 16px 20px;margin-bottom:16px;border:0;border-radius:var(--shape-l);background:var(--surface-container);color:var(--on-surface);text-align:left;text-decoration:none;cursor:pointer;position:relative;overflow:hidden;font:inherit}
+.tile::after{content:"";position:absolute;inset:0;background:var(--on-surface);opacity:0;transition:opacity .15s;pointer-events:none}
+.tile:hover::after{opacity:.08}.tile:focus-visible{outline:2px solid var(--primary);outline-offset:2px}.tile:active::after{opacity:.12}
+.tile-ic{width:40px;height:40px;border-radius:50%;background:var(--secondary-container);color:var(--on-secondary-container);display:grid;place-items:center;flex:none}
+.tile-t{flex:1;min-width:0;display:flex;flex-direction:column}.tile-t b{font:500 16px/24px Roboto,sans-serif;letter-spacing:.15px}
+.tile-t small{font:400 14px/20px Roboto,sans-serif;letter-spacing:.25px;color:var(--on-surface-variant)}
+.tile>svg:last-child{color:var(--on-surface-variant)}
+.backrow{margin-bottom:8px}.backrow .text-btn{display:inline-flex;align-items:center;gap:4px}.backrow svg{width:20px;height:20px;transform:rotate(180deg)}
+.scan-vid{width:100%;max-height:50vh;border-radius:var(--shape-m);background:#000;object-fit:cover}.qr-box{background:#fff;padding:8px;border-radius:var(--shape-m);width:min(280px,100%);margin:8px 0}.qr-box svg{display:block;width:100%;height:auto}
+.sync-st{display:flex;align-items:center;gap:8px;margin:8px 0}.sync-st .dot{flex:none}
+.sync-err{color:var(--error);margin:8px 0;font:400 14px/20px Roboto,sans-serif}
+.sync-cfg{width:100%;min-height:96px;font:400 12px/16px ui-monospace,Menlo,monospace;border:1px solid var(--outline);border-radius:var(--shape-m);background:var(--surface-container-high);color:var(--on-surface);padding:8px;letter-spacing:0}
+.sync-steps{margin:8px 0;padding-left:24px;list-style:decimal}.sync-steps li{padding:6px 0 6px 4px;border:0;display:list-item}.sync-steps li::before{content:none}.sync-steps pre{white-space:pre-wrap;font:400 12px/16px ui-monospace,Menlo,monospace;background:var(--surface-container-high);padding:8px;border-radius:var(--shape-s);margin:6px 0}
+.st-total{margin:4px 0 12px}.st-total progress{width:100%;height:8px;accent-color:var(--primary)}
+.st-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--outline-variant)}
+.st-row .st-main{flex:1;min-width:0}.st-row .st-t{font:500 16px/24px Roboto,sans-serif}.st-row .st-d{font:400 12px/16px Roboto,sans-serif;color:var(--on-surface-variant);letter-spacing:.4px}
+.st-row .st-sz{font:500 14px/20px Roboto,sans-serif;white-space:nowrap}.st-row .text-btn{border:1px solid var(--outline);height:32px}
+.app-sec{border-top:1px solid var(--outline-variant);margin-top:16px;padding-top:16px}
+#installBox .app-sec:first-child{margin-top:8px;padding-top:0;border-top:0}
+.app-sec h4{margin:0 0 4px;font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px}
+.legal-lead{font:400 14px/22px Roboto,sans-serif;letter-spacing:.25px;color:var(--on-surface-variant);margin:8px 0 0}
+.legal-h{margin:28px 0 2px;padding-top:20px;border-top:1px solid var(--outline-variant);font:500 16px/24px Roboto,sans-serif;letter-spacing:.15px}
+.legal-h:first-of-type{border-top:0;padding-top:0}
+.legal-sub{font:400 13px/20px Roboto,sans-serif;letter-spacing:.2px;color:var(--on-surface-variant);margin:0 0 4px}
+.cred-note b{font-weight:500;color:var(--on-surface)}
+.cred-group.lic{text-transform:none;font-size:14px;letter-spacing:.1px}
+.hdrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ankichip{display:none;align-items:center;justify-content:flex-end;height:36px;flex:none}   /* wrapper: stable hover area (min-width is set from the collapsed width in JS) */
+body[data-view=anki] .ankichip{display:flex}
+.chipbody{display:inline-flex;align-items:center;height:36px;padding:0 12px;border-radius:18px;background:var(--surface-container-highest);color:var(--on-surface);font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px;white-space:nowrap;transition:padding .28s cubic-bezier(.2,0,0,1)}
+.ankichip.open .chipbody{padding:0 4px 0 12px}
+.gx{display:grid;grid-template-columns:1fr;opacity:1;transition:grid-template-columns .28s cubic-bezier(.2,0,0,1),opacity .2s}
+.gx>.gi{overflow:hidden;min-width:0;display:flex;align-items:center;white-space:nowrap}
+.chipbody .lbl{margin-left:8px}
+.ankichip.open .lbl{grid-template-columns:0fr;opacity:0;margin-left:0}   /* open: only the coloured dot is left of the actions */
+.chipbody .acts{grid-template-columns:0fr;opacity:0;margin-left:0}
+.ankichip.open .acts{grid-template-columns:1fr;opacity:1;margin-left:6px}
+.ankichip .icon-btn{width:32px;height:32px;flex:none}.ankichip .icon-btn svg{width:20px;height:20px}
+.ankichip .vdiv{width:1px;height:20px;background:var(--outline-variant);margin:0 4px;flex:none}
+.mdialog{border:0;border-radius:28px;background:var(--surface-container-high);color:var(--on-surface);padding:0;width:min(560px,calc(100vw - 32px));box-shadow:var(--elev3)}
+.mdialog::backdrop{background:rgba(0,0,0,.32)}
+.mdialog-in{padding:24px;max-height:min(82vh,760px);display:flex;flex-direction:column;overflow:hidden}
+#ankiDlgBody{flex:1 1 auto;min-height:0;overflow-y:auto;margin-right:-8px;padding-right:8px}
+.mdialog h2{font:400 24px/32px Roboto,sans-serif;letter-spacing:0;margin:0 0 12px;flex:none}
+.mdialog-act{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin-top:16px;flex:none}
+.trhint{display:block;min-height:16px;margin-top:4px;font:400 12px/16px Roboto,sans-serif;letter-spacing:.3px;color:var(--on-surface-variant)}
+.chip-re{height:28px;padding:0 10px;margin:0 2px;font-size:13px;flex:none}
+.pron,.ipa{font-family:Roboto,'Noto Sans','Lucida Grande','Lucida Sans Unicode','Segoe UI','Arial Unicode MS',sans-serif}   /* wide IPA coverage when the web font lacks a symbol */
+.opt-inputs{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}.opt-inputs .fld{flex:1;min-width:180px;margin-top:0}
+.switchrow{display:flex;align-items:center;gap:12px;margin:12px 0 4px;font:400 14px/20px Roboto,sans-serif;cursor:pointer}.switchrow input{width:20px;height:20px;accent-color:var(--primary)}
+/* progress */
+.progress{position:fixed;top:0;left:0;right:0;z-index:20;height:4px;background:var(--primary-container);overflow:hidden;opacity:0;transition:opacity .2s}
+.progress.on{opacity:1}
+.progress::before{content:"";position:absolute;inset:0;width:40%;background:var(--primary);animation:slide 1.2s ease-in-out infinite}
+@keyframes slide{0%{left:-40%}100%{left:100%}}
+main{padding:16px 16px calc(150px + env(safe-area-inset-bottom,0px)) calc(var(--rail) + 16px)}
+/* cards */
+.card{background:var(--surface-container);border-radius:var(--shape-l);padding:16px 20px;margin-bottom:16px;animation:rise .25s ease-out both}
+.card.hero{background:var(--primary-container);color:var(--on-primary-container)}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.hero-row{display:flex;align-items:center;gap:12px}
+h2{margin:0;font:400 36px/44px Roboto,sans-serif;letter-spacing:0;flex:1;min-width:0;overflow-wrap:anywhere}
+h3{margin:0 0 4px;font:500 16px/24px Roboto;letter-spacing:.15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pron{font:400 14px/20px Roboto;letter-spacing:.25px;opacity:.85;margin:4px 0 0}
+.badge{font:500 12px/16px Roboto;letter-spacing:.5px;padding:2px 8px;border-radius:var(--shape-s);background:var(--tertiary-container);color:var(--on-tertiary-container)}
+ol{margin:12px 0 0;padding:0;list-style:none;counter-reset:s}
+li{counter-increment:s;position:relative;padding:12px 0 12px 36px;border-top:1px solid var(--outline-variant)}
+li:first-child{border-top:0}
+li::before{content:counter(s);position:absolute;left:0;top:12px;width:24px;height:24px;border-radius:50%;background:var(--secondary-container);color:var(--on-secondary-container);font:500 12px/24px Roboto;text-align:center;letter-spacing:0}
+::selection{background:var(--primary-container);color:var(--on-primary-container)}
+main,.sheet,.qsheet,.csheet{-webkit-user-select:text;user-select:text}
+.badge,.tag,.icon-btn,.vchip{user-select:none}
+.pos{display:inline-block;font:500 12px/16px Roboto;letter-spacing:.5px;padding:2px 8px;margin-right:8px;border-radius:var(--shape-s);background:var(--surface-container-highest);color:var(--on-surface-variant);vertical-align:1px}
+.def{font:400 16px/24px Roboto}
+.ex{display:flex;align-items:flex-start;gap:4px;margin:8px 0 0;padding:4px 4px 4px 12px;border-left:3px solid var(--primary);border-radius:0 var(--shape-s) var(--shape-s) 0;background:var(--surface-container-high)}
+.ex>div{flex:1;padding:4px 0}
+.ex .id{font:italic 400 14px/20px Roboto;letter-spacing:.25px}
+.ex .en{font:400 14px/20px Roboto;letter-spacing:.25px;color:var(--on-surface-variant)}
+audio{height:36px;max-width:100%;vertical-align:middle;margin-left:8px}
+.src{font:400 12px/16px Roboto;letter-spacing:.4px;color:var(--on-surface-variant);margin:12px 0 0}
+.src a{color:var(--primary)}
+.snack{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--shape-s);background:var(--surface-container-highest);color:var(--on-surface);margin-bottom:16px}
+.snack.err svg{color:var(--error)}
+.empty{text-align:center;padding:48px 16px;color:var(--on-surface-variant)}
+.empty svg{width:48px;height:48px;margin-bottom:8px;opacity:.6}
+.empty .h{font:400 22px/28px Roboto;letter-spacing:0;color:var(--on-surface);margin:0 0 4px}
+@media(max-width:480px){h2{font-size:30px;line-height:38px}.title{font-size:24px}}
+</style>
+<script src="/theme.js"></script><script src="/cards-store.js"></script><script src="/apkg.js"></script><script src="/sync.js"></script><script src="/vendor/qr/qrcode.js"></script></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 -960 960 960"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/></symbol>
+  <symbol id="i-vol" viewBox="0 -960 960 960"><path d="M560-131v-82q90-26 145-100t55-168q0-94-55-168T560-749v-82q124 28 202 125.5T840-481q0 127-78 224.5T560-131ZM120-360v-240h160l200-200v640L280-360H120Zm440 40v-322q47 22 73.5 66t26.5 96q0 51-26.5 94.5T560-320Z"/></symbol>
+  <symbol id="i-book" viewBox="0 -960 960 960"><path d="M560-564v-68q33-14 67.5-21t72.5-7q26 0 51 4t49 10v64q-24-9-48.5-13.5T700-600q-38 0-73 9.5T560-564Zm0 220v-68q33-14 67.5-21t72.5-7q26 0 51 4t49 10v64q-24-9-48.5-13.5T700-380q-38 0-73 9t-67 27Zm0-110v-68q33-14 67.5-21t72.5-7q26 0 51 4t49 10v64q-24-9-48.5-13.5T700-490q-38 0-73 9.5T560-454ZM260-320q47 0 91.5 10.5T440-278v-394q-41-24-87-36t-93-12q-36 0-71.5 7T120-692v396q35-12 69.5-18t70.5-6Zm260 42q44-21 88.5-31.5T700-320q36 0 70.5 6t69.5 18v-396q-33-14-68.5-21t-71.5-7q-47 0-93 12t-87 36v394Zm-40 118q-48-38-104-59t-116-21q-42 0-82.5 11T100-198q-21 11-40.500-1T40-234v-482q0-11 5.500-21T62-752q46-24 96-36t102-12q58 0 113.500 15T480-740q51-30 106.500-45T700-800q52 0 102 12t96 36q11 5 16.500 15t5.500 21v482q0 23-19.500 35t-40.500 1q-37-20-77.500-31T700-240q-60 0-116 21t-104 59Z"/></symbol>
+  <symbol id="i-history" viewBox="0 -960 960 960"><path d="M480-120q-138 0-240.5-91.5T122-440h82q14 104 92.5 172T480-200q117 0 198.5-81.5T760-480q0-117-81.5-198.5T480-760q-69 0-129 32t-101 88h110v80H120v-240h80v94q51-64 124.5-99T480-840q75 0 140.5 28.5t114 77q48.5 48.5 77 114T840-480q0 75-28.5 140.5t-77 114q-48.5 48.5-114 77T480-120Zm112-192L440-464v-216h80v184l128 128-56 56Z"/></symbol>
+  <symbol id="i-close" viewBox="0 -960 960 960"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></symbol>
+  <symbol id="i-list" viewBox="0 -960 960 960"><path d="M360-200v-80h480v80H360Zm0-240v-80h480v80H360Zm0-240v-80h480v80H360ZM200-160q-33 0-56.500-23.500T120-240q0-33 23.500-56.500T200-320q33 0 56.500 23.500T280-240q0 33-23.500 56.500T200-160Zm0-240q-33 0-56.500-23.500T120-480q0-33 23.500-56.500T200-560q33 0 56.500 23.500T280-480q0 33-23.500 56.500T200-400Zm0-240q-33 0-56.500-23.500T120-720q0-33 23.500-56.500T200-800q33 0 56.500 23.500T280-720q0 33-23.500 56.500T200-640Z"/></symbol>
+  <symbol id="i-settings" viewBox="0 -960 960 960"><path d="m370-80-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.500v-27q0-6.500 1-13.500L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.500 12t22.500 15l119-50 110 190-103 78q1 7 1 13.500v27q0 6.500-2 13.500l103 78-110 190-118-50q-11 8-23 15t-24 12L590-80H370Zm112-260q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-99.500 41T342-480q0 58 40.500 99t99.500 41Z"/></symbol>
+  <symbol id="i-cards" viewBox="0 -960 960 960"><path d="M280-800h400q33 0 56.500 23.500T760-720v320q0 33-23.500 56.500T680-320H280q-33 0-56.500-23.500T200-400v-320q0-33 23.500-56.500T280-800Zm0 80v320h400v-320H280ZM160-640v360q0 33 23.500 56.500T240-200h440v-80H240v-360h-80Z"/></symbol>
+  <symbol id="i-open" viewBox="0 -960 960 960"><path d="M200-120q-33 0-56.500-23.500T120-200v-560q0-33 23.500-56.500T200-840h280v80H200v560h560v-280h80v280q0 33-23.500 56.500T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z"/></symbol>
+  <symbol id="i-add" viewBox="0 -960 960 960"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></symbol>
+  <symbol id="i-check" viewBox="0 -960 960 960"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></symbol>
+  <symbol id="i-download" viewBox="0 -960 960 960"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.500-23.500T160-240v-120h80v120h480v-120h80v120q0 33-23.500 56.500T720-160H240Z"/></symbol>
+  <symbol id="i-sync" viewBox="0 -960 960 960"><path d="M160-160v-80h110l-16-14q-52-46-73-105t-21-119q0-111 66.500-197.500T400-790v84q-72 26-116 88.500T240-478q0 45 17 87.500t53 78.500l10 10v-98h80v240H160Zm400-10v-84q72-26 116-88.500T720-482q0-45-17-87.500T650-648l-10-10v98h-80v-240h240v80H690l16 14q49 49 71.500 106.500T800-482q0 111-66.500 197.500T560-170Z"/></symbol>
+  <symbol id="i-delete" viewBox="0 -960 960 960"><path d="M280-120q-33 0-56.500-23.500T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.500 56.500T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360Z"/></symbol>
+  <symbol id="i-eye" viewBox="0 -960 960 960"><path d="M480-320q75 0 127.500-52.500T660-500q0-75-52.500-127.500T480-680q-75 0-127.500 52.500T300-500q0 75 52.500 127.500T480-320Zm0-72q-45 0-76.500-31.500T372-500q0-45 31.500-76.500T480-608q45 0 76.500 31.500T588-500q0 45-31.500 76.500T480-392Zm0 192q-146 0-266-81.500T40-500q54-137 174-218.500T480-800q146 0 266 81.500T920-500q-54 137-174 218.500T480-200Z"/></symbol>
+  <symbol id="i-drop" viewBox="0 -960 960 960"><path d="M480-360 280-560h400L480-360Z"/></symbol>
+  <symbol id="i-stop" viewBox="0 -960 960 960"><path d="M240-240v-480h480v480H240Z"/></symbol>
+  <symbol id="i-arrow" viewBox="0 -960 960 960"><path d="M647-440H160v-80h487L423-744l57-56 320 320-320 320-57-56 224-224Z"/></symbol>
+  <symbol id="i-minus" viewBox="0 -960 960 960"><path d="M200-440v-80h560v80H200Z"/></symbol>
+  <symbol id="i-chev" viewBox="0 -960 960 960"><path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/></symbol>
+  <symbol id="i-info" viewBox="0 -960 960 960"><path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.500-11.500T520-640q0-17-11.500-28.500T480-680q-17 0-28.500 11.500T440-640q0 17 11.500 28.500T480-600Zm0 520q-83 0-156-31.500T197-197q-54-54-85.500-127T80-480q0-83 31.500-156T197-763q54-54 127-85.500T480-880q83 0 156 31.500T763-763q54 54 85.500 127T880-480q0 83-31.500 156T763-197q-54 54-127 85.500T480-80Z"/></symbol>
+  <symbol id="i-expand" viewBox="0 -960 960 960"><path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/></symbol>
+  <symbol id="i-edit" viewBox="0 -960 960 960"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.500-17t30.500-6q16 0 31 6t26 18l55 56q12 11 17.500 26t5.500 30q0 16-5.500 30.500T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></symbol>
+  <symbol id="i-warn" viewBox="0 -960 960 960"><path d="M40-120 480-880l440 760H40Zm444-120q17 0 28.500-11.500T524-280q0-17-11.500-28.500T484-320q-17 0-28.500 11.500T444-280q0 17 11.500 28.500T484-240Zm-40-120h80v-200h-80v200Z"/></symbol>
+</svg>
+
+<nav class="rail" aria-label="Main">
+  <!-- 1. pages -->
+  <button class="rail-item" id="navKamus" type="button" aria-current="page">
+    <span class="rail-ind"><svg><use href="#i-book"/></svg></span><span>Kamus</span>
+  </button>
+  <button class="rail-item" id="navAnki" type="button">
+    <span class="rail-ind"><svg><use href="#i-cards"/></svg></span><span>Anki</span>
+  </button>
+  <!-- 2. functions of the current page (History belongs to Kamus) -->
+  <hr class="rail-div" id="railDiv">
+  <button class="rail-item" id="histBtn" aria-expanded="false" aria-controls="sheet">
+    <span class="rail-ind"><svg><use href="#i-history"/></svg></span><span>History</span>
+  </button>
+  <div class="rail-spacer"></div>
+  <!-- 3. always visible -->
+  <button class="rail-item" id="navSettings" type="button">
+    <span class="rail-ind"><svg><use href="#i-settings"/></svg></span><span>Settings</span>
+  </button>
+</nav>
+<aside class="sheet" id="sheet" aria-label="Search history" aria-hidden="true" inert>
+  <div class="sheet-head"><h2>History</h2>
+    <button class="text-btn" id="clearHist" type="button">Clear</button>
+    <button class="icon-btn" id="closeSheet" type="button" aria-label="Close history"><svg><use href="#i-close"/></svg></button></div>
+  <div class="sheet-body" id="hist"></div>
+</aside>
+
+<header id="hd"><div class="wrap hdrow"><h1 class="title" id="pageTitle">Kamus <small>Indonesian ⇄ English</small></h1><div class="ankichip" id="ankiChip" role="group" aria-label="Anki connection"></div></div></header>
+<aside class="qsheet" id="qsheet" aria-label="Quick look" aria-hidden="true" inert>
+  <div class="qhead"><div class="qw" id="qw"></div><span id="qsay"></span>
+    <button class="icon-btn" id="qclose" type="button" aria-label="Close quick look"><svg><use href="#i-close"/></svg></button></div>
+  <div class="qbody" id="qbody"></div>
+</aside>
+
+<aside class="qsheet csheet" id="csheet" aria-label="New Anki card" aria-hidden="true" inert>
+  <div class="qhead"><div class="qw">New card</div>
+    <button class="icon-btn" id="cclose" type="button" aria-label="Close"><svg><use href="#i-close"/></svg></button></div>
+  <div class="qbody" id="cbody"></div>
+  <div class="cfoot"><span class="grow" id="cnote"></span><button class="text-btn" id="ccancel" type="button">Cancel</button><button class="btn-filled" id="csave" type="button">Add card</button></div>
+</aside>
+
+<div class="toc-wrap" id="tocWrap" hidden>
+  <button class="icon-btn tonal toc-btn" id="tocBtn" type="button" aria-label="On this page" aria-expanded="false" aria-controls="toc"><svg><use href="#i-list"/></svg></button>
+  <nav class="toc" id="toc" aria-label="On this page"><h4>On this page</h4><div id="tocList"></div></nav>
+</div>
+<div class="progress" id="pg" role="progressbar" aria-label="Loading"></div>
+
+<main id="viewKamus"><div class="wrap" id="out">
+  <div class="empty"><svg><use href="#i-book"/></svg><p class="h">Cari kata Indonesia</p>
+  <div>Definitions from KBBI, English from Wiktionary, plus example sentences and pronunciation.</div></div>
+</div></main>
+
+<main id="viewAnki" hidden><div class="wrap">
+  <div id="ankiNote"></div>
+  <section class="card">
+    <div class="a-tools"><input id="aSearch" type="search" placeholder="Search cards…" aria-label="Search cards" autocomplete="off">
+      <button type="button" class="vchip on" data-filter="all">All</button><button type="button" class="vchip" data-filter="new">Not in Anki</button>
+      <button type="button" class="vchip" data-filter="due">Due</button><button type="button" class="vchip" data-filter="learning">Learning</button></div>
+    <div class="sum" id="ankiSummary"></div>
+    <div id="ankiList"></div>
+  </section>
+</div></main>
+
+<main id="viewSettings" hidden><div class="wrap">
+  <section class="card">
+    <h3>Appearance</h3>
+    <div id="themeBox"></div>
+  </section>
+  <section class="card">
+    <h3>TTS Service</h3>
+    <div class="speed"><label for="ttsSpeed">Speed</label><input id="ttsSpeed" type="range" min="0.5" max="1.5" step="0.05" value="1"><output id="ttsSpeedVal" for="ttsSpeed">1.00×</output><button type="button" class="text-btn" id="ttsSpeedReset">Reset</button></div>
+    <div id="ttsOptions" role="radiogroup" aria-label="Text-to-speech engine"></div>
+  </section>
+  <section class="card">
+    <h3>Translation</h3>
+    <label class="switchrow"><input type="checkbox" id="trAuto"> Fill in missing translations automatically (cards)</label>
+    <div id="trOptions" role="radiogroup" aria-label="Translation service"></div>
+  </section>
+  <section class="card" id="syncCard">
+    <h3>Sync (optional)</h3>
+    <p class="muted">Keep your cards and search history in step across devices with <b>your own</b> Firebase project and a Google sign-in. Nothing is sent anywhere until you set this up, and Kamus has no account of its own that sees your data.</p>
+    <div id="syncBox"></div>
+  </section>
+  <section class="card" id="storageCard">
+    <h3>Storage in this browser</h3>
+    <div id="storageBox"><p class="muted">Calculating…</p></div>
+  </section>
+  <section class="card" id="appCard">
+    <h3>App</h3>
+    <div id="installBox"></div>
+    <div class="app-sec">
+      <h4>Update</h4>
+      <p class="muted">Reload to get the latest version. Your history, cards, settings and speech model are kept.</p>
+      <p style="margin-top:12px"><button type="button" class="btn-tonal" id="reloadBtn"><svg><use href="#i-sync"/></svg>Reload app</button></p>
+    </div>
+  </section>
+  <a class="tile" href="#legal" id="licTile">
+    <span class="tile-ic"><svg><use href="#i-book"/></svg></span>
+    <span class="tile-t"><b>Legal information</b><small id="licSummary">Licences, attributions and terms of use</small></span>
+    <svg><use href="#i-chev"/></svg>
+  </a>
+</div></main>
+
+<main id="viewLegal" hidden><div class="wrap">
+  <div class="backrow"><button type="button" class="text-btn" id="licBack"><svg><use href="#i-chev"/></svg>Settings</button></div>
+  <section class="card">
+    <h3>Legal information</h3>
+    <div id="creditsList"><p class="muted">Loading…</p></div>
+  </section>
+</div></main>
+
+<dialog id="syncImpDlg" class="mdialog" aria-labelledby="syncImpTitle"><div class="mdialog-in"><h2 id="syncImpTitle">Set up sync on this device?</h2><div id="syncImpBody"></div>
+  <div class="mdialog-act"><button class="text-btn" id="syncImpNo" type="button">Cancel</button><button class="btn-filled" id="syncImpYes" type="button">Use this config</button></div></div></dialog>
+<dialog id="syncScanDlg" class="mdialog" aria-labelledby="syncScanTitle"><div class="mdialog-in"><h2 id="syncScanTitle">Scan the QR code</h2>
+  <p class="muted" id="syncScanMsg">On the device that is already set up: Settings → Sync → Set up another device. Point this camera at its QR code.</p>
+  <video id="syncScanVid" class="scan-vid" playsinline muted></video>
+  <div class="mdialog-act"><button class="text-btn" id="syncScanClose" type="button">Close</button></div></div></dialog>
+<dialog id="ankiDlg" class="mdialog" aria-labelledby="ankiDlgTitle"><div class="mdialog-in">
+  <h2 id="ankiDlgTitle">Anki connection</h2>
+  <div id="ankiDlgBody"></div>
+  <div class="mdialog-act" id="ankiDlgAct"></div>
+</div></dialog>
+
+<div class="dock"><div class="dock-in">
+  <div class="suggest" id="suggest" role="listbox" aria-label="Suggestions" hidden></div>
+  <div class="bar"><form id="f" role="search">
+    <svg class="idle-icon" aria-hidden="true"><use href="#i-search"/></svg>
+    <input id="q" type="search" placeholder="Cari kata…" aria-label="Search a word" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button class="icon-btn filled" id="go" type="submit" disabled aria-label="Search" title="Search"><svg><use href="#i-search"/></svg></button>
+  </form></div>
+</div></div>
+
+<script>
+const out=document.getElementById('out'),q=document.getElementById('q'),pg=document.getElementById('pg');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ico=n=>`<svg><use href="#i-${n}"/></svg>`;
+
+// ---- text-to-speech: engine + voice come from Settings (localStorage), fallback = browser voice
+const TTS_KEY='kamus-tts',ENGINES=['browser','edge','wikidepia','wikidepia-web'];
+const TTS_DEFAULT={engine:'edge',edge:'gadis',wikidepia:'wibowo','wikidepia-web':'wibowo',speed:1};
+function getTts(){const c=getTtsRaw();c.speed=Math.min(1.5,Math.max(.5,+c.speed||1));return c;}
+function getTtsRaw(){
+  try{const s=JSON.parse(localStorage.getItem(TTS_KEY));if(s&&ENGINES.includes(s.engine))return {...TTS_DEFAULT,...s};}catch{}
+  try{const old=localStorage.getItem('kamus-voice');if(old==='browser')return {...TTS_DEFAULT,engine:'browser'};if(old==='ardi')return {...TTS_DEFAULT,edge:'ardi'};}catch{}
+  return {...TTS_DEFAULT};
+}
+function setTts(patch){try{localStorage.setItem(TTS_KEY,JSON.stringify({...getTts(),...patch}));}catch{}}
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),4000);}
+let curAudio=null;
+function stopSpeech(){speechSynthesis.cancel();if(wdSource){try{wdSource.stop();}catch{}wdSource=null;}if(curAudio){curAudio.pause();curAudio=null;}document.querySelectorAll('.speaking,.loading').forEach(b=>b.classList.remove('speaking','loading'));}
+function browserSpeak(t,btn,speed=1){
+  const u=new SpeechSynthesisUtterance(t);u.lang='id-ID';u.rate=.85*speed;
+  const v=speechSynthesis.getVoices().find(v=>v.lang.replace('_','-').startsWith('id'));if(v)u.voice=v;
+  btn.classList.add('speaking','loading');u.onstart=()=>btn.classList.remove('loading');u.onend=u.onerror=()=>btn.classList.remove('speaking','loading');
+  speechSynthesis.speak(u);
+}
+function speak(t,btn,override){
+  if(btn.classList.contains('speaking')){stopSpeech();return;}   // tap again while it is loading or playing = stop
+  stopSpeech();
+  const cfg={...getTts(),...override};
+  if(cfg.engine==='browser'){browserSpeak(t,btn,cfg.speed);return;}
+  btn.classList.add('speaking','loading');   // the spinner shows until the voice is actually playing
+  if(cfg.engine==='wikidepia-web'){
+    webSpeak(t,cfg['wikidepia-web'],btn,cfg.speed).catch(err=>{btn.classList.remove('speaking','loading');toast('In-browser Wikidepia: '+err.message+'. Using the browser voice.');browserSpeak(t,btn,cfg.speed);});return;}
+  const a=new Audio('/api/tts?engine='+cfg.engine+'&voice='+cfg[cfg.engine]+(cfg.speed!==1?'&speed='+cfg.speed:'')+'&text='+encodeURIComponent(t));curAudio=a;
+  const fail=()=>{if(curAudio!==a)return;curAudio=null;btn.classList.remove('speaking','loading');toast((cfg.engine==='edge'?'edge-tts':'Wikidepia TTS')+' is unavailable, using the browser voice.');browserSpeak(t,btn,cfg.speed);};
+  a.onplaying=()=>btn.classList.remove('loading');
+  a.onended=()=>{btn.classList.remove('speaking','loading');if(curAudio===a)curAudio=null;};
+  a.onerror=fail;
+  a.play().catch(fail);
+}
+const say=(t,cls='')=>`<button class="icon-btn ${cls}" data-say="${esc(t)}" aria-label="Listen: ${esc(t)}" title="Listen">${ico('vol')}</button>`;
+const ex=(id,en)=>`<div class="ex"><div><div class="id" lang="id">${esc(id)}</div>${en?`<div class="en" lang="en">${esc(en)}</div>`:''}</div>${say(id,'sm')}</div>`;
+const snack=(msg,err)=>`<div class="snack ${err?'err':''}">${ico('warn')}<span>${esc(msg)}</span></div>`;
+
+out.addEventListener('click',e=>{const b=e.target.closest('[data-say]');if(b)speak(b.dataset.say,b);});
+const KEY='kamus-history2';
+function hist(){try{let a=JSON.parse(localStorage.getItem(KEY));if(!a)a=(JSON.parse(localStorage.getItem('kamus-history'))||[]).map(w=>({w,g:''}));return a;}catch{return[];}}
+function remember(w,g){try{const old=hist().find(x=>x.w===w);localStorage.setItem(KEY,JSON.stringify([{w,g:g||(old&&old.g)||'',t:Date.now()},...hist().filter(x=>x.w!==w)].slice(0,30)));}catch{}renderHist();if(window.KamusSync)KamusSync.schedule();}
+function renderHist(){
+  const h=hist();
+  document.getElementById('hist').innerHTML=h.length?h.map(x=>`<div role="button" tabindex="0" class="hcard" data-w="${esc(x.w)}"><div class="w">${esc(x.w)}</div>${x.g?`<div class="g">${esc(x.g.length>140?x.g.slice(0,139)+'…':x.g)}</div>`:''}</div>`).join('')
+    :`<div class="hempty">${ico('history')}<p>No searches yet.</p></div>`;
+}
+renderHist();
+const sheet=document.getElementById('sheet'),histBtn=document.getElementById('histBtn');
+function setSheet(open){sheet.classList.toggle('open',open);sheet.inert=!open;sheet.setAttribute('aria-hidden',!open);histBtn.setAttribute('aria-expanded',open);}
+let pinned=false,closeT;
+const isOpen=()=>sheet.classList.contains('open');
+const closeSheet=()=>{pinned=false;setSheet(false);};
+histBtn.onclick=()=>{if(isOpen()&&!pinned){pinned=true;}else if(isOpen()){closeSheet();}else{pinned=true;setSheet(true);}};
+// hovering the History item opens its sheet; it closes when the pointer leaves both (unless pinned by a click)
+[histBtn,sheet].forEach(el=>{
+  el.addEventListener('pointerenter',e=>{if(e.pointerType!=='mouse')return;clearTimeout(closeT);if(el===histBtn)setSheet(true);});
+  el.addEventListener('pointerleave',e=>{if(e.pointerType!=='mouse'||pinned)return;clearTimeout(closeT);closeT=setTimeout(()=>setSheet(false),220);});
+});
+document.getElementById('closeSheet').onclick=()=>{closeSheet();histBtn.focus();};
+document.getElementById('clearHist').onclick=()=>{try{localStorage.removeItem(KEY);localStorage.removeItem('kamus-history');localStorage.setItem('kamus-history-cleared',String(Date.now()));}catch{}renderHist();if(window.KamusSync)KamusSync.schedule();};
+addEventListener('keydown',e=>{if(e.key==='Escape'&&isOpen()){closeSheet();histBtn.focus();}});
+document.getElementById('hist').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-w]')){e.preventDefault();e.target.click();}});
+document.getElementById('hist').addEventListener('click',e=>{const c=e.target.closest('[data-w]');if(!c)return;q.value=c.dataset.w;go(c.dataset.w);if(matchMedia('(max-width:600px)').matches)closeSheet();fitIdle();});
+
+// hovering the search bar focuses it and selects the text; leaving it unfocuses
+const dock=document.querySelector('.dock-in');
+let hovering=false;
+const syncOpen=()=>dock.classList.toggle('open',hovering||dock.matches(':focus-within'));
+dock.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'){hovering=true;q.focus();q.select();syncOpen();}});
+dock.addEventListener('focusin',syncOpen);
+dock.addEventListener('focusout',()=>setTimeout(syncOpen,0));
+// a tap/click that focuses the box selects its text (so the next word simply replaces it); clicking again just places the caret
+let justFocused=false;
+q.addEventListener('focus',()=>{justFocused=true;setTimeout(()=>{q.select();try{q.setSelectionRange(0,q.value.length);}catch{}},0);});
+q.addEventListener('mouseup',e=>{if(justFocused){e.preventDefault();justFocused=false;}});
+q.addEventListener('blur',()=>{justFocused=false;});
+document.getElementById('f').addEventListener('click',e=>{if(e.target===e.currentTarget)q.focus();});
+dock.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){hovering=false;if(document.activeElement===q)q.blur();syncOpen();}});
+
+const goBtn=document.getElementById('go'),sug=document.getElementById('suggest');
+const fitIdle=()=>dock.style.setProperty('--idle-w',(q.value.trim()?Math.min(Math.max(q.value.trim().length*9+56,96),280):64)+'px');
+const syncBtn=()=>{goBtn.disabled=!q.value.trim();};
+let sugItems=[],sugActive=-1,sugTok=0,sugT;
+function hideSuggest(){sug.hidden=true;sug.innerHTML='';sugItems=[];sugActive=-1;sugTok++;}
+function drawSuggest(prefix){
+  if(!sugItems.length){sug.hidden=true;sug.innerHTML='';return;}
+  sug.innerHTML=sugItems.map((s,i)=>`<div class="sg ${i===sugActive?'active':''}" role="option" data-i="${i}">${ico(s.h?'history':'search')}<span><b>${esc(s.w.slice(0,prefix.length))}</b>${esc(s.w.slice(prefix.length))}</span>${s.h?'<span class="tag">history</span>':''}</div>`).join('');
+  sug.hidden=false;
+}
+function pickSuggest(i){const s=sugItems[i];if(!s)return;q.value=s.w;hideSuggest();syncBtn();fitIdle();q.select();go(s.w);}
+q.addEventListener('input',()=>{
+  syncBtn();fitIdle();clearTimeout(sugT);
+  const prefix=q.value.trim().toLowerCase();if(!prefix){hideSuggest();return;}
+  const mine=hist().filter(x=>x.w.startsWith(prefix)&&x.w!==prefix).slice(0,3).map(x=>({w:x.w,h:true}));
+  sugItems=mine;sugActive=-1;drawSuggest(prefix);
+  const tok=++sugTok;
+  sugT=setTimeout(async()=>{
+    try{const ws=await wikiSuggest(prefix);
+      if(tok!==sugTok)return;
+      sugItems=[...mine,...ws.filter(w=>w!==prefix&&!mine.some(m=>m.w===w)).map(w=>({w}))].slice(0,6);drawSuggest(prefix);
+    }catch{}
+  },150);
+});
+q.addEventListener('keydown',e=>{
+  if(sug.hidden)return;
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();sugActive=(sugActive+(e.key==='ArrowDown'?1:-1)+sugItems.length+1)%(sugItems.length+1);if(sugActive===sugItems.length)sugActive=-1;drawSuggest(q.value.trim().toLowerCase());}
+  else if(e.key==='Enter'&&sugActive>=0){e.preventDefault();pickSuggest(sugActive);}
+  else if(e.key==='Escape'){hideSuggest();}
+});
+sug.addEventListener('mousedown',e=>e.preventDefault());
+sug.addEventListener('click',e=>{const el=e.target.closest('[data-i]');if(el)pickSuggest(+el.dataset.i);});
+q.addEventListener('blur',()=>setTimeout(hideSuggest,120));
+dock.addEventListener('pointerleave',()=>hideSuggest());
+fitIdle();
+
+// table of contents
+const tocWrap=document.getElementById('tocWrap'),tocList=document.getElementById('tocList'),tocBtn=document.getElementById('tocBtn');
+let tocT;
+const setToc=o=>{tocWrap.classList.toggle('open',o);tocBtn.setAttribute('aria-expanded',o);};
+function buildToc(d){
+  if(!d||!d.kbbi||!d.kbbi.length){tocWrap.hidden=true;return;}
+  const items=[['sec-kbbi','KBBI · '+d.kbbi[0].headword]];
+  if(d.kbbi.length>1)items.push(['sec-rel','Related words ('+(d.kbbi.length-1)+')']);
+  if(document.getElementById('sec-en'))items.push(['sec-en','English · Wiktionary']);
+  if(document.getElementById('sec-sn'))items.push(['sec-sn','Examples · Tatoeba']);
+  tocList.innerHTML=items.map(([id,l])=>`<a href="#${id}" data-t="${id}">${esc(l)}</a>`).join('');
+  tocWrap.hidden=false;setToc(false);updateToc();tocPlace();
+}
+function updateToc(){
+  const links=[...tocList.children];if(!links.length)return;
+  let act=links[0];
+  links.forEach(a=>{const el=document.getElementById(a.dataset.t);if(el&&el.getBoundingClientRect().top<=140)act=a;});
+  const el=document.documentElement;if(el.scrollHeight>innerHeight+8&&innerHeight+scrollY>=el.scrollHeight-4)act=links[links.length-1];
+  links.forEach(a=>a.classList.toggle('active',a===act));
+}
+addEventListener('scroll',updateToc,{passive:true});
+function tocPlace(){   // wide screens: just below the title row; the container appears once the page has scrolled
+  const top=Math.max(16,document.getElementById('hd').offsetHeight+8-scrollY);
+  tocWrap.style.setProperty('--toc-top',top+'px');tocWrap.classList.toggle('stuck',scrollY>4);
+}
+addEventListener('scroll',tocPlace,{passive:true});addEventListener('resize',tocPlace);
+tocList.addEventListener('click',e=>{const a=e.target.closest('[data-t]');if(!a)return;e.preventDefault();
+  document.getElementById(a.dataset.t).scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'start'});
+  if(!matchMedia('(min-width:1280px)').matches)setToc(false);});
+tocBtn.onclick=()=>setToc(!tocWrap.classList.contains('open'));
+tocWrap.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'){clearTimeout(tocT);setToc(true);}});
+tocWrap.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){clearTimeout(tocT);tocT=setTimeout(()=>setToc(false),220);}});
+document.addEventListener('click',e=>{if(!tocWrap.contains(e.target))setToc(false);});
+
+// ---- quick look: select a word on the page -> chip with its English gloss -> right side sheet
+const qchip=document.createElement('button');qchip.type='button';qchip.className='qchip';qchip.hidden=true;document.body.appendChild(qchip);
+const qsheet=document.getElementById('qsheet'),qbody=document.getElementById('qbody');
+const qcache=new Map(),kcache=new Map();
+const getJSON=(cache,url)=>{if(!cache.has(url))cache.set(url,fetch(url).then(r=>r.json()).catch(()=>({error:true})));return cache.get(url);};
+const quickData=w=>wikiLookup(w).catch(()=>({senses:[],ipa:[],audio:[]}));
+const kbbiData=w=>getJSON(kcache,'/api/kbbi?q='+encodeURIComponent(w));
+let qWord='',qRange=null,qTimer,qLang='id',qTarget='';
+function selectedWord(){
+  const s=getSelection();if(!s||s.isCollapsed||!s.rangeCount)return null;
+  const r=s.getRangeAt(0),n=r.commonAncestorContainer,el=n.nodeType===1?n:n.parentElement;
+  if(!el||!el.closest('#out,#qsheet,#ankiList,#viewLegal'))return null;
+  const t=s.toString().replace(/·/g,'').replace(/\s+/g,' ').trim().replace(/^[^\p{L}]+|[^\p{L}]+$/gu,'').toLowerCase();
+  if(t.length<2||t.length>40||t.split(' ').length>3||!/^[\p{L}\- ]+$/u.test(t))return null;
+  return {t,r,lang:el.closest('[lang=en]')?'en':'id'};
+}
+function placeChip(){
+  if(!qRange||qchip.hidden)return;
+  const rects=qRange.getClientRects();if(!rects.length)return;
+  const l=rects[rects.length-1],w=qchip.offsetWidth;
+  // sits just above the selected word so it never covers the text next to it; below it if there is no room above
+  let x=Math.max(8,Math.min(l.left,innerWidth-w-8)),y=l.top-32-6;
+  if(y<8)y=l.bottom+6;
+  qchip.style.left=x+'px';qchip.style.top=Math.max(8,y)+'px';
+}
+const hideChip=()=>{qchip.hidden=true;};
+const shortGloss=g=>g.replace(/\s*\([^)]*\)/g,'').trim()||g;
+function setChip(text,muted){qchip.className='qchip'+(muted?' muted':'');qchip.innerHTML=ico('book')+'<span>'+esc(text)+'</span>';qchip.hidden=false;placeChip();}
+function onSel(){
+  const s=selectedWord();if(!s){hideChip();return;}
+  qWord=s.t;qRange=s.r.cloneRange();qLang=s.lang;setChip('…',true);
+  if(s.lang==='en'){   // English text (Wiktionary glosses, translations): show its Indonesian translation; a tap looks that word up
+    trText(s.t,'en','id').then(r=>{if(qWord!==s.t||qchip.hidden)return;const w=(r||'').trim().toLowerCase().replace(/[.!?]+$/,'');
+      qTarget=/^[\p{L}\-]+$/u.test(w)?w:'';setChip(w||'No translation',!w);}).catch(()=>{if(qWord===s.t&&!qchip.hidden)setChip('Translation unavailable',true);});
+    return;
+  }
+  quickData(qWord).then(d=>{
+    if(qWord!==s.t||qchip.hidden)return;
+    const g=d&&d.senses&&d.senses[0];
+    g?setChip(shortGloss(g.gloss),false):setChip('No English entry',true);
+  });
+}
+document.addEventListener('selectionchange',()=>{clearTimeout(qTimer);qTimer=setTimeout(onSel,250);});
+addEventListener('scroll',placeChip,{passive:true});addEventListener('resize',placeChip);
+qchip.addEventListener('mousedown',e=>e.preventDefault());   // keep the text selected
+qchip.addEventListener('click',()=>{const w=qLang==='en'?qTarget:qWord;if(w)openQuick(w);});
+const closeQuick=()=>{qsheet.classList.remove('open');qsheet.inert=true;qsheet.setAttribute('aria-hidden','true');};
+document.getElementById('qclose').onclick=closeQuick;
+qsheet.addEventListener('click',e=>{const b=e.target.closest('[data-say]');if(b)speak(b.dataset.say,b);});
+addEventListener('keydown',e=>{if(e.key==='Escape'){hideChip();closeQuick();closeCard();}});
+async function openQuick(w){
+  hideChip();
+  document.getElementById('qw').textContent=w;document.getElementById('qsay').innerHTML=say(w,'tonal');
+  qbody.innerHTML='<p class="note">Loading…</p><div id="qkbbi"></div>';
+  qsheet.classList.add('open');qsheet.inert=false;qsheet.setAttribute('aria-hidden','false');
+  const [d,k]=[await quickData(w),null];
+  if(!qsheet.classList.contains('open')||document.getElementById('qw').textContent!==w)return;
+  const senses=(d&&d.senses)||[];
+  qbody.innerHTML=(d&&d.ipa&&d.ipa.length?`<p class="pron">${d.ipa.map(esc).join(' · ')}</p>`:'')
+    +`<h3>English <span class="badge">Wiktionary</span></h3>`
+    +(senses.length?`<ol>${senses.slice(0,5).map(s=>`<li><span class="pos">${esc(s.pos)}</span> <span class="def" lang="en">${esc(s.gloss)}</span></li>`).join('')}</ol>`:'<p class="note">No English entry on Wiktionary for this form.</p>')
+    +`<h3>Indonesian <span class="badge">KBBI</span></h3><div id="qkbbi"><p class="note">Loading…</p></div>`
+    +`<button class="btn-filled" id="qopen" type="button">Open full entry</button>`;
+  document.getElementById('qopen').onclick=()=>{if(document.body.dataset.view!=='kamus')location.hash='#kamus';q.value=w;fitIdle();syncBtn();go(w);closeQuick();};
+  const kd=await kbbiData(w);
+  const box=document.getElementById('qkbbi');if(!box||document.getElementById('qw').textContent!==w)return;
+  const e=kd&&kd.entries&&kd.entries[0];
+  box.innerHTML=e?`${kd.base?`<p class="note">Listed under “${esc(kd.base)}”.</p>`:''}<p class="pron">${esc(e.syllables)}</p><ol>${e.senses.slice(0,3).map(s=>`<li>${s.pos.length?`<span class="pos">${esc(s.pos.join(' '))}</span>`:''}<span class="def">${esc(s.definition)}</span></li>`).join('')}</ol>`
+    :'<p class="note">No KBBI entry found.</p>';
+}
+
+// ---- Anki cards: one word + one meaning = one note, 4 cards (model comes from /api/anki/model)
+const ANKI_URL_KEY='kamus-ankiurl',ANKI_KEY_KEY='kamus-ankikey';
+let ankiModel=null,cardList=[],ankiState={state:'unknown'},lastResult=null,draft=null,aFilter='all',aText='',aBusy='';
+const KB_POS={n:'n.',v:'v.',a:'adj.',adv:'adv.',num:'num.',pron:'pron.',p:'part.',pre:'prep.',kon:'conj.'};
+const WK_POS={noun:'n.',verb:'v.',adjective:'adj.',adverb:'adv.',pronoun:'pron.',preposition:'prep.',conjunction:'conj.',numeral:'num.',particle:'part.','proper noun':'n.'};
+const kbPos=s=>{const t=(s.pos||[]).find(x=>KB_POS[x]);return t?KB_POS[t]:'';};
+const wkPos=s=>WK_POS[(s.pos||'').toLowerCase()]||'';
+const reEsc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const hasWord=(text,w)=>!!text&&new RegExp('(?<!\\w)'+reEsc(w)+'(?!\\w)','i').test(text);
+const hintOf=w=>w.split(/\s+/).map(p=>[p[0],...[...p].slice(1).map(c=>/\p{L}/u.test(c)?'_':c)].join(' ')).join(' · ');
+const blankOf=(ex,w)=>hasWord(ex,w)?ex.replace(new RegExp('(?<!\\w)'+reEsc(w)+'(?!\\w)','gi'),'[ … ]'):'';
+const capFirst=s=>String(s).replace(/^(\s*)(\p{L})/u,(m,sp,c)=>sp+c.toUpperCase());   // first letter of an Indonesian sentence
+const clip=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
+async function getModel(){
+  if(!ankiModel){ankiModel=await (await fetch('/anki-model.json')).json();
+    const css=ankiModel.css.split('}').map(r=>{const i=r.indexOf('{');if(i<0)return '';const sels=r.slice(0,i).split(',').map(s=>s.trim()).filter(s=>s&&!/night/i.test(s));
+      return sels.length?sels.map(s=>/^\.card\b/.test(s)?s.replace(/^\.card/,'.acard'):'.acard '+s).join(',')+r.slice(i)+'}':'';}).join('\n');
+    const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);}
+  return ankiModel;
+}
+function mrender(tpl,f){   // also {{^Field}}…{{/Field}} (shown when empty)
+  tpl=tpl.replace(/\{\{\^(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g,(_,k,inner)=>f[k]?'':inner);
+  let prev;do{prev=tpl;tpl=tpl.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g,(_,k,inner)=>f[k]?inner:'');}while(tpl!==prev);
+  return tpl.replace(/\{\{(\w+)\}\}/g,(_,k)=>{const v=f[k]||'';return /^\[sound:/.test(v)?'<span class="snd">🔊</span>':esc(v);});
+}
+const skipN=f=>[1,2,3,4].filter(n=>f['Skip'+n]).length,cardCount=f=>4-skipN(f);
+function facesHtml(f,toggles){
+  const pf={...f,ExampleBlank:blankOf(f.Example||'',f.Word||''),Hint:hintOf(f.Word||'x'),Audio:f.Word?'[sound:x]':'',ExampleAudio:f.Example?'[sound:x]':''};
+  return ankiModel.templates.map((t,i)=>{const front=mrender(t.Front,pf);
+    const off=!!f['Skip'+(i+1)];
+    return `<div class="face${off?' off':''}"><div class="face-head">${toggles?`<label class="face-on"><input type="checkbox" data-skip="${i+1}" ${off?'':'checked'}><span class="face-name">${esc(t.Name)}</span></label>`:`<span class="face-name">${esc(t.Name)}${off?' · off':''}</span>`}<span class="face-tabs"><button type="button" class="vchip on" data-side="front">Front</button><button type="button" class="vchip" data-side="back">Back</button></span></div>`
+      +(front.trim()?`<div class="acard" data-pane="front">${front}</div><div class="acard" data-pane="back" hidden>${mrender(t.Back,pf)}</div>`:`<div class="face-none">${off?'Turned off: this card is not made.':'No card is made from this template (a field it needs is empty).'}</div>`)+'</div>';}).join('');
+}
+document.addEventListener('click',e=>{const b=e.target.closest('.face .vchip');if(!b)return;const face=b.closest('.face');
+  face.querySelectorAll('.vchip').forEach(x=>x.classList.toggle('on',x===b));face.querySelectorAll('[data-pane]').forEach(x=>x.hidden=x.dataset.pane!==b.dataset.side);});
+
+// -- "+" next to each meaning in the results -> create-card sheet
+const csheet=document.getElementById('csheet'),cbody=document.getElementById('cbody');
+const closeCard=()=>{csheet.classList.remove('open');csheet.inert=true;csheet.setAttribute('aria-hidden','true');};
+function openCard(kind,ei,si){
+  const d=lastResult;if(!d)return;const wk=d.wiktionary||{senses:[],ipa:[]};
+  let entry,ks,ws,word;
+  if(kind==='kb'){entry=d.kbbi[ei];ks=entry.senses[si];word=entry.headword;const pos=kbPos(ks);ws=wk.senses.find(w=>pos&&wkPos(w)===pos)||wk.senses[0];}
+  else{ws=wk.senses[si];word=d.word;entry=d.kbbi.find(e=>e.headword===word)||d.kbbi[0];const pos=wkPos(ws);ks=entry&&(entry.senses.find(s=>pos&&kbPos(s)===pos)||entry.senses[0]);}
+  const exs=[];const addEx=(id,en,src)=>{id=id&&capFirst(id);if(id&&!exs.some(x=>x.id===id))exs.push({id,en:en||'',src});};
+  if(ws)ws.examples.forEach(x=>addEx(x.id,x.en,'Wiktionary'));
+  wk.senses.forEach(w=>w.examples.forEach(x=>addEx(x.id,x.en,'Wiktionary')));
+  (d.sentences||[]).forEach(s=>addEx(s.id,s.en,'Tatoeba'));
+  if(ks)ks.examples.forEach(x=>addEx(x,'','KBBI'));
+  const ex=exs.find(x=>hasWord(x.id,word))||exs[0]||{id:'',en:''};
+  draft={word,fields:{Word:word,IPA:(wk.ipa&&wk.ipa[0])||(entry&&entry.ipa)||'',POS:(ks&&kbPos(ks))||(ws&&wkPos(ws))||'',KBBI:ks?ks.definition:'',Wiki:ws?shortGloss(ws.gloss):'',Example:ex.id,ExampleEN:ex.en,Skip1:'',Skip2:'',Skip3:'',Skip4:''},
+    kb:(entry?entry.senses:[]).map(s=>({label:(kbPos(s)?kbPos(s)+' ':'')+s.definition,val:s.definition})),
+    wk:wk.senses.map(w=>({label:(wkPos(w)?wkPos(w)+' ':'')+w.gloss,val:w.gloss})),ex:exs,auto:{}};
+  renderDraft();
+}
+const POS_LIST=['n.','v.','adj.','adv.','pron.','num.','part.','prep.','conj.','interj.'];
+async function renderDraft(){
+  await getModel();const f=draft.fields;
+  const opts=(list,key)=>draft.mode==='edit'?'':`<span class="pick-wrap"><select class="pick" data-pick="${key}" aria-label="Choose another ${key==='kb'?'KBBI meaning':key==='wk'?'English meaning':'example'}"><option value="">Choose another…</option>${list.map((o,i)=>`<option value="${i}">${esc(clip(key==='ex'?(o.src+': '+o.id):o.label,70))}</option>`).join('')}</select>${ico('drop')}</span>`;
+  const posList=f.POS&&!POS_LIST.includes(f.POS)?[f.POS,...POS_LIST]:POS_LIST;
+  const posPick=`<span class="pick-wrap"><select class="pick" data-pick="pos" aria-label="Part of speech"><option value=""${f.POS?'':' selected'}>Part of speech</option>${posList.map(x=>`<option value="${esc(x)}"${x===f.POS?' selected':''}>${esc(x)}</option>`).join('')}</select>${ico('drop')}</span>`;
+  cbody.innerHTML=`<div class="frow top"><label class="fld w2"><input data-f="Word" value="${esc(f.Word)}" placeholder="Word" aria-label="Word"></label><div class="fld">${posPick}</div></div>
+    <label class="fld"><input data-f="IPA" value="${esc(f.IPA)}" placeholder="Pronunciation (IPA)" aria-label="Pronunciation (IPA)"></label>
+    <hr class="sdiv">
+    <h4>Meaning</h4>
+    <div class="fld"><div class="fld-head"><span>KBBI</span>${opts(draft.kb,'kb')}</div><textarea data-f="KBBI" rows="2" placeholder="Meaning in Indonesian" aria-label="KBBI meaning">${esc(f.KBBI)}</textarea><span class="trhint" id="trh-KBBI"></span></div>
+    <div class="fld"><div class="fld-head"><span>WIKI</span>${opts(draft.wk,'wk')}</div><input data-f="Wiki" value="${esc(f.Wiki)}" placeholder="Meaning in English" aria-label="WIKI meaning"><span class="trhint" id="trh-Wiki"></span></div>
+    <hr class="sdiv">
+    <div class="fld-head sect"><h4>Example</h4>${opts(draft.ex,'ex')}</div>
+    <label class="fld"><textarea data-f="Example" rows="2" placeholder="Sentence in Indonesian" aria-label="Example sentence in Indonesian">${esc(f.Example)}</textarea><span class="trhint" id="trh-Example"></span></label>
+    <label class="fld"><textarea data-f="ExampleEN" rows="2" placeholder="Translation in English" aria-label="Example translation in English">${esc(f.ExampleEN)}</textarea><span class="trhint" id="trh-ExampleEN"></span></label>
+    <hr class="sdiv">
+    <h4>Cards to make</h4><p class="muted" style="margin:0 0 8px">Turn off a type you do not want. In Anki an unwanted card is simply not made (an existing one becomes empty and disappears with Tools → Empty Cards); turn it on again to get it back.</p><div id="cprev"></div>`;
+  csheet.querySelector('.qw').textContent=draft.mode==='edit'?'Edit card':'New card';document.getElementById('csave').textContent=draft.mode==='edit'?'Save changes':'Add card';
+  csheet.classList.add('open');csheet.inert=false;csheet.setAttribute('aria-hidden','false');document.getElementById('qsheet').classList.remove('open');
+  updatePreview();autoFill();
+}
+function updatePreview(){
+  const f=draft.fields,ok=f.Word&&(f.KBBI||f.Wiki);document.getElementById('csave').disabled=!ok||cardCount(f)<1;
+  document.getElementById('cnote').textContent=ok?`One word + one meaning = one note (${cardCount(f)} card${cardCount(f)===1?'':'s'}).`:'Needs a word and a meaning.';
+  const keep=[...document.querySelectorAll('#cprev .face')].map(x=>x.querySelector('.vchip.on')?.dataset.side);
+  document.getElementById('cprev').innerHTML=facesHtml(f,true);
+  document.querySelectorAll('#cprev .face').forEach((fc,i)=>{if(keep[i]==='back')fc.querySelector('.vchip[data-side=back]')?.click();});
+}
+cbody.addEventListener('change',e=>{const n=e.target.dataset.skip;if(!n)return;draft.fields['Skip'+n]=e.target.checked?'':'1';if(cardCount(draft.fields)<1){draft.fields['Skip'+n]='';toast('Keep at least one card type.');}updatePreview();});
+cbody.addEventListener('input',e=>{const k=e.target.dataset.f;if(!k)return;draft.fields[k]=e.target.value;if(draft.auto)delete draft.auto[k];trHint(k,'');updatePreview();clearTimeout(trT);trT=setTimeout(autoFill,800);});
+cbody.addEventListener('change',e=>{const key=e.target.dataset.pick;if(key==='pos'){draft.fields.POS=e.target.value;updatePreview();return;}if(!key||e.target.value==='')return;const f=draft.fields;
+  if(key==='kb')f.KBBI=draft.kb[e.target.value].val;else if(key==='wk')f.Wiki=draft.wk[e.target.value].val;else{const x=draft.ex[e.target.value];f.Example=x.id;f.ExampleEN=x.en;}
+  cbody.querySelectorAll('[data-f]').forEach(i=>{i.value=f[i.dataset.f]??'';});e.target.value='';draft.auto={};updatePreview();autoFill();});
+document.getElementById('cclose').onclick=document.getElementById('ccancel').onclick=closeCard;
+document.getElementById('csave').onclick=async()=>{
+  try{
+    if(draft.mode==='edit'){
+      const old=(cardList.find(x=>x.id===draft.id)||{}).fields;
+      const card=await KamusCards.update(draft.id,draft.fields);
+      closeCard();await loadCards();pushEditToAnki(card,old);return;
+    }const j=await KamusCards.create(draft.fields);
+    toast(j.created?`Card added: ${j.card.word} · ${j.card.meaning}`:'You already have a card for this word and meaning.');closeCard();mineLoad().then(renderMine);
+  }catch(err){toast(err.message||'Could not save the card');}
+};
+out.addEventListener('click',e=>{const b=e.target.closest('[data-add]');if(!b)return;
+  b.dataset.add==='kb'?openCard('kb',+b.dataset.e,+b.dataset.s):openCard('wk',0,+b.dataset.s);});
+
+// -- AnkiConnect (talks from THIS browser to the Anki desktop app on THIS device)
+const ankiCfg=()=>{let url='http://127.0.0.1:8765',key='';try{url=localStorage.getItem(ANKI_URL_KEY)||url;key=localStorage.getItem(ANKI_KEY_KEY)||'';}catch{}return {url,key};};
+// AnkiConnect only exists in Anki desktop; phones/tablets (incl. iPadOS, which reports itself as a Mac) cannot run it
+const isMobile=()=>!!(navigator.userAgentData&&navigator.userAgentData.mobile)||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
+async function ac(action,params={},timeout=10000){
+  const {url,key}=ankiCfg(),ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),timeout);
+  try{const r=await fetch(url,{method:'POST',body:JSON.stringify({action,version:6,params,...(key?{key}:{})}),signal:ctl.signal});
+    const j=await r.json();if(j.error)throw new Error(j.error);return j.result;}finally{clearTimeout(t);}
+}
+async function checkAnki(){
+  ankiState={state:'checking'};renderConn();
+  if(isMobile()){ankiState={state:'mobile'};renderConn();return;}
+  try{const u=new URL(ankiCfg().url),local=['localhost','127.0.0.1'];
+    if(local.includes(location.hostname)&&local.includes(u.hostname)&&u.port===location.port){ankiState={state:'conflict',port:u.port};renderConn();return;}}catch{}
+  try{const v=await ac('version',{},4000);const decks=await ac('deckNames',{},4000);ankiState={state:'ok',version:v,decks};}
+  catch(err){ankiState={state:err instanceof TypeError||err.name==='AbortError'?'offline':'error',message:err.message};}
+  renderConn();
+}
+const unsynced=()=>cardList.filter(c=>!c.note_id);
+const synced=()=>cardList.filter(c=>c.note_id);
+const ankiChip=document.getElementById('ankiChip'),ankiDlg=document.getElementById('ankiDlg');
+let chipT=0,chipPinned=false;
+async function exportApkg(){   // the .apkg is built in this browser (apkg.js); the audio comes from the voice chosen in Settings
+  const cards=await KamusCards.list();if(!cards.length){toast('There are no cards to export.');return;}
+  const m=await getModel(),a=audioFor();
+  const getAudio=async text=>{
+    if(a.e==='web'){if(!(await wdHasModel()))return null;const r=await webSynth(text,a.voice);return {bytes:wavEncode(r.wav,r.sr),ext:'.wav'};}
+    const res=await fetch(absTts(text,a));if(!res.ok)return null;return {bytes:new Uint8Array(await res.arrayBuffer()),ext:'.'+a.ext};
+  };
+  try{
+    aBusy='Exporting…';renderConn();
+    const r=await KamusApkg.build({cards,model:m,getAudio,onProgress:(i,n)=>{aBusy=`Exporting ${i}/${n}…`;renderConn();}});
+    const url=URL.createObjectURL(r.blob),link=document.createElement('a');link.href=url;link.download='kamus.apkg';document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+    toast(`Exported ${r.notes} note${r.notes===1?'':'s'} (${r.cards} cards)`+(r.noAudio?`; ${r.noAudio} without audio (no voice available)`:'')+'.');
+  }catch(err){toast('Export failed: '+err.message);}
+  aBusy='';renderConn();
+}
+async function importFromAnki(){   // notes that use the Kamus note type in Anki but are not in Kamus yet (made in the Anki app, or in another browser)
+  if(ankiState.state!=='ok')return;
+  try{
+    const m=await getModel();aBusy='Reading Anki…';renderConn();
+    const ids=await ac('findNotes',{query:`"note:${m.name}"`}),notes=ids.length?await ac('notesInfo',{notes:ids}):[];
+    const haveNid=new Set(cardList.filter(c=>c.note_id).map(c=>c.note_id));
+    const txt=h=>{const d=document.createElement('div');d.innerHTML=h||'';return (d.textContent||'').trim();};
+    let added=0,linked=0,failed=0,last='';
+    for(const n of notes){
+      if(haveNid.has(n.noteId))continue;
+      const f={};for(const k of ['Word','IPA','POS','KBBI','Wiki','Example','ExampleEN','Skip1','Skip2','Skip3','Skip4'])f[k]=txt((n.fields[k]||{}).value);
+      try{
+        const r=await KamusCards.create(f);
+        if(r.created){await KamusCards.report([{id:r.card.id,note_id:n.noteId}]);added++;}
+        else if(!r.card.note_id){await KamusCards.report([{id:r.card.id,note_id:n.noteId}]);linked++;}   // the same word and meaning was already here: just connect it to the Anki note
+      }catch(err){failed++;last=err.message;}
+    }
+    toast(!added&&!linked&&!failed?`Nothing new: Kamus already has all ${notes.length} “${m.name}” note${notes.length===1?'':'s'} from Anki.`
+      :`Imported ${added} card${added===1?'':'s'} from Anki`+(linked?`, linked ${linked} existing`:'')+(failed?`, ${failed} skipped (${last})`:'')+'.');
+  }catch(err){toast('Import failed: '+err.message);}
+  aBusy='';await loadCards();await refreshProgress(false);
+}
+async function backupCards(){
+  const cards=await KamusCards.list();if(!cards.length)return;
+  const blob=new Blob([JSON.stringify({kamus_cards:1,exported:new Date().toISOString(),cards},null,1)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='kamus-cards-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  toast(`Backed up ${cards.length} card${cards.length===1?'':'s'}.`);
+}
+async function restoreCards(file){
+  try{
+    const j=JSON.parse(await file.text());if(!j||!Array.isArray(j.cards))throw new Error('this is not a Kamus backup');
+    const n=await KamusCards.importCards(j.cards);toast(n?`Restored ${n} card${n===1?'':'s'} (${j.cards.length-n} already here).`:'Nothing new: all those cards are already here.');await loadCards();
+  }catch(err){toast('Could not restore: '+err.message);}
+}
+document.addEventListener('change',e=>{if(e.target.id==='aRestore'&&e.target.files[0]){restoreCards(e.target.files[0]);e.target.value='';}});
+async function ankiWebSync(){aBusy='Syncing with AnkiWeb…';renderConn();try{await ac('sync',{},120000);toast('Anki synced with AnkiWeb.');}catch(err){toast('AnkiWeb sync failed: '+err.message);}aBusy='';renderConn();}
+function renderConn(){   // the chip in the title bar (+ a one-line note, + the dialog if it is open)
+  const s=ankiState.state,ok=s==='ok',checking=s==='checking'||s==='unknown',n=unsynced().length+cardList.filter(c=>c.note_id&&c.dirty).length,busy=!!aBusy;
+  const label=busy?aBusy:checking?'Checking…':ok?'Connected':'Disconnected';
+  ankiChip.innerHTML=`<span class="chipbody"><span class="dot ${ok?'ok':(checking?'':'bad')}"></span><span class="gx lbl"><span class="gi">${esc(label)}</span></span><span class="gx acts"><span class="gi">`
+    +(ok?`<button type="button" class="icon-btn sm${busy?' loading':''}" data-chip="sync" ${busy?'disabled':''} title="${n?`Send ${n} new or edited card${n===1?'':'s'} to Anki and refresh progress`:'Refresh progress from Anki'}" aria-label="Sync with Anki"><svg><use href="#i-sync"/></svg></button>
+      <button type="button" class="icon-btn sm" data-chip="export" ${cardList.length?'':'disabled'} title="Export all cards as .apkg" aria-label="Export .apkg"><svg><use href="#i-download"/></svg></button><span class="vdiv"></span>`:'')
+    +(!ok&&!checking&&s!=='mobile'?'<button type="button" class="text-btn chip-re" data-chip="reconnect">Reconnect</button>':'')
+    +`<button type="button" class="icon-btn sm" data-chip="info" title="Connection details" aria-label="Connection details"><svg><use href="#i-info"/></svg></button></span></span></span>`;
+  if(!ankiChip.classList.contains('open')){ankiChip.style.minWidth='';ankiChip.style.minWidth=ankiChip.firstElementChild.offsetWidth+'px';}   // hover area never shrinks below the collapsed pill (no flicker when the open pill is narrower)
+  document.getElementById('ankiNote').innerHTML=!ok&&!checking?`<div class="snack">${ico('warn')}<span>Anki is not connected. Your cards are saved here; open ⓘ in the title bar to connect.</span></div>`:'';
+  if(ankiDlg.open)renderAnkiDialog();
+}
+ankiChip.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'){clearTimeout(chipT);ankiChip.classList.add('open');}});
+ankiChip.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'&&!chipPinned)chipT=setTimeout(()=>ankiChip.classList.remove('open'),250);});
+ankiChip.addEventListener('click',e=>{
+  const b=e.target.closest('[data-chip]');
+  if(!b){   // clicking/tapping the chip itself pins the actions open, or hides them again (touch has no hover)
+    if(ankiChip.classList.contains('open')&&chipPinned){chipPinned=false;ankiChip.classList.remove('open');}else{chipPinned=true;ankiChip.classList.add('open');}
+    return;}
+  const act=b.dataset.chip;if(act==='reconnect')checkAnki();else if(act==='sync')syncToAnki();else if(act==='export')exportApkg();else if(act==='info')openAnkiDialog();
+});
+document.addEventListener('click',e=>{if(chipPinned&&!e.target.closest('#ankiChip')){chipPinned=false;ankiChip.classList.remove('open');}});
+function openAnkiDialog(){renderAnkiDialog();if(!ankiDlg.open)ankiDlg.showModal();}
+ankiDlg.addEventListener('click',e=>{if(e.target===ankiDlg)ankiDlg.close();});
+function renderAnkiDialog(){
+  const s=ankiState.state,ok=s==='ok',checking=s==='checking'||s==='unknown',origin=location.origin,{url}=ankiCfg(),busy=!!aBusy;
+  const msg={unknown:'',checking:'Looking for Anki…',ok:`Connected to Anki (AnkiConnect v${ankiState.version}) · ${esc(String(ankiState.decks&&ankiState.decks.length||0))} decks`,
+    offline:'Anki is not reachable from this browser.',error:'AnkiConnect answered with an error: '+esc(ankiState.message||''),
+    mobile:'This device cannot run AnkiConnect (it is desktop-only: Windows, macOS, Linux).',
+    conflict:`Kamus and AnkiConnect both use port ${esc(ankiState.port||'')} on this computer.`}[s]||'';
+  const hint={offline:'Open Anki on this computer with the AnkiConnect add-on, and allow this page in its settings (see “Set up AnkiConnect”).',
+    mobile:'Export an .apkg file and import it into AnkiDroid or AnkiMobile; cards stay here in Kamus.',
+    conflict:'Start Kamus with <code>--port 8780</code> (or set <code>webBindPort</code> in AnkiConnect to another port, then update the address below).'}[s]||'';
+  document.getElementById('ankiDlgBody').innerHTML=`<div class="a-status"><span class="dot ${ok?'ok':(checking?'':'bad')}"></span><span>${msg}</span></div>
+    ${hint?`<p style="margin:8px 0 0">${hint}</p>`:''}
+    ${!ok&&!checking?`<p class="muted" style="margin-top:10px">Your cards live in Kamus first. When Anki is open with AnkiConnect, <b>Sync</b> in the title bar sends them and brings your learning progress back, so you can add and manage cards here and practise in your local Anki.</p>`:''}
+    <details class="setup" ${ok?'':'open'}><summary>Set up AnkiConnect</summary>
+      <ol><li><span class="def">In Anki: <b>Tools → Add-ons → Get Add-ons…</b>, enter code <code>2055492159</code>, restart Anki.</span></li>
+      <li><span class="def">Open <b>Tools → Add-ons → AnkiConnect → Config</b> and let this page talk to it:<pre class="cfg">"webCorsOriginList": ["http://localhost", "${esc(origin)}"]</pre><button class="text-btn" data-dlg="copy" type="button">Copy</button> Restart Anki afterwards.</span></li>
+      <li><span class="def">Keep Anki open while syncing. Anki’s own <b>Sync</b> (or the AnkiWeb button here) then pushes everything to your AnkiWeb account.</span></li></ol>
+      <div class="frow"><label class="fld"><span>AnkiConnect address</span><input id="aUrl" value="${esc(url)}"></label><label class="fld"><span>API key (only if you set one)</span><input id="aKey" type="password" value="${esc(ankiCfg().key)}" autocomplete="off"></label></div>
+      <p class="muted">Audio is fetched by Anki from this page’s address (${esc(origin)}), must stay reachable while syncing.</p></details>
+    <div class="a-backup"><h4>Backup</h4><p class="muted">Your cards are stored in this browser only (each address, such as localhost or a Tailscale name, has its own). Download a backup to keep them safe or move them to another browser.</p>
+      <button class="text-btn" data-dlg="backup" type="button" ${cardList.length?'':'disabled'}>Back up cards</button><button class="text-btn" data-dlg="restore" type="button">Restore from backup…</button><input type="file" id="aRestore" accept="application/json,.json" hidden></div>`;
+  document.getElementById('ankiDlgAct').innerHTML=`<button class="text-btn" data-dlg="check" type="button">Check again</button>
+    ${ok?`<button class="text-btn" data-dlg="prog" type="button" ${synced().length&&!busy?'':'disabled'}>Refresh progress</button><button class="text-btn" data-dlg="import" type="button" ${busy?'disabled':''} title="Add notes of the 'Kamus v1' note type that Kamus does not have yet">Import from Anki</button><button class="text-btn" data-dlg="web" type="button" ${busy?'disabled':''}>Sync with AnkiWeb</button>`:''}
+    <button class="text-btn" data-dlg="export" type="button" ${cardList.length?'':'disabled'}>Export .apkg</button>
+    <button class="btn-filled" data-dlg="close" type="button">Close</button>`;
+}
+ankiDlg.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-dlg]');if(!b)return;const a=b.dataset.dlg;
+  if(a==='close')ankiDlg.close();else if(a==='check')checkAnki();else if(a==='prog')refreshProgress(true);else if(a==='web')ankiWebSync();else if(a==='export')exportApkg();else if(a==='backup')backupCards();else if(a==='import')importFromAnki();else if(a==='restore')document.getElementById('aRestore').click();
+  else if(a==='copy'){try{await navigator.clipboard.writeText(`"webCorsOriginList": ["http://localhost", "${location.origin}"]`);toast('Copied.');}catch{toast('Select the text and copy it manually.');}}
+});
+ankiDlg.addEventListener('change',e=>{
+  if(e.target.id==='aUrl'){try{localStorage.setItem(ANKI_URL_KEY,e.target.value.trim());}catch{}checkAnki();}
+  if(e.target.id==='aKey'){try{localStorage.setItem(ANKI_KEY_KEY,e.target.value);}catch{}checkAnki();}
+});
+const audioFor=()=>{const c=getTts();if(c.engine==='wikidepia-web')return {e:'web',voice:c['wikidepia-web'],ext:'wav'};const e=c.engine==='browser'?'edge':c.engine;return {e,voice:c[e],ext:e==='wikidepia'?'wav':'mp3'};};
+async function audioSpec(text,a,filename,field){return a.e==='web'?{data:await webWavBase64(text,a.voice),filename,fields:[field]}:{url:absTts(text,a),filename,fields:[field]};}
+const absTts=(t,a)=>`${location.origin}/api/tts?engine=${a.e}&voice=${a.voice}&text=${encodeURIComponent(t)}`;
+const escSearch=s=>s.replace(/[\\"*_]/g,'\\$&');
+async function reportCards(updates){if(updates.length)await KamusCards.report(updates);}
+async function ensureAnkiModel(){   // Anki's 'Kamus v1' may predate the SkipN fields: add them and refresh the templates (old notes keep working: empty Skip = card is made)
+  const m=await getModel();
+  if(!(await ac('modelNames')).includes(m.name))return;
+  const have=await ac('modelFieldNames',{modelName:m.name});
+  const missing=m.fields.filter(x=>!have.includes(x));if(!missing.length)return;
+  for(const fn of missing)await ac('modelFieldAdd',{modelName:m.name,fieldName:fn});
+  await ac('updateModelTemplates',{model:{name:m.name,templates:Object.fromEntries(m.templates.map(t=>[t.Name,{Front:t.Front,Back:t.Back}]))}});
+}
+async function syncToAnki(){
+  const m=await getModel(),todo=unsynced(),a=audioFor(),updates=[];let failed=0,last='';
+  try{
+    aBusy='Preparing Anki…';renderConn();
+    if(!(await ac('modelNames')).includes(m.name))await ac('createModel',{modelName:m.name,inOrderFields:m.fields,css:m.css,isCloze:false,cardTemplates:m.templates.map(t=>({Name:t.Name,Front:t.Front,Back:t.Back}))});
+    await ensureAnkiModel();await ac('createDeck',{deck:m.deck});
+    for(const c of cardList.filter(c=>c.note_id&&c.dirty)){aBusy='Updating edited cards…';renderConn();try{await pushNoteUpdate(c,null);updates.push({id:c.id,dirty:false});}catch(err){failed++;last=err.message;}}
+    for(let i=0;i<todo.length;i++){
+      const c=todo[i];aBusy=`Sending ${i+1}/${todo.length}…`;renderConn();
+      const f={...c.fields,Audio:'',ExampleAudio:''};
+      const audio=[await audioSpec(f.Word,a,`kamus-${c.id}-w.${a.ext}`,'Audio')];
+      if(f.Example)audio.push(await audioSpec(f.Example,a,`kamus-${c.id}-e.${a.ext}`,'ExampleAudio'));
+      try{const id=await ac('addNote',{note:{deckName:m.deck,modelName:m.name,fields:f,options:{allowDuplicate:false},tags:['kamus'],audio}},120000);updates.push({id:c.id,note_id:id});}
+      catch(err){
+        if(/duplicate/i.test(err.message)){const ids=await ac('findNotes',{query:`"note:${m.name}" "Index:${escSearch(f.Index)}"`});if(ids[0]){updates.push({id:c.id,note_id:ids[0]});continue;}}
+        failed++;last=err.message;
+      }
+    }
+    await reportCards(updates);
+    toast(failed?`${updates.length} sent, ${failed} failed (${last})`:`${updates.length} card${updates.length===1?'':'s'} sent to Anki.`);
+  }catch(err){toast('Sync failed: '+err.message);}
+  aBusy='';await loadCards();await refreshProgress(false);
+}
+async function refreshProgress(announce){
+  if(ankiState.state!=='ok')return;
+  try{
+    const m=await getModel();aBusy='Reading progress…';renderConn();
+    const ids=await ac('findNotes',{query:`"note:${m.name}"`}),notes=ids.length?await ac('notesInfo',{notes:ids}):[];
+    const cardIds=notes.flatMap(n=>n.cards),infos=cardIds.length?await ac('cardsInfo',{cards:cardIds}):[],due=cardIds.length?await ac('areDue',{cards:cardIds}):[];
+    const dueSet=new Set(cardIds.filter((_,i)=>due[i])),byNote={};
+    infos.forEach(ci=>{(byNote[ci.note]=byNote[ci.note]||[]).push(ci);});
+    const byIndex=Object.fromEntries(cardList.map(c=>[c.fields.Index,c])),byNid=new Map(cardList.filter(c=>c.note_id).map(c=>[c.note_id,c])),updates=[],seen=new Set();   // note id first: an edited card's Index may differ from the old note's
+    notes.forEach(n=>{const c=byNid.get(n.noteId)||byIndex[n.fields.Index&&n.fields.Index.value];if(!c)return;seen.add(c.id);const cs=byNote[n.noteId]||[];
+      const rev=cs.filter(x=>x.type===2);
+      updates.push({id:c.id,note_id:n.noteId,progress:{cards:cs.length,new:cs.filter(x=>x.type===0).length,learning:cs.filter(x=>x.type===1||x.type===3).length,review:rev.length,
+        reps:cs.reduce((a,x)=>a+x.reps,0),lapses:cs.reduce((a,x)=>a+x.lapses,0),interval:rev.length?Math.round(rev.reduce((a,x)=>a+x.interval,0)/rev.length):0,
+        dueNow:cs.filter(x=>dueSet.has(x.cardId)).length,suspended:cs.filter(x=>x.queue===-1).length}});});
+    cardList.filter(c=>c.note_id&&!seen.has(c.id)).forEach(c=>updates.push({id:c.id,note_id:null}));   // deleted in Anki
+    await reportCards(updates);if(announce)toast('Progress updated from Anki.');
+  }catch(err){toast('Could not read progress: '+err.message);}
+  aBusy='';await loadCards();
+}
+// -- the card list (served from Kamus's own database first; Anki is optional)
+const stateOf=c=>{const p=c.progress;if(!c.note_id)return 'notsynced';if(!p||!p.cards)return 'sent';if(p.new===p.cards)return 'new';if(p.review===p.cards)return 'review';return 'learning';};
+const STATE_LABEL={notsynced:'Not in Anki',sent:'In Anki',new:'In Anki · new',learning:'In Anki · learning',review:'In Anki · review'};
+function renderCards(){
+  const q=aText.trim().toLowerCase();
+  const list=cardList.filter(c=>(!q||(c.word+' '+c.meaning+' '+c.fields.KBBI).toLowerCase().includes(q))&&
+    (aFilter==='all'||(aFilter==='new'&&!c.note_id)||(aFilter==='due'&&c.progress&&c.progress.dueNow>0)||(aFilter==='learning'&&c.progress&&c.progress.learning>0)));
+  const tot=cardList.length,inA=synced().length,dueN=cardList.reduce((a,c)=>a+((c.progress&&c.progress.dueNow)||0),0),lrn=cardList.filter(c=>stateOf(c)==='learning').length;
+  document.getElementById('ankiSummary').innerHTML=tot?`<span class="badge">${tot} note${tot===1?'':'s'} · ${cardList.reduce((a,c)=>a+cardCount(c.fields),0)} cards</span><span class="badge ok">${inA} in Anki</span><span class="badge">${tot-inA} not in Anki</span><span class="badge">${dueN} due now</span><span class="badge">${lrn} learning</span>`:'';
+  document.getElementById('ankiList').innerHTML=!tot?`<div class="empty"><svg><use href="#i-cards"/></svg><p class="h">No cards yet</p><div>Look up a word, then tap <b>+</b> next to a meaning to make an Anki card from it.</div></div>`
+    :!list.length?'<p class="muted" style="padding:16px 0">No cards match.</p>':list.map(c=>{const f=c.fields,p=c.progress,st=stateOf(c);
+      return `<article class="crow${ankiFocusIds&&ankiFocusIds.has(c.id)?' focus':''}" data-id="${esc(c.id)}"><div class="crow-top"><div class="crow-main">
+        <div class="crow-head">${say(c.word,'sm')}<span role="button" tabindex="0" class="cw" data-word="${esc(c.word)}" title="Look this word up in the side sheet">${esc(c.word)}</span><span class="pron" style="display:inline;margin:0">${esc(cleanIpa(f.IPA||''))}</span>${f.POS?`<span class="pos" style="margin:0">${esc(f.POS)}</span>`:''}</div>
+        <div class="crow-meaning" lang="en">${esc(c.meaning)}</div>${f.Wiki&&f.KBBI?`<div class="crow-kbbi">${esc(clip(f.KBBI,160))}</div>`:''}
+        ${f.Example?`<hr class="crow-div"><div class="crow-ex">${say(f.Example,'sm')}<div class="crow-kbbi"><i lang="id">${esc(capFirst(f.Example))}</i></div></div>`:''}</div>
+        <div class="crow-side">${c.dirty&&c.note_id?'<span class="badge warn" title="Changed here; the next Sync updates Anki">Desynced</span>':''}${p&&p.cards?`<span class="statwrap"><button type="button" class="badge ok stat" aria-describedby="stat-${esc(c.id)}">${STATE_LABEL[st]}</button><div class="statpop" role="tooltip" id="stat-${esc(c.id)}">${p.dueNow?`<b>${p.dueNow} due</b> · `:''}${p.reps} reviews · ${p.lapses} lapses${p.interval?` · interval ${p.interval}d`:''}<br>cards: ${p.new} new, ${p.learning} learning, ${p.review} review${c.progress_at?`<br>progress ${new Date(c.progress_at*1000).toLocaleDateString()}`:''}</div></span>`:`<span class="badge ${c.note_id?'ok':''}">${STATE_LABEL[st]}</span>`}
+          <div class="crow-act"><button class="icon-btn sm" data-act="prev" title="Show the cards" aria-label="Show the cards" aria-expanded="false"><svg><use href="#i-expand"/></svg></button>
+            <button class="icon-btn sm" data-act="edit" title="Edit this card" aria-label="Edit"><svg><use href="#i-edit"/></svg></button>
+            <button class="icon-btn sm" data-act="del" title="Delete from Kamus" aria-label="Delete"><svg><use href="#i-delete"/></svg></button></div></div></div>
+        <div class="crow-prev" hidden></div></article>`;}).join('');
+  renderConn();
+}
+document.getElementById('ankiList').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.cw')){e.preventDefault();e.target.click();}});
+document.getElementById('ankiList').addEventListener('click',async e=>{
+  if(getSelection().toString())return;   // the user is selecting text, not tapping
+  
+  const sp=e.target.closest('[data-say]');if(sp){speak(sp.dataset.say,sp);return;}   // pronunciation
+  const wd=e.target.closest('[data-word]');if(wd){openQuick(wd.dataset.word);return;}   // look the word up in the side sheet
+  const b=e.target.closest('[data-act]');if(!b)return;const row=b.closest('.crow'),c=cardList.find(x=>x.id===row.dataset.id);
+  if(b.dataset.act==='prev'){const box=row.querySelector('.crow-prev');if(box.hidden){await getModel();box.innerHTML=facesHtml(c.fields);}box.hidden=!box.hidden;row.classList.toggle('open',!box.hidden);b.setAttribute('aria-expanded',!box.hidden);}
+  else if(b.dataset.act==='edit'){openEditCard(c);}
+  else if(b.dataset.act==='del'&&confirm(`Delete “${c.word} · ${c.meaning}” from Kamus?`+(c.note_id?'\n\nIt stays in Anki (delete it there too if you want it gone).':''))){
+    await KamusCards.remove(c.id);await loadCards();}
+});
+document.getElementById('aSearch').addEventListener('input',e=>{aText=e.target.value;renderCards();});
+document.querySelector('.a-tools').addEventListener('click',e=>{const b=e.target.closest('[data-filter]');if(!b)return;aFilter=b.dataset.filter;
+  document.querySelectorAll('.a-tools [data-filter]').forEach(x=>x.classList.toggle('on',x===b));renderCards();});
+// the cards live in this browser (cards-store.js); the first time, the old server database (cards.db) is copied in
+const cardsReady=KamusCards.migrateFromServer().then(n=>{if(n)toast(`Moved ${n} card${n===1?'':'s'} from the server into this browser.`);}).catch(()=>{});
+async function loadCards(){await cardsReady;try{cardList=await KamusCards.list();}catch{}renderCards();}
+async function loadAnki(){
+  await loadCards();await getModel();renderCards();checkAnki();
+  const f=document.querySelector('.crow.focus');if(f){f.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});}
+  ankiFocusIds=null;   // the highlight animation has already been applied
+}
+
+// ---- storage: IndexedDB (Cache Storage and service workers only exist on https/localhost, but Kamus is also opened as http://192.168.x.x)
+const idb=(()=>{
+  let dbp=null;
+  const open=()=>dbp||(dbp=new Promise((res,rej)=>{const r=indexedDB.open('kamus',1);
+    r.onupgradeneeded=()=>{for(const s of ['wiki','wav','models'])if(!r.result.objectStoreNames.contains(s))r.result.createObjectStore(s);};
+    r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}));
+  const tx=async(store,mode,fn)=>{const db=await open();return new Promise((res,rej)=>{const t=db.transaction(store,mode),req=fn(t.objectStore(store));
+    t.oncomplete=()=>res(req&&req.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error);});};
+  return {get:(s,k)=>tx(s,'readonly',o=>o.get(k)),put:(s,k,v)=>tx(s,'readwrite',o=>o.put(v,k)),del:(s,k)=>tx(s,'readwrite',o=>o.delete(k)),has:async(s,k)=>(await tx(s,'readonly',o=>o.count(k)))>0,clear:s=>tx(s,'readwrite',o=>o.clear()),
+    stats:async(s,pred=()=>true)=>{const db=await open(),sz=v=>v==null?0:v instanceof Blob?v.size:v.byteLength!=null?v.byteLength:typeof v==='string'?v.length:JSON.stringify(v).length;
+      return new Promise((res,rej)=>{const r=db.transaction(s,'readonly').objectStore(s).openCursor();let n=0,bytes=0;r.onsuccess=()=>{const c=r.result;if(!c){res({n,bytes});return;}if(pred(c.key)){n++;bytes+=sz(c.value);}c.continue();};r.onerror=()=>rej(r.error);});}};
+})();
+
+// ---- Material 3 loading indicator: one rounded shape that morphs through several "cookie" shapes while it rotates.
+// It lives inside any .icon-btn that has the class `loading`, and a playing button shows a stop icon instead of the speaker.
+const LI={els:new Set(),raf:0};
+const LI_SHAPES=[[10,.17],[9,.10],[5,.12],[2,.28],[8,.16],[4,.15],[2,.20]];   // [lobes, amplitude]
+function liPath(t,still){
+  t=Math.max(0,t);   // the first animation frame can be timestamped a hair before the start time
+  const hold=.35,morph=.45,per=hold+morph,k=LI_SHAPES.length,i=Math.floor(t/per)%k,u=t%per;
+  let w=u<hold?0:(u-hold)/morph;w=w*w*(3-2*w);
+  const [na,aa]=LI_SHAPES[i],[nb,ab]=LI_SHAPES[(i+1)%k],rot=still?0:t*1.1,scale=.94/(1+(1-w)*aa+w*ab),pts=[];
+  for(let j=0;j<96;j++){const th=j/96*Math.PI*2,r=scale*(1+(1-w)*aa*Math.cos(na*(th-rot))+w*ab*Math.cos(nb*(th-rot)));pts.push((r*Math.cos(th)).toFixed(3)+' '+(r*Math.sin(th)).toFixed(3));}
+  return 'M'+pts.join('L')+'Z';
+}
+function liLoop(){
+  const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches,t0=performance.now();
+  const frame=now=>{if(!LI.els.size){LI.raf=0;return;}const d=liPath((now-t0)/1000,reduce);LI.els.forEach(el=>el.firstElementChild.setAttribute('d',d));LI.raf=requestAnimationFrame(frame);};
+  LI.raf=requestAnimationFrame(frame);
+}
+function syncSpeakBtn(b){
+  const loading=b.classList.contains('loading'),playing=b.classList.contains('speaking')&&!loading;
+  let li=b.querySelector(':scope > .li');
+  if(loading&&!li){b.insertAdjacentHTML('beforeend','<svg class="li" viewBox="-1 -1 2 2" aria-hidden="true"><path fill="currentColor" d="'+liPath(0,true)+'"/></svg>');li=b.querySelector(':scope > .li');LI.els.add(li);if(!LI.raf)liLoop();}
+  if(!loading&&li){LI.els.delete(li);li.remove();}
+  if(b.dataset.say!==undefined){const use=b.querySelector(':scope > svg:not(.li) use');if(use){use.setAttribute('href',playing||loading?'#i-stop':'#i-vol');}
+    const label=playing||loading?'Stop':'Listen: '+b.dataset.say;b.setAttribute('aria-label',label);b.title=playing||loading?'Stop':'Listen';}
+}
+new MutationObserver(ms=>{for(const m of ms)if(m.target.matches&&m.target.matches('.icon-btn'))syncSpeakBtn(m.target);}).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+
+// ---- Wiktionary, called straight from the browser (it sends CORS headers; KBBI and Tatoeba do not, so those stay on the server)
+const WIKI_REST='https://en.wiktionary.org/api/rest_v1/page/definition/',WIKI_API='https://en.wiktionary.org/w/api.php';
+const wikiMem=new Map(),wikiSugMem=new Map();
+// Wiktionary's narrow transcription uses combining marks (e.g. the dental mark U+032A) that no web font supplies and many systems lack: drop them
+const cleanIpa=s=>String(s).replace(/[\u0300-\u036F\u200B-\u200F\u2060\uFEFF]/g,'');
+const htmlText=h=>(new DOMParser().parseFromString(h||'','text/html').body.textContent||'').replace(/\s+/g,' ').trim();   // DOMParser: nothing runs or loads
+async function fetchJSON(url,ms=12000){const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),ms);
+  try{const r=await fetch(url,{signal:ctl.signal});if(r.status===404)return null;if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();}finally{clearTimeout(t);}}
+async function wikiPron(word){
+  const j=await fetchJSON(`${WIKI_API}?action=parse&page=${encodeURIComponent(word)}&prop=text&format=json&formatversion=2&disabletoc=1&origin=*`);
+  if(!j||!j.parse)return {ipa:[],audio:[]};
+  const page=j.parse.text,i=page.indexOf('id="Indonesian"');if(i<0)return {ipa:[],audio:[]};
+  const k=page.indexOf('<h2',i+1),sec=page.slice(i,k>0?k:undefined);
+  const ipa=[...new Set([...sec.matchAll(/class="IPA[^"]*"[^>]*>([^<]+)</g)].map(m=>cleanIpa(m[1])))].filter(x=>'/['.includes(x[0]));
+  const audio=[...new Set([...sec.matchAll(/(?:https:)?\/\/upload\.wikimedia\.org\/[^"'\s]+\.(?:ogg|mp3|wav|opus)/g)].map(m=>m[0].startsWith('//')?'https:'+m[0]:m[0]))];
+  return {ipa,audio};
+}
+async function wikiFetch(word){
+  const [def,pron]=await Promise.all([fetchJSON(WIKI_REST+encodeURIComponent(word)),wikiPron(word).catch(()=>({ipa:[],audio:[]}))]);
+  const senses=[];
+  for(const block of (def&&def.id)||[])for(const d of block.definitions||[]){const gloss=htmlText(d.definition);if(!gloss)continue;
+    senses.push({pos:(block.partOfSpeech||'').toLowerCase(),gloss,examples:(d.parsedExamples||[]).map(x=>({id:htmlText(x.example),en:htmlText(x.translation)}))});}
+  return {senses,...pron,url:`https://en.wiktionary.org/wiki/${encodeURIComponent(word)}#Indonesian`};
+}
+async function wikiLookup(word){
+  word=word.toLowerCase().trim();if(wikiMem.has(word))return wikiMem.get(word);
+  const p=(async()=>{
+    try{const r=await wikiFetch(word);idb.put('wiki',word,r).catch(()=>{});return r;}
+    catch(err){let hit=null;try{hit=await idb.get('wiki',word);}catch{}if(hit){hit.ipa=[...new Set((hit.ipa||[]).map(cleanIpa))];return hit;}throw err;}   // offline: the last answer we saw
+  })();
+  wikiMem.set(word,p);p.catch(()=>wikiMem.delete(word));return p;
+}
+// ---- Tatoeba, also called straight from the browser (api.tatoeba.org sends CORS headers; CC BY 2.0 FR, each sentence carries its licence)
+const TATOEBA='https://api.tatoeba.org/v1/sentences',tatMem=new Map();
+async function tatoebaFetch(word){
+  const j=await fetchJSON(`${TATOEBA}?lang=ind&q=${encodeURIComponent(word)}&trans%3Alang=eng&is_unapproved=no&sort=relevance&limit=30`,10000);
+  const re=new RegExp('(?<!\\p{L})'+reEsc(word)+'(?!\\p{L})','iu'),out=[];
+  for(const x of (j&&j.data)||[]){
+    if(!re.test(x.text))continue;
+    const en=(x.translations||[]).find(t=>t.lang==='eng');
+    if(en)out.push({id:x.text,en:en.text,tatoeba_id:x.id});
+    if(out.length>=5)break;
+  }
+  return out;
+}
+async function tatoebaLookup(word){
+  word=word.toLowerCase().trim();if(tatMem.has(word))return tatMem.get(word);
+  const p=(async()=>{
+    try{const r=await tatoebaFetch(word);idb.put('wiki','tat:'+word,r).catch(()=>{});return r;}
+    catch(err){let hit=null;try{hit=await idb.get('wiki','tat:'+word);}catch{}if(hit)return hit;throw err;}   // offline: the last answer we saw
+  })();
+  tatMem.set(word,p);p.catch(()=>tatMem.delete(word));return p;
+}
+async function wikiSuggest(prefix){
+  prefix=prefix.toLowerCase().replace(/[^\p{L}\p{N} -]/gu,'').slice(0,30).trim();if(!prefix)return [];
+  if(wikiSugMem.has(prefix))return wikiSugMem.get(prefix);
+  const j=await fetchJSON(`${WIKI_API}?action=query&list=search&srsearch=${encodeURIComponent(`incategory:Indonesian_lemmas prefix:"${prefix}"`)}&srnamespace=0&srlimit=20&format=json&origin=*`,8000);
+  const titles=[...new Set(((j&&j.query&&j.query.search)||[]).map(h=>h.title).filter(t=>t.toLowerCase().startsWith(prefix)))].sort((a,b)=>a.length-b.length||a.localeCompare(b)).slice(0,6);
+  if(wikiSugMem.size>300)wikiSugMem.clear();wikiSugMem.set(prefix,titles);return titles;
+}
+function wikiCardHtml(wk){   // null = still loading, false = failed, object = result (no card when it has no senses)
+  if(wk===null)return `<section class="card" id="sec-en"><h3>English <span class="badge">Wiktionary</span></h3><p class="muted">Looking up Wiktionary…</p></section>`;
+  if(wk===false)return `<section class="card" id="sec-en"><h3>English <span class="badge">Wiktionary</span></h3><p class="muted">Wiktionary could not be reached from this browser.</p></section>`;
+  if(!wk.senses.length)return '';
+  return `<section class="card" id="sec-en"><h3>English <span class="badge">Wiktionary</span></h3>
+      ${wk.ipa.length?`<p class="pron">${wk.ipa.map(esc).join(' · ')}${wk.audio.slice(0,1).map(u=>`<audio controls src="${esc(u)}"></audio>`).join('')}</p>`:''}
+      <ol>${wk.senses.map((s,j)=>`<li class="has-add"><span class="pos">${esc(s.pos)}</span> <span class="def" lang="en">${esc(s.gloss)}</span>${s.examples.map(x=>ex(x.id,x.en)).join('')}<button class="icon-btn sm addcard" data-add="wk" data-s="${j}" title="Create Anki card" aria-label="Create Anki card">${ico('add')}</button></li>`).join('')}</ol>
+      <p class="src"><a href="${esc(wk.url)}" target="_blank" rel="noopener">View on Wiktionary</a> · CC BY-SA</p></section>`;
+}
+function swapWikiCard(html){const el=document.getElementById('sec-en');if(html){if(el)el.outerHTML=html;}else if(el)el.remove();}
+
+// ---- Wikidepia VITS inside the browser: onnxruntime-web in a worker; the model is downloaded once into the Cache Storage
+const WD_BASE='/models/wikidepia/',WD_MODEL=WD_BASE+'vits.onnx',WD_CACHE='kamus-models';
+const WD={worker:null,calls:new Map(),seq:0,tokens:null,speakers:null,vocab:null,last:null,info:null};
+const wdState={has:false,bytes:0,progress:null,error:''};
+let wdSource=null,wdCtx=null;
+const WD_KEY='wikidepia-vits';
+async function wdHasModel(){
+  try{if(await idb.has('models',WD_KEY))return true;}catch{return false;}
+  try{   // a model stored by an earlier version in Cache Storage (https/localhost only): move it over
+    if(typeof caches!=='undefined'){const c=await caches.open(WD_CACHE),hit=await c.match(WD_MODEL);if(hit){await idb.put('models',WD_KEY,await hit.blob());await c.delete(WD_MODEL);return true;}}
+  }catch{}
+  return false;
+}
+function wdWorker(){
+  if(!WD.worker){WD.worker=new Worker('/wd-worker.js',{type:'module'});
+    WD.worker.onmessage=e=>{const m=e.data,c=WD.calls.get(m.id);if(!c)return;WD.calls.delete(m.id);m.ok?c.resolve(m):c.reject(new Error(m.error));};
+    WD.worker.onerror=e=>{for(const c of WD.calls.values())c.reject(new Error('worker error '+(e.message||'')));WD.calls.clear();WD.worker=null;};}
+  return WD.worker;
+}
+const wdCall=(msg,transfer)=>new Promise((resolve,reject)=>{const id=++WD.seq;WD.calls.set(id,{resolve,reject});wdWorker().postMessage({...msg,id},transfer||[]);});
+async function wdAssets(){if(!WD.tokens){const [t,s]=await Promise.all([fetch(WD_BASE+'tokens.json').then(r=>r.json()),fetch(WD_BASE+'speakers.json').then(r=>r.json())]);WD.tokens=t;WD.speakers=s;WD.vocab=new Map(t.vocab.map((x,i)=>[x,i]));}}
+function wdTokenize(ph){   // same as Coqui's tokenizer for this model: lower-case, collapse spaces, characters -> ids, a blank id around every symbol
+  const t=WD.tokens,ids=[];for(const ch of ph.toLowerCase().replace(/\s+/g,' ').trim()){const id=WD.vocab.get(ch);if(id!==undefined)ids.push(id);}
+  if(!t.add_blank)return ids;const out=[t.blank_id];for(const id of ids)out.push(id,t.blank_id);return out;
+}
+function wavEncode(f32,sr){
+  const n=f32.length,buf=new ArrayBuffer(44+n*2),v=new DataView(buf),w=(o,s)=>[...s].forEach((c,i)=>v.setUint8(o+i,c.charCodeAt(0)));
+  w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+  for(let i=0;i<n;i++)v.setInt16(44+i*2,Math.max(-1,Math.min(1,f32[i]))*32767,true);return new Uint8Array(buf);
+}
+function wavDecode(ab){const v=new DataView(ab),n=(ab.byteLength-44)/2,f=new Float32Array(n);for(let i=0;i<n;i++)f[i]=v.getInt16(44+i*2,true)/32767;return f;}
+async function webSynth(text,voice,opts={}){   // -> {wav:Float32Array, sr, ms, cached}
+  await wdAssets();
+  const speed=opts.speed||1,key=speed===1?`${voice}/${text}`:`${voice}/x${speed.toFixed(2)}/${text}`;
+  if(!opts.phonemes){let hit=null;try{hit=await idb.get('wav',key);}catch{}if(hit)return {wav:wavDecode(hit),sr:WD.tokens.sample_rate,ms:0,cached:true};}
+  const ph=opts.phonemes??(await fetchJSON('/api/phonemize?text='+encodeURIComponent(text))).phonemes;   // text -> IPA is the one step that stays on the server
+  const ids=wdTokenize(ph),sid=WD.speakers[voice]??WD.speakers.wibowo;
+  const r=await wdCall({type:'run',ids,sid,scales:opts.scales||[0.33,1/speed,0.33]});
+  WD.last={ms:Math.round(r.ms),audioSec:r.wav.length/WD.tokens.sample_rate,threads:r.threads,isolated:r.isolated};
+  if(r.loadMs)WD.info={loadMs:Math.round(r.loadMs),threads:r.threads,isolated:r.isolated};
+  if(!opts.phonemes)idb.put('wav',key,wavEncode(r.wav,WD.tokens.sample_rate).buffer).catch(()=>{});
+  return {wav:r.wav,sr:WD.tokens.sample_rate,ms:r.ms};
+}
+async function webSpeak(text,voice,btn,speed=1){
+  if(!(await wdHasModel()))throw new Error('the model is not downloaded yet (Settings)');
+  const r=await webSynth(text,voice,{speed});
+  if(document.body.dataset.view==='settings')renderTts();
+  if(!btn.classList.contains('speaking'))return;   // stopped meanwhile
+  wdCtx=wdCtx||new AudioContext();if(wdCtx.state==='suspended')await wdCtx.resume();
+  const buf=wdCtx.createBuffer(1,r.wav.length,r.sr);buf.copyToChannel(r.wav,0);
+  const src=wdCtx.createBufferSource();src.buffer=buf;src.connect(wdCtx.destination);wdSource=src;
+  src.onended=()=>{btn.classList.remove('speaking','loading');if(wdSource===src)wdSource=null;};src.start();btn.classList.remove('loading');
+}
+async function wdWarm(){   // load the model into the worker ahead of the first word (about 4 s)
+  if(getTts().engine!=='wikidepia-web'||!(await wdHasModel()))return;
+  try{await wdAssets();const r=await wdCall({type:'load'});WD.info={loadMs:Math.round(r.loadMs),threads:r.threads,isolated:r.isolated};if(document.body.dataset.view==='settings')renderTts();}catch{}
+}
+async function webWavBase64(text,voice){const r=await webSynth(text,voice),b=wavEncode(r.wav,r.sr);let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s);}
+async function wdDownload(){
+  wdState.progress={got:0,total:0};wdState.error='';renderTts();
+  try{
+    const res=await fetch(WD_MODEL);if(!res.ok)throw new Error('HTTP '+res.status);
+    const total=+res.headers.get('Content-Length')||0,reader=res.body.getReader(),chunks=[];let got=0;
+    for(;;){const {done,value}=await reader.read();if(done)break;chunks.push(value);got+=value.length;wdState.progress={got,total};wdUpdateProgress();}
+    await idb.put('models',WD_KEY,new Blob(chunks,{type:'application/octet-stream'}));
+    try{await navigator.storage.persist();}catch{}   // ask the browser not to evict it
+    wdState.has=true;wdState.bytes=got;try{localStorage.setItem('kamus-wd-bytes',String(got));}catch{}
+    if(getTts().engine==='wikidepia-web')wdWarm();
+  }catch(err){wdState.error=err.message;}
+  wdState.progress=null;renderTts();
+}
+async function wdRemove(){try{await idb.del('models',WD_KEY);}catch{}if(WD.worker){WD.worker.terminate();WD.worker=null;}wdState.has=false;WD.info=null;try{localStorage.removeItem('kamus-wd-bytes');}catch{}renderTts();}
+function wdUpdateProgress(){const pr=wdState.progress,el=document.getElementById('wdProg');if(!pr||!el)return;el.max=pr.total||1;el.value=pr.got;const t=document.getElementById('wdProgText');if(t)t.textContent=`${(pr.got/1e6).toFixed(0)} / ${pr.total?(pr.total/1e6).toFixed(0):'?'} MB`;}
+
+// ---- Appearance + speech speed (Settings)
+const SEEDS=[['#6750a4','Purple (Material default)'],['#0b57d0','Blue'],['#006a6a','Teal'],['#386a20','Green'],['#7d5700','Amber'],['#a04100','Orange'],['#b3261e','Red'],['#984061','Pink'],['#7d5635','Brown']];
+function renderTheme(){
+  const cur=KamusTheme.current().toLowerCase(),md=KamusTheme.mode();
+  const preset=SEEDS.some(([h])=>h===cur);
+  document.getElementById('themeBox').innerHTML=`<div class="seg" role="radiogroup" aria-label="Light or dark">${[['light','Light'],['dark','Dark'],['system','Use system']].map(([k,n])=>`<button type="button" role="radio" class="${md===k?'on':''}" aria-checked="${md===k}" data-mode="${k}">${md===k?ico('check'):''}${n}</button>`).join('')}</div>
+    <div class="swatches" role="group" aria-label="Seed colour">${SEEDS.map(([h,n])=>`<button type="button" class="swatch ${cur===h?'on':''}" data-seed="${h}" style="--sw:${h}" aria-label="${n}" aria-pressed="${cur===h}" title="${n}">${cur===h?ico('check'):''}</button>`).join('')}
+    <label class="swatch custom ${preset?'':'on'}" ${preset?'':`style="--sw:${cur}"`} title="Custom colour">${preset?ico('add'):ico('check')}<input type="color" id="themeCustom" value="${cur}" aria-label="Custom colour"></label></div>
+    <div class="theme-row"><button type="button" class="text-btn" id="themeReset">Reset to default</button></div>`;
+}
+document.getElementById('themeBox').addEventListener('click',e=>{const mb=e.target.closest('[data-mode]');if(mb){KamusTheme.setMode(mb.dataset.mode);renderTheme();return;}
+  const s=e.target.closest('[data-seed]');if(s){KamusTheme.apply(s.dataset.seed);renderTheme();}
+  if(e.target.id==='themeReset'){KamusTheme.apply(KamusTheme.DEFAULT);renderTheme();}});
+document.getElementById('themeBox').addEventListener('input',e=>{if(e.target.id==='themeCustom'){KamusTheme.apply(e.target.value);e.target.parentElement.style.setProperty('--sw',e.target.value);}});
+document.getElementById('themeBox').addEventListener('change',e=>{if(e.target.id==='themeCustom')renderTheme();});
+const spd=document.getElementById('ttsSpeed'),spdVal=document.getElementById('ttsSpeedVal');
+function showSpeed(){const s=getTts().speed;spd.value=s;spdVal.textContent=s.toFixed(2)+'×';}
+spd.addEventListener('input',()=>{setTts({speed:+spd.value});spdVal.textContent=(+spd.value).toFixed(2)+'×';});
+document.getElementById('ttsSpeedReset').onclick=()=>{setTts({speed:1});showSpeed();};
+
+// ---- Install as an app / HTTPS help
+let installEvt=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(document.body.dataset.view==='settings')renderInstall();});
+addEventListener('appinstalled',()=>{installEvt=null;renderInstall();});
+function renderInstall(){
+  const box=document.getElementById('installBox'),host=location.hostname,standalone=matchMedia('(display-mode: standalone)').matches,secure=isSecureContext;
+  const install=standalone?'<p class="muted">Installed: running as an app.</p>'
+    :secure?(installEvt?'<p style="margin-top:8px"><button type="button" class="btn-filled" id="installBtn">Install Kamus</button></p>'
+      :'<p class="muted">Use your browser’s menu: “Install app” or “Add to Home Screen”.</p>')
+    :'<p class="muted">Not available over plain http (see Connection).</p>';
+  const url=host.endsWith('.ts.net')?esc(host)+':8443':'&lt;computer&gt;.&lt;tailnet&gt;.ts.net:8443';
+  const conn=secure?'<p class="muted">Secure (https).</p>'
+    :`<p class="muted">Plain http on <code>${esc(location.host)}</code>: browsers show “Not secure”, refuse to install the app, and in-browser speech uses one thread.</p>
+      <details class="setup"><summary>Enable https with Tailscale</summary><ol>
+        <li><span class="def">Tailscale admin console → <b>DNS</b> → <b>HTTPS Certificates</b> → <b>Enable HTTPS</b>.</span></li>
+        <li><span class="def">On the computer running Kamus:<pre class="cfg">tailscale serve --bg --https=8443 http://127.0.0.1:8765</pre></span></li>
+        <li><span class="def">Open <code>https://${url}</code> on your devices.</span></li></ol></details>`;
+  box.innerHTML=`<div class="app-sec"><h4>Install</h4>${install}</div><div class="app-sec"><h4>Connection</h4>${conn}</div>`;
+  const b=document.getElementById('installBtn');if(b)b.onclick=async()=>{installEvt.prompt();await installEvt.userChoice;installEvt=null;renderInstall();};
+}
+
+// ---- Editing a saved card; changes reach Anki through AnkiConnect (now, or on the next Sync)
+function openEditCard(c){
+  const f=c.fields;
+  draft={mode:'edit',id:c.id,word:c.word,fields:{Word:f.Word,IPA:f.IPA||'',POS:f.POS||'',KBBI:f.KBBI||'',Wiki:f.Wiki||'',Example:capFirst(f.Example||''),ExampleEN:f.ExampleEN||'',Skip1:f.Skip1||'',Skip2:f.Skip2||'',Skip3:f.Skip3||'',Skip4:f.Skip4||''},kb:[],wk:[],ex:[],auto:{}};
+  renderDraft();
+}
+async function pushNoteUpdate(card,old){   // old = the fields before the edit (null = refresh all audio)
+  const f={...card.fields};delete f.Audio;delete f.ExampleAudio;
+  const a=audioFor(),audio=[];
+  if(!old||card.fields.Word!==old.Word)audio.push(await audioSpec(card.fields.Word,a,`kamus-${card.id}-w.${a.ext}`,'Audio'));
+  if(card.fields.Example&&(!old||card.fields.Example!==old.Example))audio.push(await audioSpec(card.fields.Example,a,`kamus-${card.id}-e.${a.ext}`,'ExampleAudio'));
+  const note={id:card.note_id,fields:f};if(audio.length)note.audio=audio;
+  try{await ac('updateNoteFields',{note},120000);}
+  catch(err){if(audio.length&&/audio/i.test(err.message)){delete note.audio;await ac('updateNoteFields',{note},120000);}else throw err;}
+}
+async function pushEditToAnki(card,old){
+  if(!card.note_id)return;
+  if(ankiState.state!=='ok'){toast('Saved. Anki will get the change on the next Sync.');return;}
+  try{await ensureAnkiModel();await pushNoteUpdate(card,old);await reportCards([{id:card.id,dirty:false}]);toast('Saved and updated in Anki.');}
+  catch(err){toast('Saved here. Anki update failed ('+err.message+'); it will retry on Sync.');}
+  loadCards();
+}
+// ---- Translation: fill in the missing language of an example / meaning (engines: MyMemory, Argos Translate, LibreTranslate)
+const TR_KEY='kamus-tr',TR_NAME={mymemory:'MyMemory',argos:'Argos Translate',opusmt:'Opus-MT (this browser)',libretranslate:'LibreTranslate'};
+const getTr=()=>{try{return {engine:'mymemory',auto:true,url:'',key:'',...JSON.parse(localStorage.getItem(TR_KEY))};}catch{return {engine:'mymemory',auto:true,url:'',key:''};}};
+const setTr=patch=>{try{localStorage.setItem(TR_KEY,JSON.stringify({...getTr(),...patch}));}catch{}};
+// Opus-MT in the browser (Transformers.js in tr-worker.js); the model files are kept in IndexedDB ('models' store, key mt:<path>)
+const MT={worker:null,seq:0,pending:{},has:{},prog:null,err:'',info:null};
+const mtDirs=['id-en','en-id'];
+function mtCall(msg){
+  if(!MT.worker){
+    MT.worker=new Worker('/tr-worker.js',{type:'module'});
+    MT.worker.onmessage=e=>{const p=MT.pending[e.data.id];if(!p)return;delete MT.pending[e.data.id];e.data.ok?p.res(e.data):p.rej(new Error(e.data.error));};
+    MT.worker.onerror=e=>{for(const k in MT.pending){MT.pending[k].rej(new Error(e.message||'translation worker failed'));delete MT.pending[k];}MT.worker=null;};
+  }
+  return new Promise((res,rej)=>{const id=++MT.seq;MT.pending[id]={res,rej};MT.worker.postMessage({...msg,id});});
+}
+// The files of each model. They are fetched from this server when it has them (scripts/download_opus_mt.sh), else straight from Hugging Face (it allows cross-origin downloads).
+const MT_SIZES={'id-en':[['config.json',1376],['generation_config.json',293],['tokenizer.json',5291338],['tokenizer_config.json',280],['special_tokens_map.json',74],['onnx/encoder_model_quantized.onnx',47674782],['onnx/decoder_model_merged_quantized.onnx',54947024]],
+  'en-id':[['config.json',1376],['generation_config.json',293],['tokenizer.json',5291338],['tokenizer_config.json',280],['special_tokens_map.json',74],['onnx/encoder_model_quantized.onnx',47674781],['onnx/decoder_model_merged_quantized.onnx',54947023]]};
+const mtFiles=d=>MT_SIZES[d].map(([f,size])=>({path:`/models/opus-mt/Xenova/opus-mt-${d}/${f}`,size,hf:`https://huggingface.co/Xenova/opus-mt-${d}/resolve/main/${f}`}));
+const mtBytes=d=>MT_SIZES[d].reduce((a,x)=>a+x[1],0);
+async function mtRefresh(){
+  for(const d of mtDirs){let ok=true;for(const x of mtFiles(d))if(!(await idb.has('models','mt:'+x.path).catch(()=>false)))ok=false;MT.has[d]=ok;}
+}
+async function mtDownload(d){
+  const files=mtFiles(d),local=!!((((trStatus||{}).opusmt||{})[d]||{}).available);   // this server's copy when it has one
+  MT.prog={d,got:0,total:mtBytes(d)};MT.err='';renderTr();
+  try{
+    let got=0;
+    for(const f of files){
+      const res=await fetch(local?f.path:f.hf);if(!res.ok)throw new Error('HTTP '+res.status+' '+(local?f.path:f.hf));
+      const reader=res.body.getReader(),chunks=[];let n=0;
+      for(;;){const {done,value}=await reader.read();if(done)break;chunks.push(value);n+=value.length;got+=value.length;MT.prog.got=got;mtProgress();}
+      if(n!==f.size)throw new Error(`Unexpected size for ${f.path.split('/').pop()} (${n} bytes, expected ${f.size})`);
+      await idb.put('models','mt:'+f.path,new Blob(chunks));
+    }
+    try{await navigator.storage.persist();}catch{}
+  }catch(err){MT.err=err.message;for(const f of files)await idb.del('models','mt:'+f.path).catch(()=>{});}
+  MT.prog=null;await mtRefresh();renderTr();
+}
+async function mtRemove(d){
+  for(const f of mtFiles(d))await idb.del('models','mt:'+f.path).catch(()=>{});
+  if(MT.worker){MT.worker.terminate();MT.worker=null;}   // drops the loaded pipelines too
+  await mtRefresh();renderTr();
+}
+function mtProgress(){const p=document.getElementById('mtProg');if(!p||!MT.prog)return;p.value=MT.prog.got;p.max=MT.prog.total||1;document.getElementById('mtProgText').textContent=` ${(MT.prog.got/1e6).toFixed(0)} / ${(MT.prog.total/1e6).toFixed(0)} MB`;}
+// MyMemory is called straight from the browser (it sends CORS headers); the 500-byte limit means long text goes in sentence chunks
+const mmChunks=(text,limit=450)=>{const out=[];let cur='';for(const s of text.split(/(?<=[.!?])\s+/)){if(cur&&new TextEncoder().encode(cur+' '+s).length>limit){out.push(cur);cur=s;}else cur=(cur+' '+s).trim();}if(cur)out.push(cur);return out;};
+const mmDecode=t=>{const e=document.createElement('textarea');e.innerHTML=t;return e.value;};
+async function mymemoryText(text,from,to){
+  const key='tr:mm:'+from+to+':'+text;
+  try{const hit=await idb.get('wiki',key);if(hit)return hit;}catch{}
+  const parts=[];
+  for(const ch of mmChunks(text)){
+    const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(ch)+'&langpair='+from+'|'+to);
+    if(!r.ok)throw new Error('MyMemory: HTTP '+r.status);
+    const j=await r.json(),out=mmDecode((j.responseData||{}).translatedText||'');
+    if(String(j.responseStatus)!=='200'||/MYMEMORY WARNING/i.test(out))throw new Error('MyMemory: '+out.slice(0,120));
+    parts.push(out);
+  }
+  const res=parts.join(' ');idb.put('wiki',key,res).catch(()=>{});return res;
+}
+async function trText(text,from,to,override){
+  const c={...getTr(),...override};
+  if(c.engine==='mymemory')return mymemoryText(text,from,to);
+  if(c.engine==='opusmt'){
+    const d=from+'-'+to;if(MT.has[d]===undefined)await mtRefresh();if(!MT.has[d])throw new Error('download the '+d+' model in Settings first');
+    const r=await mtCall({type:'translate',dir:d,text});MT.info={ms:Math.round(r.ms),loadMs:Math.round(r.loadMs),threads:r.threads};return r.text;
+  }
+  const r=await fetch('/api/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,from,to,engine:c.engine,url:c.url,key:c.key})});
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'translation failed');return j.text;
+}
+let trT=0;const trBusy={};
+const trHint=(field,text)=>{const e=document.getElementById('trh-'+field);if(e)e.textContent=text||'';};
+async function autoFill(){
+  if(!draft||!getTr().auto)return;
+  const f=draft.fields,auto=draft.auto||(draft.auto={});
+  for(const [idF,enF] of [['Example','ExampleEN'],['KBBI','Wiki']]){   // [Indonesian, English]
+    const id=(f[idF]||'').trim(),en=(f[enF]||'').trim();let job=null;
+    if(id&&(!en||(auto[enF]&&auto[enF].src!==id)))job={target:enF,source:idF,from:'id',to:'en',text:id};
+    else if(en&&(!id||(auto[idF]&&auto[idF].src!==en)))job={target:idF,source:enF,from:'en',to:'id',text:en};
+    if(!job||trBusy[job.target]===job.text)continue;
+    trBusy[job.target]=job.text;trHint(job.target,'Translating…');
+    try{
+      const out=await trText(job.text,job.from,job.to);
+      if(!draft||(draft.fields[job.source]||'').trim()!==job.text||((draft.fields[job.target]||'').trim()&&!draft.auto[job.target]))continue;   // the user changed things meanwhile
+      draft.fields[job.target]=out;draft.auto[job.target]={src:job.text};
+      const el=cbody.querySelector(`[data-f="${job.target}"]`);if(el)el.value=out;
+      trHint(job.target,`Auto-translated with ${TR_NAME[getTr().engine]}; edit if needed.`);updatePreview();
+    }catch(err){trBusy[job.target]=null;trHint(job.target,'Translation failed: '+err.message);}
+  }
+}
+let trStatus=null;
+const TR_INFO={mymemory:{desc:'Free web service, no setup. Daily limit; quality varies.'},
+  argos:{desc:'Open source, works offline on the server (about 100 MB per language pair).'},
+  opusmt:{desc:'Argos itself cannot run in a browser, so this is its client-side equivalent: the same kind of open Opus-MT models (Helsinki-NLP), run on this device. Downloaded once (about 108 MB per direction, from this server or from Hugging Face), then fully offline.'},
+  libretranslate:{desc:'Open-source server you host or can reach. Needs its address.'}};
+function renderTr(){
+  const c=getTr(),st=trStatus||{};
+  document.getElementById('trAuto').checked=!!c.auto;
+  document.getElementById('trOptions').innerHTML=['mymemory','argos','opusmt','libretranslate'].map(e=>{
+    const sel=c.engine===e,locked=(e==='argos'&&trStatus&&!(st.argos||{}).ready)||(e==='opusmt'&&!(MT.has['id-en']||MT.has['en-id']));
+    const status=e==='opusmt'?(MT.err||(MT.has['id-en']&&MT.has['en-id']?'Ready · offline'+(MT.info?` · last ${MT.info.ms} ms`:''):locked?'Download a direction to use it.':'One direction missing: that direction will not translate.')):e==='argos'?(!trStatus?'':locked?'Not installed (run scripts/install_argos.sh).':'Ready · offline'):e==='libretranslate'?(c.url?'Server set.':'Add the server address above.'):'Ready.';
+    return `<div class="opt ${sel?'sel':''}" role="radio" aria-checked="${sel}" tabindex="0" data-tr="${e}" data-locked="${locked}">
+      <span class="radio"></span><div class="opt-main"><div class="opt-title">${TR_NAME[e]}</div><div class="opt-desc">${TR_INFO[e].desc}</div>
+      ${e==='opusmt'?`<div class="opt-status">${mtDirs.map(d=>{const info=((st.opusmt||{})[d])||{};const lbl=d==='id-en'?'Indonesian → English':'English → Indonesian';
+        if(MT.prog&&MT.prog.d===d)return `<div>${lbl}: <progress id="mtProg" max="${MT.prog.total||1}" value="${MT.prog.got}"></progress><span id="mtProgText"></span></div>`;
+        return MT.has[d]?`<div>${lbl}: downloaded <button type="button" class="text-btn" data-mtrm="${d}">Remove</button></div>`:`<div>${lbl}: <button type="button" class="text-btn" data-mtdl="${d}">Download${' · '+(mtBytes(d)/1e6).toFixed(0)+' MB'}</button></div>`;}).join('')}</div>`:''}
+      ${e==='libretranslate'?`<div class="opt-inputs"><label class="fld"><input data-trin="url" value="${esc(c.url)}" placeholder="https://libretranslate.example.com" aria-label="LibreTranslate address"></label><label class="fld"><input data-trin="key" type="password" value="${esc(c.key)}" placeholder="API key (if required)" aria-label="API key" autocomplete="off"></label></div>`:''}
+      <div class="opt-status" id="trs-${e}">${esc(status)}</div></div>
+      <button type="button" class="text-btn" data-trtest="${e}" ${locked?'disabled':''}>Test</button></div>`;}).join('');
+}
+const trBox=document.getElementById('trOptions');
+trBox.addEventListener('click',async e=>{
+  const dl=e.target.closest('[data-mtdl]'),rm=e.target.closest('[data-mtrm]');
+  if(dl){mtDownload(dl.dataset.mtdl);return;}if(rm){mtRemove(rm.dataset.mtrm);return;}
+  const t=e.target.closest('[data-trtest]');
+  if(t){const en=t.dataset.trtest,out=document.getElementById('trs-'+en);out.textContent='Translating…';
+    try{const r=await trText('Pagi ini saya makan ikan.','id','en',{engine:en});out.textContent=`“Pagi ini saya makan ikan.” → “${r}”`;}catch(err){out.textContent='Failed: '+err.message;}return;}
+  if(e.target.closest('input'))return;
+  const o=e.target.closest('[data-tr]');if(!o)return;
+  if(o.dataset.locked==='true'){toast(o.dataset.tr==='opusmt'?'Download an Opus-MT direction first.':'Install Argos Translate first (scripts/install_argos.sh).');return;}
+  setTr({engine:o.dataset.tr});renderTr();
+});
+trBox.addEventListener('change',e=>{const k=e.target.dataset.trin;if(k){setTr({[k]:e.target.value.trim()});renderTr();}});
+document.getElementById('trAuto').addEventListener('change',e=>setTr({auto:e.target.checked}));
+async function loadTrStatus(){try{trStatus=await (await fetch('/api/translate/status')).json();}catch{trStatus=null;}await mtRefresh();renderTr();}
+
+// ---- Sync tile (Settings) + hooks for sync.js
+const FB_RULES=`rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /users/{uid}/{document=**} {\n      allow read, write: if request.auth != null && request.auth.uid == uid;\n    }\n  }\n}`;
+function drawQr(){
+  const box=document.getElementById('syncQr');if(!box||!window.qrcode)return;
+  try{const q=qrcode(0,'M');q.addData(KamusSync.shareUrl());q.make();box.innerHTML=q.createSvgTag({cellSize:4,margin:2,scalable:true});}catch(err){box.textContent='Could not draw the QR code: '+err.message;}
+  const local=['localhost','127.0.0.1','::1'].includes(location.hostname);
+  document.getElementById('syncQrNote').textContent=local?'You opened Kamus as '+location.hostname+', which a phone cannot reach: scan this code with the in-app scanner, or open Kamus on this computer through its network/Tailscale address and show the code from there.':'The link points to '+location.origin+'.';
+}
+const loadScriptOnce=(()=>{const m={};return src=>m[src]||(m[src]=new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('could not load '+src));document.head.appendChild(s);}));})();
+function renderSync(){
+  const box=document.getElementById('syncBox');if(!box)return;if(!window.KamusSync){box.innerHTML='<p class="muted">Sync is not available (sync.js did not load; restart the Kamus server).</p>';return;}const S=KamusSync.state,cfg=KamusSync.getConfig();
+  if(!cfg){
+    box.innerHTML=`<details class="setup" open><summary>How to set it up (about 5 minutes, free)</summary><ol class="sync-steps">
+      <li>Open <b>console.firebase.google.com</b> and create a project (Google Analytics can stay off). It uses the free <b>Spark</b> plan.</li>
+      <li><b>Google sign-in:</b> left menu <b>Security → Authentication → Get started</b>. On <b>Sign-in method</b> choose <b>Google</b>, switch <b>Enable</b> on, pick a support email, save.
+        Then <b>Settings → Authorised domains → Add domain</b> and add this page’s address: <code>${esc(location.hostname)}</code> (a plain IP address is not accepted; <code>localhost</code> is already allowed).</li>
+      <li><b>Database:</b> left menu <b>Databases and storage → Firestore → Create database</b> (Standard edition, any nearby region, <b>production mode</b>). Open the <b>Rules</b> tab, replace everything with the text below and press <b>Publish</b>:<pre>${esc(FB_RULES)}</pre><button type="button" class="text-btn" data-sync="copyrules">Copy rules</button></li>
+      <li><b>Config:</b> on <b>Project Overview</b> press <b>+ Add app</b> → <b>Web</b> (<code>&lt;/&gt;</code>), give it a nickname (leave Hosting off), <b>Register app</b>, and copy the <code>const firebaseConfig = {…};</code> block (later: gear → Project settings → General → Your apps).</li>
+      <li><b>Here:</b> paste it below and press <b>Save config</b>. Then <b>Sign in with Google</b>: a sign-in page opens, press its button, choose your account, and you return here.</li>
+      <li><b>More devices:</b> after signing in, open <b>Set up another device (QR code)</b> here. On the other device scan it with its camera app (open the link) or use <b>Scan a QR code</b> in this same section, confirm, and sign in with the same Google account. Add each device’s address to <b>Authorised domains</b>.</li></ol>
+      <p class="muted">The config values are not secrets; the rules above are what protect your data. Cards and history are merged automatically; Anki note ids and progress stay on each device.</p></details>
+      <textarea class="sync-cfg" id="syncCfg" placeholder="const firebaseConfig = { apiKey: &quot;…&quot;, authDomain: &quot;…&quot;, projectId: &quot;…&quot;, … };" aria-label="Firebase web config" spellcheck="false"></textarea>
+      <p style="margin-top:8px"><button type="button" class="btn-tonal" data-sync="save">Save config</button> <button type="button" class="text-btn" data-sync="scan">Scan a QR code from another device</button></p>${S.error?`<div class="sync-err">${esc(S.error)}</div>`:''}`;
+    return;
+  }
+  const st=S.status,u=S.user,busy=st==='syncing',ago=S.last?new Date(S.last).toLocaleString():'not yet';
+  box.innerHTML=`<div class="sync-st"><span class="dot ${u?'ok':(st==='error'?'bad':'')}"></span><span>${u?`Signed in as <b>${esc(u.email||u.name||'your Google account')}</b>`:st==='error'?'Not connected':'Not signed in'} · project <code>${esc(cfg.projectId)}</code></span></div>
+    ${S.error?`<div class="sync-err">${esc(S.error)}</div>`:''}
+    ${u?`<label class="switchrow"><input type="checkbox" id="syncAuto" ${KamusSync.isAuto()?'checked':''}> Sync automatically</label>
+      <p class="muted">${busy?'Syncing…':`Last sync: ${esc(ago)}${S.last?` (${S.pulled} received, ${S.pushed} sent)`:''}`}. Anki note ids and progress stay on each device.</p>
+      <p><button type="button" class="btn-tonal" data-sync="now" ${busy?'disabled':''}>Sync now</button> <button type="button" class="text-btn" data-sync="out">Sign out</button></p>`
+     :`<p><button type="button" class="btn-filled" data-sync="in" ${st==='signedout'||st==='error'?'':'disabled'}>Sign in with Google</button></p>`}
+    <details class="setup" id="syncShare"><summary>Set up another device (QR code)</summary>
+      <p class="muted">On the other device open Kamus, then Settings → Sync → <b>Scan a QR code</b>, or just point its camera app at this code and open the link. It only carries the project settings, not your account or your cards; the other device still signs in with Google.</p>
+      <div class="qr-box" id="syncQr" role="img" aria-label="QR code with the sync settings"></div>
+      <p class="muted" id="syncQrNote"></p><p><button type="button" class="text-btn" data-sync="copylink">Copy link</button></p></details>
+    <p><button type="button" class="text-btn" data-sync="remove">Remove this Firebase config</button></p>`;
+  drawQr();
+}
+// ---- receive a shared config: from a scanned QR code or by opening a share link (#sync=…)
+const impDlg=document.getElementById('syncImpDlg');let impCfg=null;
+function confirmSyncImport(cfg){
+  impCfg=cfg;const cur=KamusSync.getConfig();
+  document.getElementById('syncImpBody').innerHTML=`<p>Project <b>${esc(cfg.projectId)}</b> (${esc(cfg.authDomain)}).</p>`
+    +(cur&&cur.projectId!==cfg.projectId?`<p class="sync-err">This replaces the project already set up here (<code>${esc(cur.projectId)}</code>).</p>`:'')
+    +`<p class="muted">Only continue if this QR code or link came from you. You will still sign in with Google afterwards.</p>`;
+  if(!impDlg.open)impDlg.showModal();
+}
+document.getElementById('syncImpNo').onclick=()=>{impDlg.close();impCfg=null;};
+document.getElementById('syncImpYes').onclick=()=>{if(!impCfg)return;KamusSync.setConfig(impCfg);impCfg=null;impDlg.close();location.hash='#settings';location.reload();};
+function handleSyncHash(){
+  if(!window.KamusSync||!location.hash.startsWith('#sync='))return;
+  const raw=location.hash;history.replaceState(null,'',location.pathname+'#settings');route();   // the config does not stay in the address bar
+  try{confirmSyncImport(KamusSync.fromShared(raw));}catch(err){toast(err.message);}
+}
+const scanDlg=document.getElementById('syncScanDlg'),scanVid=document.getElementById('syncScanVid');let scanStream=null,scanOn=false;
+function stopSyncScan(){scanOn=false;if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}scanVid.srcObject=null;}
+async function startSyncScan(){
+  const msg=document.getElementById('syncScanMsg');if(!scanDlg.open)scanDlg.showModal();
+  if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){msg.textContent='The camera needs a secure address (https or localhost). Use your phone’s own camera app instead: scan the code and open the link it shows.';return;}
+  try{
+    await loadScriptOnce('/vendor/qr/jsQR.js');
+    scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});scanVid.srcObject=scanStream;await scanVid.play();scanOn=true;
+    const cv=document.createElement('canvas'),cx=cv.getContext('2d',{willReadFrequently:true});
+    const tick=()=>{
+      if(!scanOn)return;
+      if(scanVid.videoWidth){const k=Math.min(1,640/scanVid.videoWidth);cv.width=Math.round(scanVid.videoWidth*k);cv.height=Math.round(scanVid.videoHeight*k);cx.drawImage(scanVid,0,0,cv.width,cv.height);
+        const r=jsQR(cx.getImageData(0,0,cv.width,cv.height).data,cv.width,cv.height,{inversionAttempts:'dontInvert'});
+        if(r&&r.data){try{const cfg=KamusSync.fromShared(r.data);stopSyncScan();scanDlg.close();confirmSyncImport(cfg);return;}catch(err){msg.textContent=err.message;}}}
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }catch(err){msg.textContent=err.name==='NotAllowedError'?'Camera permission was refused. Allow it for this page and try again.':'Could not use the camera: '+err.message;}
+}
+document.getElementById('syncScanClose').onclick=()=>{stopSyncScan();scanDlg.close();};
+scanDlg.addEventListener('close',stopSyncScan);
+if(window.KamusSync){   // sync.js is optional: if it fails to load, the rest of the app must still work
+document.getElementById('syncBox').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-sync]');if(!b)return;const k=b.dataset.sync;
+  if(k==='save'){try{KamusSync.saveConfig(document.getElementById('syncCfg').value);location.reload();}catch(err){KamusSync.state.error=err.message;renderSync();}}
+  else if(k==='copylink'){try{await navigator.clipboard.writeText(KamusSync.shareUrl());toast('Link copied.');}catch{toast('Could not copy: select the QR code link manually.');}}
+  else if(k==='scan')startSyncScan();
+  else if(k==='copyrules'){try{await navigator.clipboard.writeText(FB_RULES);toast('Rules copied.');}catch{toast('Select the text and copy it manually.');}}
+  else if(k==='in')KamusSync.signIn();else if(k==='out')KamusSync.signOut();else if(k==='now')KamusSync.syncNow();
+  else if(k==='remove'&&confirm('Remove the Firebase config from this browser? Your local cards stay; the cloud copy stays in your Firebase project.')){KamusSync.removeConfig();location.reload();}
+});
+document.getElementById('syncBox').addEventListener('change',e=>{if(e.target.id==='syncAuto')KamusSync.setAuto(e.target.checked);});
+KamusSync.onState(()=>{if(document.body.dataset.view==='settings')renderSync();});
+KamusSync.init({
+  getHistory:()=>({items:hist(),clearedAt:+(localStorage.getItem('kamus-history-cleared')||0)}),
+  setHistory:h=>{try{localStorage.setItem(KEY,JSON.stringify(h.items));localStorage.setItem('kamus-history-cleared',String(h.clearedAt||0));}catch{}renderHist();},
+  onRemoteChange:()=>{loadCards();mineLoad().then(renderMine);}
+});
+}
+
+// ---- Storage tile (Settings): what Kamus keeps in this browser
+const fmtB=n=>n>=1e9?(n/1e9).toFixed(2)+' GB':n>=1e6?(n/1e6).toFixed(1)+' MB':n>=1e3?Math.round(n/1e3)+' KB':n+' B';
+async function renderStorage(){
+  const box=document.getElementById('storageBox');if(!box||!navigator.storage||!navigator.storage.estimate){if(box)box.innerHTML='<p class="muted">This browser does not report storage use.</p>';return;}
+  const z={n:0,bytes:0},safe=p=>p.catch(()=>z);
+  const [est,persisted,cards,look,wav,wd,mt]=await Promise.all([navigator.storage.estimate().catch(()=>({})),(navigator.storage.persisted?navigator.storage.persisted():Promise.resolve(false)).catch(()=>false),
+    safe(KamusCards.stats()),safe(idb.stats('wiki')),safe(idb.stats('wav')),safe(idb.stats('models',k=>!String(k).startsWith('mt:'))),safe(idb.stats('models',k=>String(k).startsWith('mt:')))]);
+  const used=est.usage||0,quota=est.quota||0,appFiles=(est.usageDetails||{}).caches||0;
+  const row=(t,d,sz,btn)=>`<div class="st-row"><div class="st-main"><div class="st-t">${t}</div><div class="st-d">${d}</div></div><span class="st-sz">${sz}</span>${btn||''}</div>`;
+  box.innerHTML=`<div class="st-total"><div><b>${fmtB(used)}</b> used${quota?` of about ${fmtB(quota)} this browser allows`:''}</div>${quota?`<progress max="${quota}" value="${used}"></progress>`:''}</div>`
+   +row('Your cards',`${cards.n} card${cards.n===1?'':'s'}. Only stored here: back them up.`,fmtB(cards.bytes),`<button type="button" class="text-btn" data-st="backup" ${cards.n?'':'disabled'}>Back up</button>`)
+   +row('Lookup cache','Wiktionary, Tatoeba and translation answers, kept for offline use.',fmtB(look.bytes),`<button type="button" class="text-btn" data-st="wiki" ${look.n?'':'disabled'}>Clear</button>`)
+   +row('Audio cache','Speech made by the in-browser voice.',fmtB(wav.bytes),`<button type="button" class="text-btn" data-st="wav" ${wav.n?'':'disabled'}>Clear</button>`)
+   +row('Voice model (Wikidepia)','Downloaded for offline voices. Download it again in the voice settings.',fmtB(wd.bytes),`<button type="button" class="text-btn" data-st="wd" ${wd.n?'':'disabled'}>Remove</button>`)
+   +row('Translation models (Opus-MT)','Downloaded for offline translation.',fmtB(mt.bytes),`<button type="button" class="text-btn" data-st="mt" ${mt.n?'':'disabled'}>Remove</button>`)
+   +(appFiles?row('App files','The offline copy of the page and recent lookups (service worker).',fmtB(appFiles),''):'')
+   +row('Keep my data',persisted?'The browser has agreed not to delete Kamus data when space runs low.':'The browser may delete Kamus data when space runs low.',persisted?'Protected':'Not protected',persisted?'':`<button type="button" class="text-btn" data-st="persist">Protect</button>`);
+}
+document.getElementById('storageBox').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-st]');if(!b)return;const k=b.dataset.st;
+  if(k==='backup')await backupCards();
+  else if(k==='wiki'){await idb.clear('wiki');wikiMem.clear();tatMem.clear();toast('Lookup cache cleared.');}
+  else if(k==='wav'){await idb.clear('wav');toast('Audio cache cleared.');}
+  else if(k==='wd'){await wdRemove();toast('Voice model removed.');}
+  else if(k==='mt'){for(const d of mtDirs)await mtRemove(d);toast('Translation models removed.');}
+  else if(k==='persist'){let ok=false;try{ok=await navigator.storage.persist();}catch{}toast(ok?'Kamus data is now protected.':'The browser did not agree (it decides by itself, for example for installed apps).');}
+  renderStorage();
+});
+
+// ---- Settings page
+let ttsStatus=null;
+const SAMPLE='Selamat pagi, apa kabar?';
+const ENGINE_INFO={
+  browser:{title:'Browser built-in',desc:'Free and offline. Uses your system’s Indonesian voice.'},
+  edge:{title:'edge-tts',desc:'Natural Microsoft Edge voices. Needs internet; clips are cached.',voices:[['gadis','Gadis · female'],['ardi','Ardi · male']]},
+  'wikidepia-web':{title:'Wikidepia · in this browser',desc:'Offline neural voices run in your browser (about 121 MB, downloaded once). Non-commercial use.',voices:[['wibowo','Wibowo · audiobook'],['ardi','Ardi'],['gadis','Gadis']]},
+  wikidepia:{title:'Wikidepia · on the server',desc:'Offline neural voices on the server’s CPU. Non-commercial use.',voices:[['wibowo','Wibowo · audiobook'],['ardi','Ardi'],['gadis','Gadis']]}
+};
+function renderTts(){
+  const cfg=getTts(),st=ttsStatus||{},wd=st.wikidepia||{};
+  const status=e=>{
+    if(e==='browser')return speechSynthesis.getVoices().some(v=>v.lang.replace('_','-').startsWith('id'))?'Indonesian system voice found.':'No Indonesian system voice found.';
+    if(e==='edge')return ttsStatus?'Ready.':'';
+    if(!ttsStatus)return '';
+    if(e==='wikidepia-web'){const web=wd.web||{};if(!web.onnx)return 'Not available on this server.';if(wdState.progress)return '';
+      const mb=Math.round((wdState.bytes||+localStorage.getItem('kamus-wd-bytes')||web.bytes)/1e6);
+      if(!wdState.has)return (wdState.error?`Download failed: ${wdState.error}. `:'')+`Not downloaded (about ${Math.round(web.bytes/1e6)} MB).`;
+      return `Ready · ${mb} MB stored`+(WD.info?` · ${WD.info.threads} thread${WD.info.threads===1?'':'s'}`:'')+(window.isSecureContext?'':' (plain http: https is faster)')+(WD.last?` · ${WD.last.audioSec.toFixed(1)}s of speech in ${(WD.last.ms/1000).toFixed(1)}s`:'');}
+    if(!wd.env||!wd.model)return 'Not installed (run scripts/install_wikidepia.sh).';
+    return 'Ready · CPU'+(wd.last_seconds?` · last sentence ${wd.last_seconds}s`:'')+(wd.error?` · error: ${wd.error}`:'');
+  };
+  document.getElementById('ttsOptions').innerHTML=ENGINES.map(e=>{
+    const info=ENGINE_INFO[e],disabled=e==='wikidepia'&&ttsStatus&&!wd.ready,locked=e==='wikidepia-web'&&ttsStatus&&!wdState.has,sel=cfg.engine===e;   // locked: can be chosen only after the model is downloaded; its Download button stays usable
+    return `<div class="opt ${sel?'sel':''} ${disabled?'disabled':''}" role="radio" aria-checked="${sel}" aria-disabled="${disabled}" tabindex="0" data-engine="${e}" data-locked="${!!locked}">
+      <span class="radio"></span>
+      <div class="opt-main"><div class="opt-title">${esc(info.title)}</div><div class="opt-desc">${esc(info.desc)}</div>
+        ${info.voices?`<div class="vchips">${info.voices.map(([v,l])=>`<button type="button" class="vchip ${cfg[e]===v?'on':''}" data-engine="${e}" data-voice="${v}">${esc(l)}</button>`).join('')}</div>`:''}
+        <div class="opt-status">${esc(status(e))}</div>
+        ${e==='wikidepia-web'&&ttsStatus&&(wd.web||{}).onnx?(wdState.progress?`<div class="opt-status"><progress id="wdProg" max="${wdState.progress.total||1}" value="${wdState.progress.got}" style="width:100%"></progress><span id="wdProgText"></span></div>`
+          :wdState.has?'<button type="button" class="vchip" data-wd="remove" style="margin-top:10px">Remove model from this browser</button>':'<button type="button" class="vchip on" data-wd="download" style="margin-top:10px">Download model</button>'):''}</div>
+      <button type="button" class="text-btn" data-test="${e}" ${disabled||locked?'disabled':''}>Test</button></div>`;
+  }).join('');
+}
+async function loadStatus(){try{ttsStatus=await (await fetch('/api/tts/status')).json();}catch{ttsStatus=null;}wdState.has=await wdHasModel();renderTts();}
+const ttsBox=document.getElementById('ttsOptions');
+ttsBox.addEventListener('click',async e=>{
+  const wdb=e.target.closest('[data-wd]');if(wdb){wdb.dataset.wd==='download'?wdDownload():wdRemove();return;}
+  const test=e.target.closest('[data-test]'),chip=e.target.closest('.vchip'),opt=e.target.closest('.opt');
+  if(test){const en=test.dataset.test;test.textContent='…';speak(SAMPLE,test,{engine:en});
+    const a=curAudio;const restore=()=>{test.textContent='Test';loadStatus();};
+    if(a){a.addEventListener('ended',restore);a.addEventListener('error',restore);}else setTimeout(restore,1500);return;}
+  if(chip){setTts({engine:chip.dataset.engine,[chip.dataset.engine]:chip.dataset.voice});renderTts();wdWarm();return;}
+  if(opt&&opt.dataset.locked==='true'){toast('Download the model first (button on this card).');return;}
+  if(opt&&opt.getAttribute('aria-disabled')!=='true'){setTts({engine:opt.dataset.engine});renderTts();wdWarm();}
+});
+ttsBox.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('opt')){e.preventDefault();e.target.click();}});
+if('speechSynthesis' in window)speechSynthesis.addEventListener('voiceschanged',()=>{if(document.body.dataset.view==='settings')renderTts();});
+let creditsLoaded=false;
+const SPDX={'MIT':'MIT','Apache-2.0':'Apache-2.0','BSD-3-Clause':'BSD-3-Clause','MPL-2.0':'MPL-2.0','LGPL-3.0':'LGPL-3.0-only','GPL-3.0':'GPL-3.0-only','AGPL-3.0-or-later':'AGPL-3.0-or-later','CC BY-SA 4.0':'CC-BY-SA-4.0'};
+const LIC_ORDER=['MIT','Apache-2.0','BSD-3-Clause','MPL-2.0','LGPL-3.0','GPL-3.0','AGPL-3.0-or-later'];
+const licLink=l=>SPDX[l]?`<a href="https://spdx.org/licenses/${SPDX[l]}.html" target="_blank" rel="noopener">${esc(l)}</a>`:esc(l);
+function credEntry(i){   // name, licence, version, what it is used for, attribution notice, terms
+  return `<div class="cred"><div class="cred-head">${i.url?`<a class="cred-name" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.name)}</a>`:`<span class="cred-name">${esc(i.name)}</span>`}
+    <span class="badge">${esc(i.license)}</span>${i.version?`<span class="cred-role">v${esc(i.version)}</span>`:''}</div>
+    <div class="cred-role">${esc(i.role)}</div>${i.attribution?`<div class="cred-note"><b>Attribution:</b> ${esc(i.attribution)}</div>`:''}${i.note?`<div class="cred-note">${esc(i.note)}</div>`:''}</div>`;
+}
+async function loadCredits(){
+  if(creditsLoaded)return;
+  try{
+    const d=await (await fetch('/api/credits')).json(),it=d.items;
+    const restricted=it.filter(i=>i.kind==='software'&&/non-commercial/i.test(i.license)),software=it.filter(i=>i.kind==='software'&&!restricted.includes(i));
+    const OTHER='Other or combined licences',groups={};software.forEach(i=>{const k=LIC_ORDER.includes(i.license)?i.license:OTHER;(groups[k]=groups[k]||[]).push(i);});
+    const order=Object.keys(groups).sort((a,b)=>{const x=LIC_ORDER.indexOf(a),y=LIC_ORDER.indexOf(b);return (x<0?99:x)-(y<0?99:y);});
+    const sect=(n,title,sub,body)=>body?`<h4 class="legal-h">${n}. ${title}</h4><p class="legal-sub">${sub}</p>${body}`:'';
+    document.getElementById('creditsList').innerHTML=
+      `<p class="legal-lead">Kamus is a personal study tool. It displays content from other people’s dictionaries and uses open-source software, each under its own terms, listed below. Kamus is provided “as is”, without warranty of any kind, and is not affiliated with or endorsed by any project, organisation or company named here.</p>`
+      +sect(1,'Content and data sources','Shown in lookup results. Attribution notices and usage limits apply.',it.filter(i=>i.kind==='data').map(credEntry).join(''))
+      +sect(2,'Online services','Contacted while you use Kamus; their own terms apply.',it.filter(i=>i.kind==='service').map(credEntry).join(''))
+      +sect(3,'Open-source software','Grouped by licence; each licence name links to its full text.',order.map(l=>`<div class="cred-group lic">${licLink(l)}</div>`+groups[l].map(credEntry).join('')).join(''))
+      +sect(4,'Models with usage restrictions','Free for personal, non-commercial use only.',restricted.map(credEntry).join(''))
+      +sect(5,'Fonts, icons and design','',it.filter(i=>i.kind==='asset').map(credEntry).join(''))
+      +`<h4 class="legal-h">6. Trademarks</h4><p class="legal-sub">Names such as Microsoft, Edge, Google, Material Design, Anki, AnkiWeb, Wikimedia, Wiktionary, Tatoeba and KBBI belong to their owners and are used only to identify the services and content Kamus works with.</p>`
+      +`<p class="cred-note" style="margin-top:24px">Last reviewed: ${esc(d.updated)} · source list: <code>credits.json</code></p>`;
+    creditsLoaded=true;
+    document.getElementById('licSummary').textContent=`Licences, attributions and terms of use · ${it.length} items`;
+  }catch{document.getElementById('creditsList').innerHTML='<p class="muted">Could not load the legal information.</p>';}
+}
+// ---- routing: #settings / (anything else = Kamus)
+const navKamus=document.getElementById('navKamus'),navAnki=document.getElementById('navAnki'),navSettings=document.getElementById('navSettings');
+function route(){
+  const v={'#settings':'settings','#anki':'anki','#legal':'legal','#licences':'legal'}[location.hash]||'kamus';
+  document.body.dataset.view=v;
+  for(const k of ['kamus','anki','settings','legal'])document.getElementById('view'+k[0].toUpperCase()+k.slice(1)).hidden=v!==k;
+  navKamus.setAttribute('aria-current',v==='kamus'?'page':'false');navAnki.setAttribute('aria-current',v==='anki'?'page':'false');navSettings.setAttribute('aria-current',v==='settings'||v==='legal'?'page':'false');   // Legal information is a sub-page of Settings
+  const TITLES={kamus:'Kamus',anki:'Anki',settings:'Settings',legal:'Legal information'};
+  document.getElementById('pageTitle').innerHTML=v==='kamus'?'Kamus <small>Indonesian ⇄ English</small>':TITLES[v];
+  document.title=v==='kamus'?'Kamus':TITLES[v]+' · Kamus';
+  stopSpeech();closeSheet();closeQuick();hideChip();closeCard();
+  if(v==='settings'){renderSync();renderStorage();renderInstall();loadTrStatus();renderTheme();showSpeed();renderTts();loadStatus();loadCredits();}
+  if(v==='legal')loadCredits();
+  if(v==='anki')loadAnki();if(v!=='kamus')closeCard();
+  if(v!=='anki'&&ankiDlg.open)ankiDlg.close();
+  scrollTo(0,0);
+}
+navKamus.onclick=()=>{location.hash='#kamus';};
+navAnki.onclick=()=>{location.hash='#anki';};
+navSettings.onclick=()=>{location.hash='#settings';};
+document.getElementById('licBack').onclick=()=>{location.hash='#settings';};
+document.getElementById('reloadBtn').onclick=async e=>{   // refresh the app files (not the user's data) and reload
+  e.currentTarget.disabled=true;
+  try{const regs=(navigator.serviceWorker&&await navigator.serviceWorker.getRegistrations())||[];await Promise.all(regs.map(r=>r.update().catch(()=>{})));
+    const keys=await caches.keys();await Promise.all(keys.filter(k=>k.startsWith('kamus-shell-')).map(k=>caches.delete(k)));}catch{}
+  location.reload();};
+addEventListener('hashchange',()=>{if(location.hash.startsWith('#sync='))handleSyncHash();else route();});
+
+let mineCards=[];
+const mineLoad=()=>cardsReady.then(()=>KamusCards.list()).then(l=>{mineCards=l;}).catch(()=>{mineCards=[];});
+const MINE_LABEL={notsynced:'Not in Anki',sent:'In Anki',new:'New',learning:'Learning',review:'Review'};
+let mineHits=[],minePinned=false,mineT=0,ankiFocusIds=null;
+function mineHtml(){
+  const d=lastResult;if(!d)return '';
+  const words=new Set([d.word,...d.kbbi.map(e=>e.headword)].map(w=>w.toLowerCase()));
+  const hits=mineCards.filter(c=>words.has(c.word.toLowerCase()));
+  mineHits=hits;if(!hits.length)return '';
+  const inAnki=hits.some(c=>c.note_id),first=hits[0];
+  return `<aside class="mine-float" id="mineFloat" aria-label="Your cards for this word">
+    <button type="button" class="mine-chip" data-mine-open aria-expanded="false" aria-label="Your cards: ${esc(first.meaning)}">${ico('cards')}<span>${esc(clip(first.meaning,26))}${hits.length>1?` +${hits.length-1}`:''}</span></button>
+    <div class="mine mine-body"><div class="mine-head"><button type="button" class="mine-go" data-mine-go title="Open these cards on the Anki page">${inAnki?'In your Anki':'Your cards'}${ico('arrow')}</button><button type="button" class="icon-btn sm" data-mine-min aria-label="Minimise" title="Minimise">${ico('minus')}</button></div>${hits.map(c=>{const st=stateOf(c),pr=c.progress;
+    return `<div class="mine-row"><span class="mine-m">${esc(c.meaning)}</span>${c.fields.POS?`<span class="pos">${esc(c.fields.POS)}</span>`:''}<span class="badge">${MINE_LABEL[st]}</span>${c.dirty&&c.note_id?'<span class="badge warn">Desynced</span>':''}</div>`;}).join('')}</div></aside>`;
+}
+function mineSize(m,open){   // the card morphs between the chip's and the body's measured size
+  const el=m.querySelector(open?'.mine-body':'.mine-chip');m.style.width=el.offsetWidth+'px';m.style.height=el.offsetHeight+'px';
+}
+function mineSet(open){const m=document.getElementById('mineFloat');if(!m)return;m.classList.toggle('open',open);mineSize(m,open);const c=m.querySelector('.mine-chip');if(c)c.setAttribute('aria-expanded',open);}
+function renderMine(){   // always starts as the small chip; the card opens on mouse hover or a tap
+  const old=document.getElementById('mineFloat');if(old)old.remove();minePinned=false;clearTimeout(mineT);
+  const html=mineHtml();if(!html)return;
+  document.body.insertAdjacentHTML('beforeend',html);
+  const m=document.getElementById('mineFloat');mineSize(m,false);
+  m.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'){clearTimeout(mineT);mineSet(true);}});
+  m.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'&&!minePinned)mineT=setTimeout(()=>mineSet(false),250);});
+}
+function goAnki(){   // jump to the Anki page with these cards filtered and highlighted
+  if(!mineHits.length)return;
+  aText=mineHits[0].word;aFilter='all';ankiFocusIds=new Set(mineHits.map(c=>c.id));
+  document.getElementById('aSearch').value=aText;document.querySelectorAll('.a-tools [data-filter]').forEach(x=>x.classList.toggle('on',x.dataset.filter==='all'));
+  location.hash='#anki';
+}
+document.addEventListener('click',e=>{
+  if(e.target.closest('[data-mine-open]')){minePinned=true;mineSet(true);return;}
+  if(e.target.closest('[data-mine-min]')){minePinned=false;mineSet(false);return;}
+  if(e.target.closest('[data-mine-go]')){goAnki();return;}
+  const m=document.getElementById('mineFloat');
+  if(m&&e.target.closest('#mineFloat')){minePinned=true;return;}   // a click on the opened card (mouse) keeps it open
+  if(m&&m.classList.contains('open')&&minePinned){minePinned=false;mineSet(false);}   // tap elsewhere = minimise
+});
+async function go(word){
+  pg.classList.add('on');hideChip();const minePromise=mineLoad();const oldMine=document.getElementById('mineFloat');if(oldMine)oldMine.remove();
+  try{
+    const r=await fetch('/api/lookup?q='+encodeURIComponent(word));const d=await r.json();
+    buildToc(null);
+    if(d.error){out.innerHTML=snack('Error: '+d.error,true);return;}
+    if(!d.kbbi.length){out.innerHTML=`<div class="empty"><svg><use href="#i-search"/></svg><p class="h">Tidak ditemukan</p><div>No entry for “${esc(word)}”. Try the base form (makan, not memakan).</div></div>`;return;}
+    lastResult=d;d.wiktionary=null;
+    const warn=d.warnings.length?snack('Some sources failed: '+d.warnings.join('; '),true):'';
+    const kb=d.kbbi.map((e,i)=>`<section class="card ${i==0?'hero':''}" ${i<2?`id="${i?'sec-rel':'sec-kbbi'}"`:''}>
+      <div class="hero-row"><h2>${esc(e.syllables)}</h2>${say(e.headword,'tonal')}</div>
+      <p class="pron">${esc(e.ipa)} · approx.</p>
+      <ol>${e.senses.map((s,j)=>`<li class="has-add">${s.pos.length?`<span class="pos">${esc(s.pos.join(' '))}</span>`:''}<span class="def">${esc(s.definition)}</span>${s.examples.map(x=>ex(x)).join('')}<button class="icon-btn sm addcard" data-add="kb" data-e="${i}" data-s="${j}" title="Create Anki card" aria-label="Create Anki card">${ico('add')}</button></li>`).join('')}</ol>
+      ${i==0?'<p class="src">Source: KBBI (kbbi.web.id)</p>':''}</section>`).join('');
+    const note=d.kbbi_base?`<div class="snack">${ico('book')}<span>KBBI lists “${esc(word)}” under its base word “${esc(d.kbbi_base)}”.</span></div>`:'';
+    await minePromise;
+    d.sentences=[];out.innerHTML=note+warn+kb+wikiCardHtml(null);buildToc(d);remember(word,'');renderMine();
+    tatoebaLookup(word).then(list=>{if(lastResult!==d||!list.length)return;d.sentences=list;
+      out.insertAdjacentHTML('beforeend',`<section class="card" id="sec-sn"><h3>More example sentences <span class="badge">Tatoeba</span></h3>${list.map(s=>ex(s.id,s.en)).join('')}<p class="src">Tatoeba · CC BY 2.0 FR</p></section>`);buildToc(d);}).catch(()=>{});
+    wikiLookup(word).then(wk=>{if(lastResult!==d)return;d.wiktionary=wk;swapWikiCard(wikiCardHtml(wk));buildToc(d);if(wk.senses[0])remember(word,wk.senses[0].gloss);})
+      .catch(()=>{if(lastResult===d)swapWikiCard(wikiCardHtml(false));});
+  }catch(err){buildToc(null);out.innerHTML=snack('Could not reach the server: '+err.message,true);}
+  finally{pg.classList.remove('on');}
+}
+route();handleSyncHash();
+(window.requestIdleCallback||setTimeout)(()=>wdWarm());
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+document.getElementById('f').onsubmit=e=>{e.preventDefault();const w=q.value.trim();if(w){hideSuggest();fitIdle();matchMedia('(hover:hover)').matches?q.select():q.blur();go(w);}};
+</script></body></html>

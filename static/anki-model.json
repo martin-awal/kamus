@@ -1,0 +1,45 @@
+{
+ "name": "Kamus v1",
+ "deck": "Kamus",
+ "fields": [
+  "Index",
+  "Word",
+  "IPA",
+  "POS",
+  "KBBI",
+  "Wiki",
+  "Example",
+  "ExampleEN",
+  "ExampleBlank",
+  "Hint",
+  "Audio",
+  "ExampleAudio",
+  "Skip1",
+  "Skip2",
+  "Skip3",
+  "Skip4"
+ ],
+ "templates": [
+  {
+   "Name": "1 Fill the blank",
+   "Front": "{{^Skip1}}{{#ExampleBlank}}<div class=\"lbl\">fill in the blank</div><div class=\"big\">{{ExampleBlank}}</div>{{#ExampleEN}}<div class=\"en\">&ldquo;{{ExampleEN}}&rdquo;</div>{{/ExampleEN}}{{#POS}}<div class=\"hint\">hint: ({{POS}})</div>{{/POS}}{{/ExampleBlank}}{{/Skip1}}",
+   "Back": "<div class=\"head\">{{Word}} <span class=\"ipa\">{{IPA}}</span> {{Audio}} {{#POS}}<span class=\"pos\">({{POS}})</span>{{/POS}}</div>\n{{#KBBI}}<div class=\"line\"><b>KBBI:</b> {{KBBI}}</div>{{/KBBI}}\n{{#Wiki}}<div class=\"line\"><b>WIKI:</b> &ldquo;{{Wiki}}&rdquo;</div>{{/Wiki}}\n{{#Example}}<hr><div class=\"eg\"><div class=\"lbl\">e.g.</div>{{Example}} {{ExampleAudio}}{{#ExampleEN}}<div class=\"en\">&ldquo;{{ExampleEN}}&rdquo;</div>{{/ExampleEN}}</div>{{/Example}}"
+  },
+  {
+   "Name": "2 Word to meaning",
+   "Front": "{{^Skip2}}<div class=\"head\">{{Word}} <span class=\"ipa\">{{IPA}}</span> {{Audio}} {{#POS}}<span class=\"pos\">({{POS}})</span>{{/POS}}</div>{{#Example}}<div class=\"eg\"><div class=\"lbl\">e.g.</div>{{Example}}</div>{{/Example}}{{/Skip2}}",
+   "Back": "<div class=\"head\">{{Word}} <span class=\"ipa\">{{IPA}}</span> {{Audio}} {{#POS}}<span class=\"pos\">({{POS}})</span>{{/POS}}</div>\n{{#KBBI}}<div class=\"line\"><b>KBBI:</b> {{KBBI}}</div>{{/KBBI}}\n{{#Wiki}}<div class=\"line\"><b>WIKI:</b> &ldquo;{{Wiki}}&rdquo;</div>{{/Wiki}}\n{{#Example}}<hr><div class=\"eg\"><div class=\"lbl\">e.g.</div>{{Example}} {{ExampleAudio}}{{#ExampleEN}}<div class=\"en\">&ldquo;{{ExampleEN}}&rdquo;</div>{{/ExampleEN}}</div>{{/Example}}"
+  },
+  {
+   "Name": "3 Meaning to word",
+   "Front": "{{^Skip3}}{{#Wiki}}<div class=\"lbl\">WIKI</div><div class=\"big\">{{Wiki}} {{#POS}}<span class=\"pos\">({{POS}})</span>{{/POS}}</div><div class=\"hint\">hint: {{Hint}}</div>{{/Wiki}}{{/Skip3}}",
+   "Back": "<div class=\"head\">{{Word}} <span class=\"ipa\">{{IPA}}</span> {{Audio}} {{#POS}}<span class=\"pos\">({{POS}})</span>{{/POS}}</div>\n{{#KBBI}}<div class=\"line\"><b>KBBI:</b> {{KBBI}}</div>{{/KBBI}}\n{{#Wiki}}<div class=\"line\"><b>WIKI:</b> &ldquo;{{Wiki}}&rdquo;</div>{{/Wiki}}\n{{#Example}}<hr><div class=\"eg\"><div class=\"lbl\">e.g.</div>{{Example}} {{ExampleAudio}}{{#ExampleEN}}<div class=\"en\">&ldquo;{{ExampleEN}}&rdquo;</div>{{/ExampleEN}}</div>{{/Example}}"
+  },
+  {
+   "Name": "4 Listening",
+   "Front": "{{^Skip4}}{{#Audio}}<div class=\"lbl\">listen</div><div class=\"big\">{{Audio}}</div>{{#ExampleAudio}}<div class=\"lbl\">e.g.</div><div class=\"big\">{{ExampleAudio}}</div>{{/ExampleAudio}}{{/Audio}}{{/Skip4}}",
+   "Back": "<div class=\"head\">{{Word}} <span class=\"ipa\">{{IPA}}</span> {{Audio}} {{#POS}}<span class=\"pos\">({{POS}})</span>{{/POS}}</div>\n{{#KBBI}}<div class=\"line\"><b>KBBI:</b> {{KBBI}}</div>{{/KBBI}}\n{{#Wiki}}<div class=\"line\"><b>WIKI:</b> &ldquo;{{Wiki}}&rdquo;</div>{{/Wiki}}\n{{#Example}}<hr><div class=\"eg\"><div class=\"lbl\">e.g.</div>{{Example}} {{ExampleAudio}}{{#ExampleEN}}<div class=\"en\">&ldquo;{{ExampleEN}}&rdquo;</div>{{/ExampleEN}}</div>{{/Example}}"
+  }
+ ],
+ "css": ".card{font-family:Roboto,Arial,sans-serif;font-size:20px;text-align:center;color:#1d1b20;background:#fef7ff;padding:12px}\n.lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#79747e;margin-bottom:4px}\n.big{font-size:26px;margin:8px 0}.head{font-size:30px;margin-bottom:8px}.ipa{font-size:18px;color:#49454f}\n.pos{font-size:14px;color:#6750a4;font-style:italic}.hint{font-size:16px;color:#79747e;margin-top:10px;letter-spacing:.1em}\n.en{font-size:16px;color:#49454f;margin-top:6px}.line{font-size:18px;margin:6px 0;text-align:left}.eg{margin-top:8px}.eg .lbl{text-transform:none;letter-spacing:0;font-size:14px}.eg .lbl{text-transform:none;letter-spacing:0;font-size:14px}\nhr{border:0;border-top:1px solid #cac4d0;margin:14px 0}\n.nightMode.card,.night_mode.card{background:#141218;color:#e6e0e9}.nightMode .ipa,.night_mode .ipa,.nightMode .en,.night_mode .en{color:#cac4d0}"
+}

@@ -1,0 +1,263 @@
+{
+  "updated": "2026-11-12",
+  "items": [
+    {
+      "kind": "data",
+      "name": "KBBI (via kbbi.web.id)",
+      "url": "https://kbbi.web.id/",
+      "license": "No open licence",
+      "role": "Indonesian definitions, word classes, example sentences and syllable breaks.",
+      "note": "KBBI content belongs to Badan Pengembangan dan Pembinaan Bahasa (Kemendikbudristek). Fetched from kbbi.web.id, a third-party site, for personal study only; do not redistribute. Requests are throttled to 0.6 s apart.",
+      "attribution": "© Badan Pengembangan dan Pembinaan Bahasa, Kemendikbudristek; presented by kbbi.web.id."
+    },
+    {
+      "kind": "data",
+      "name": "Wiktionary (English edition)",
+      "url": "https://en.wiktionary.org/",
+      "license": "CC BY-SA 4.0",
+      "role": "English glosses, example translations, IPA, audio recordings and word suggestions.",
+      "note": "Text is available under CC BY-SA 4.0 (and GFDL). Reuse needs attribution and the same licence. Read straight from the browser through the official REST and Action APIs (they allow cross-origin reads), with the last answer kept in the browser for offline use.",
+      "attribution": "Definitions, examples and pronunciation by Wiktionary contributors, CC BY-SA 4.0 (en.wiktionary.org); reformatted for display."
+    },
+    {
+      "kind": "data",
+      "name": "Tatoeba",
+      "url": "https://tatoeba.org/",
+      "license": "CC BY 2.0 FR",
+      "role": "Extra Indonesian example sentences with English translations.",
+      "note": "Sentences are mostly CC BY 2.0 FR (some CC0); each sentence carries its own licence and author in the API. Fetched by the browser from api.tatoeba.org/v1 (it sends CORS headers).",
+      "attribution": "Sentences by Tatoeba contributors, CC BY 2.0 FR (some CC0); each sentence keeps its own author and licence."
+    },
+    {
+      "kind": "service",
+      "name": "Microsoft Edge read-aloud service (via edge-tts)",
+      "url": "https://github.com/rany2/edge-tts",
+      "license": "Microsoft terms apply",
+      "role": "Neural voices id-ID-GadisNeural and id-ID-ArdiNeural for the edge-tts engine.",
+      "note": "Unofficial access to the online service built into Microsoft Edge; it could change or stop at any time. Audio is cached locally."
+    },
+    {
+      "kind": "service",
+      "name": "Google Fonts",
+      "url": "https://fonts.google.com/",
+      "license": "Service terms",
+      "role": "Serves the Roboto font to the page (falls back to the system font offline)."
+    },
+    {
+      "kind": "service",
+      "name": "MyMemory",
+      "url": "https://mymemory.translated.net/",
+      "license": "Service terms",
+      "role": "Optional engine that fills in missing translations of card text (Indonesian ↔ English).",
+      "note": "Text you translate is sent to their server; anonymous use has a daily quota. Quality varies (it mixes translation memory and machine translation). Called directly from the browser (it sends CORS headers), so the text goes from your device to MyMemory without passing the Kamus server."
+    },
+    {
+      "kind": "service",
+      "name": "AnkiWeb",
+      "url": "https://ankiweb.net/",
+      "license": "Service terms",
+      "role": "Linked from the Anki page (opens in a new tab). Anki itself syncs your cards with it; Kamus never talks to AnkiWeb."
+    },
+    {
+      "kind": "service",
+      "name": "Firebase (Authentication + Firestore)",
+      "url": "https://firebase.google.com/",
+      "license": "Service terms",
+      "role": "Optional: stores your cards and history in YOUR OWN Firebase project if you set up sync (Settings → Sync).",
+      "note": "Off by default. Kamus has no Firebase project of its own; data goes from your browser to the project whose config you paste."
+    },
+    {
+      "kind": "software",
+      "name": "edge-tts",
+      "package": "edge-tts",
+      "url": "https://github.com/rany2/edge-tts",
+      "license": "LGPL-3.0",
+      "role": "Python client for the Edge read-aloud service."
+    },
+    {
+      "kind": "software",
+      "name": "Wikidepia/indonesian-tts (model v1.2)",
+      "url": "https://github.com/Wikidepia/indonesian-tts",
+      "license": "Non-commercial only",
+      "role": "Offline Indonesian VITS voices (Wibowo, Ardi, Gadis). Three ways to run it: on the server (CPU), or converted to ONNX and run inside your browser; optional.",
+      "note": "The repository has no licence file; its README says 'DO NOT USE FOR COMMERCIAL PURPOSES'. Fine-tuned on audiobook data and about 2,000 Azure TTS samples. VITS: Kim, Kong & Son (2021), arXiv:2106.06103. The ONNX file in models/wikidepia-v1.2/web/ is a derivative of this model (made by scripts/export_wikidepia_onnx.py) and carries the same non-commercial restriction."
+    },
+    {
+      "kind": "software",
+      "name": "Coqui TTS 0.8.0",
+      "url": "https://github.com/coqui-ai/TTS",
+      "license": "MPL-2.0",
+      "role": "Speech synthesis toolkit that runs the Wikidepia model (only inside .tts-env).",
+      "note": "Installed from PyPI as TTS==0.8.0; later versions changed the model format, so it is pinned. It brings many dependencies (numpy, numba, librosa, pyworld, ...) that live only inside .tts-env; see `pip list` there for their licences."
+    },
+    {
+      "kind": "software",
+      "name": "onnxruntime-web",
+      "url": "https://onnxruntime.ai/",
+      "license": "MIT",
+      "version": "1.31.1",
+      "role": "Runs the converted Wikidepia model inside the browser (WebAssembly build, served from static/vendor/ort/).",
+      "note": "Copied from the npm package onnxruntime-web 1.31.1; licence taken from its package.json."
+    },
+    {
+      "kind": "software",
+      "name": "ONNX & onnxruntime (Python)",
+      "url": "https://onnx.ai/",
+      "license": "Apache-2.0 / MIT",
+      "role": "Used once, inside .tts-env, to export the model to ONNX and to check it against PyTorch (onnx 1.16.2, onnxruntime).",
+      "note": "Not needed to run Kamus."
+    },
+    {
+      "kind": "software",
+      "name": "Wikidepia/g2p-id",
+      "url": "https://github.com/Wikidepia/g2p-id",
+      "license": "MIT",
+      "role": "Converts Indonesian text to IPA phonemes for the Wikidepia model (only inside .tts-env).",
+      "note": "Installed from GitHub, not PyPI: the PyPI package 'g2p-id-py' is a different project with other output. It asks for Python 3.11+, so it is installed with --ignore-requires-python on 3.10. Stress marks and symbol fixes are added in wikidepia_worker.py."
+    },
+    {
+      "kind": "software",
+      "name": "python-crfsuite",
+      "url": "https://github.com/scrapinghub/python-crfsuite",
+      "license": "MIT",
+      "role": "Dependency of g2p-id (only inside .tts-env)."
+    },
+    {
+      "kind": "software",
+      "name": "Argos Translate",
+      "url": "https://github.com/argosopentech/argos-translate",
+      "license": "MIT",
+      "role": "Optional offline engine that translates card text (Indonesian ↔ English); runs in its own environment (.argos-env).",
+      "note": "Dual-licensed MIT or CC0 (per its README). Its translation models (OpenNMT-based, from the Argos package index) are downloaded separately; their licence has not been verified."
+    },
+    {
+      "kind": "software",
+      "name": "Transformers.js",
+      "url": "https://github.com/huggingface/transformers.js",
+      "license": "Apache-2.0",
+      "version": "4.3.2",
+      "role": "Runs the Opus-MT translation models inside the browser (static/vendor/transformers/, with its onnxruntime-web WebAssembly runtime).",
+      "note": "Copied from the npm package @huggingface/transformers 4.3.2; licence taken from its package.json. It bundles onnxruntime-web (MIT)."
+    },
+    {
+      "kind": "software",
+      "name": "Opus-MT id↔en (Helsinki-NLP; ONNX conversion by Xenova)",
+      "url": "https://huggingface.co/Helsinki-NLP/opus-mt-id-en",
+      "license": "Apache-2.0",
+      "role": "Offline translation models run in the browser (Settings → Translation → Opus-MT); served from models/opus-mt/ and stored in IndexedDB.",
+      "note": "Apache-2.0 is the licence shown on the Helsinki-NLP model pages; the Xenova ONNX repositories show no licence field. They are trained on OPUS data, whose corpora carry their own licences. Downloaded by the browser from huggingface.co/Xenova (or from this server's copy)."
+    },
+    {
+      "kind": "software",
+      "name": "LibreTranslate (server, not bundled)",
+      "url": "https://github.com/LibreTranslate/LibreTranslate",
+      "license": "AGPL-3.0",
+      "role": "Optional engine: any LibreTranslate server you host or can reach, set in Settings → Translation.",
+      "note": "Kamus only talks to it over HTTP; no LibreTranslate code is included."
+    },
+    {
+      "kind": "software",
+      "name": "PyTorch & torchaudio (CPU builds 2.0.1 / 2.0.2)",
+      "url": "https://pytorch.org/",
+      "license": "BSD-3-Clause",
+      "role": "Neural network runtime for Coqui TTS (only inside .tts-env)."
+    },
+    {
+      "kind": "software",
+      "name": "Requests",
+      "package": "requests",
+      "url": "https://requests.readthedocs.io/",
+      "license": "Apache-2.0",
+      "role": "HTTP client for KBBI, Wiktionary and Tatoeba."
+    },
+    {
+      "kind": "software",
+      "name": "sql.js",
+      "url": "https://github.com/sql-js/sql.js",
+      "license": "MIT",
+      "version": "1.16.0",
+      "role": "SQLite compiled to WebAssembly; writes the collection inside the .apkg export (static/vendor/apkg/).",
+      "note": "Copied from the npm package sql.js 1.16.0 by scripts/fetch_vendor.sh; licence from its package.json."
+    },
+    {
+      "kind": "software",
+      "name": "JSZip",
+      "url": "https://stuk.github.io/jszip/",
+      "license": "MIT",
+      "version": "3.10.2",
+      "role": "Writes the zip container of the .apkg export (static/vendor/apkg/).",
+      "note": "Dual-licensed (MIT OR GPL-3.0-or-later) per its package.json; used under the MIT option."
+    },
+    {
+      "kind": "software",
+      "name": "Firebase JS SDK",
+      "url": "https://github.com/firebase/firebase-js-sdk",
+      "license": "Apache-2.0",
+      "version": "13.3.0",
+      "role": "Optional cloud sync: Google sign-in and Firestore in the browser (static/vendor/firebase/, compat bundles).",
+      "note": "Copied from the npm package firebase 13.3.0 by scripts/fetch_vendor.sh; licence taken from its package.json (the package ships no LICENSE file). Loaded only when you add a Firebase config."
+    },
+    {
+      "kind": "software",
+      "name": "qrcode-generator",
+      "url": "https://github.com/kazuhikoarase/qrcode-generator",
+      "license": "MIT",
+      "version": "2.0.4",
+      "role": "Draws the QR code that shares the sync settings with another device (static/vendor/qr/).",
+      "note": "Copied from the npm package by scripts/fetch_vendor.sh; MIT is declared in its package.json and file header (no LICENSE file in the package)."
+    },
+    {
+      "kind": "software",
+      "name": "jsQR",
+      "url": "https://github.com/cozmo/jsQR",
+      "license": "Apache-2.0",
+      "version": "1.4.0",
+      "role": "Reads that QR code from the camera in the in-app scanner (static/vendor/qr/).",
+      "note": "Copied from the npm package jsqr 1.4.0 by scripts/fetch_vendor.sh."
+    },
+    {
+      "kind": "software",
+      "name": "AnkiConnect (Anki add-on, not bundled)",
+      "url": "https://github.com/FooSoft/anki-connect",
+      "license": "GPL-3.0",
+      "role": "Optional. Lets this page add cards to, and read review progress from, Anki desktop on your own computer (add-on code 2055492159).",
+      "note": "Kamus only talks to it over HTTP from your browser; no AnkiConnect code is included here."
+    },
+    {
+      "kind": "software",
+      "name": "Anki (desktop app, not bundled)",
+      "url": "https://apps.ankiweb.net/",
+      "license": "AGPL-3.0-or-later",
+      "role": "The flashcard app you practise in; Kamus creates notes in an Anki-compatible format (note type 'Kamus v1').",
+      "note": "Anki is licensed AGPL-3.0 or later, with some parts BSD-3, MIT and CC BY 4.0."
+    },
+    {
+      "kind": "software",
+      "name": "Python standard library & SQLite",
+      "url": "https://www.python.org/",
+      "license": "PSF License / public domain",
+      "role": "Web server, HTML parsing helpers and the lookup cache (SQLite is in the public domain)."
+    },
+    {
+      "kind": "asset",
+      "name": "Roboto",
+      "url": "https://fonts.google.com/specimen/Roboto",
+      "license": "Apache-2.0",
+      "role": "Typeface used throughout the page."
+    },
+    {
+      "kind": "asset",
+      "name": "Material Symbols",
+      "url": "https://fonts.google.com/icons",
+      "license": "Apache-2.0",
+      "role": "Icons (search, history, settings, speaker, list, close...), embedded as inline SVG."
+    },
+    {
+      "kind": "asset",
+      "name": "Material Design 3",
+      "url": "https://m3.material.io/",
+      "license": "Design guidelines",
+      "role": "Colours, shapes, navigation rail, side sheets, chips and typography follow Google's Material Design 3 guidelines."
+    }
+  ]
+}

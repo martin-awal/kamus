@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Kamus · Sign in</title>
+<style>
+:root{color-scheme:light dark;--bg:#fef7ff;--fg:#1d1b20;--muted:#49454f;--pri:#6750a4;--onpri:#fff;--err:#b3261e}
+@media(prefers-color-scheme:dark){:root{--bg:#141218;--fg:#e6e0e9;--muted:#cac4d0;--pri:#d0bcff;--onpri:#381e72;--err:#f2b8b5}}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--fg);font:16px/24px Roboto,system-ui,sans-serif;padding:16px}
+main{max-width:420px;width:100%}h1{font:400 28px/36px Roboto,system-ui,sans-serif;margin:0 0 8px}p{color:var(--muted);margin:8px 0}
+button{height:40px;padding:0 24px;border:0;border-radius:20px;background:var(--pri);color:var(--onpri);font:500 14px/20px Roboto,system-ui,sans-serif;cursor:pointer}
+button[disabled]{opacity:.5;cursor:default}a{color:var(--pri)}.err{color:var(--err)}
+</style></head><body><main>
+<h1>Sign in to sync</h1>
+<p id="msg">Loading…</p>
+<p><button id="go" disabled>Sign in with Google</button> <a href="/#settings">Back to Kamus</a></p>
+</main>
+<script src="/sync.js"></script>
+<script>
+const msg=document.getElementById('msg'),go=document.getElementById('go');
+(async()=>{
+  const cfg=KamusSync.getConfig();
+  if(!cfg){msg.textContent='No Firebase config is saved in this browser. Paste it in Settings → Sync first.';return;}
+  try{
+    const {auth}=await KamusSync.loadSdk();
+    msg.textContent=`Project ${cfg.projectId}. A Google window will open; allow pop-ups if the browser asks.`;
+    go.disabled=false;
+    go.onclick=async()=>{
+      go.disabled=true;msg.classList.remove('err');msg.textContent='Waiting for Google…';
+      try{await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());msg.textContent='Signed in. Returning to Kamus…';location.replace('/#settings');}
+      catch(e){msg.classList.add('err');msg.textContent=KamusSync.friendly(e);go.disabled=false;}
+    };
+  }catch(e){msg.classList.add('err');msg.textContent=KamusSync.friendly(e);}
+})();
+</script></body></html>
