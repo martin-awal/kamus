@@ -1668,6 +1668,8 @@ function credEntry(i){   // name, licence, version, what it is used for, attribu
     <span class="badge">${esc(i.license)}</span>${i.version?`<span class="cred-role">v${esc(i.version)}</span>`:''}</div>
     <div class="cred-role">${esc(i.role)}</div>${i.attribution?`<div class="cred-note"><b>Attribution:</b> ${esc(i.attribution)}</div>`:''}${i.note?`<div class="cred-note">${esc(i.note)}</div>`:''}</div>`;
 }
+// AGPL section 13: this must point at the source of the version people are actually using. A fork/modified copy changes it to its own repository.
+const SOURCE_URL='https://github.com/martin-awal/kamus';
 async function loadCredits(){
   if(creditsLoaded)return;
   try{
@@ -1678,6 +1680,7 @@ async function loadCredits(){
     const sect=(n,title,sub,body)=>body?`<h4 class="legal-h">${n}. ${title}</h4><p class="legal-sub">${sub}</p>${body}`:'';
     document.getElementById('creditsList').innerHTML=
       `<p class="legal-lead">Kamus is a personal study tool. It displays content from other people’s dictionaries and uses open-source software, each under its own terms, listed below. Kamus is provided “as is”, without warranty of any kind, and is not affiliated with or endorsed by any project, organisation or company named here.</p>`
+      +`<h4 class="legal-h">Kamus licence and source code</h4><p class="legal-sub">Kamus is free software under the <a href="${SOURCE_URL}/blob/main/LICENSE" target="_blank" rel="noopener">GNU Affero General Public License v3.0</a>. You may use, study, change and share it under that licence; if you run a modified copy for other people over a network, you must offer them its source code.</p><p class="legal-sub"><a href="${SOURCE_URL}" target="_blank" rel="noopener">Source code: ${esc(SOURCE_URL.replace('https://',''))}</a></p>`
       +sect(1,'Content and data sources','Shown in lookup results. Attribution notices and usage limits apply.',it.filter(i=>i.kind==='data').map(credEntry).join(''))
       +sect(2,'Online services','Contacted while you use Kamus; their own terms apply.',it.filter(i=>i.kind==='service').map(credEntry).join(''))
       +sect(3,'Open-source software','Grouped by licence; each licence name links to its full text.',order.map(l=>`<div class="cred-group lic">${licLink(l)}</div>`+groups[l].map(credEntry).join('')).join(''))

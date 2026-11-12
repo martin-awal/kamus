@@ -1,5 +1,7 @@
 # Kamus
 
+Source: https://github.com/martin-awal/kamus · Licence: AGPL-3.0
+
 A personal Indonesian dictionary for learners, run on your own computer. Look up a word and get KBBI definitions,
 English glosses from Wiktionary, example sentences, pronunciation (several text-to-speech engines), and turn what you
 find into Anki flashcards. It is a Material Design 3 web app (installable as a PWA); the server is plain Python.
@@ -85,4 +87,4 @@ Update both whenever you add or swap a dependency (see `CLAUDE.md`).
 (in-browser TTS and translation), `scripts/` (installers). `CLAUDE.md` holds the working notes.
 
 ## Licence
-Kamus is free software under the **GNU Affero General Public License v3.0** (see `LICENSE`). Third-party components keep their own licences.
+Kamus is free software under the **GNU Affero General Public License v3.0** (see `LICENSE`). If you run a modified copy for other people over a network, offer them its source: change `SOURCE_URL` in `static/index.html` to your fork (shown on Settings → Legal information). Third-party components keep their own licences.
