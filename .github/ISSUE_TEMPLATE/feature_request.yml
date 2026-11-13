@@ -1,0 +1,25 @@
+name: Feature request
+description: An idea that would help you learn Indonesian with Kamus
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The learning problem first; the feature second.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like Kamus to do?
+  - type: textarea
+    id: alt
+    attributes:
+      label: Alternatives you considered
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Data and licences
+      options:
+        - label: If this needs a new data source or library, I checked that its licence allows it (see CONTRIBUTING.md).

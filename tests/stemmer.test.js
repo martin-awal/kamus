@@ -1,4 +1,4 @@
-// node --test tests/        (no network: a small word list stands in for the Wiktionary list)
+// node --test tests/*.test.js        (no network: a small word list stands in for the Wiktionary list)
 const test = require('node:test'), assert = require('node:assert');
 global.window = {};
 const S = require('../static/stemmer.js');

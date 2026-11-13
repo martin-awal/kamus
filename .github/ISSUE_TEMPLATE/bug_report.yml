@@ -1,0 +1,45 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please do not paste KBBI text, API keys or your Firebase config. For security problems use the private route in SECURITY.md instead of this form.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open Settings → …\n2. Search for …"
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where does it happen?
+      options: [Lookup, Quick-look chip, Anki page / cards, .apkg export, AnkiConnect sync, Cloud sync (Firebase), Voices (TTS), Translation, Settings, Install / PWA, Other]
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and system
+      placeholder: Safari 18 on macOS 15 / Chrome 130 on Android 15
+    validations:
+      required: true
+  - type: dropdown
+    id: source
+    attributes:
+      label: Indonesian definitions source (Settings)
+      options: [Wiktionary (default), KBBI via the server, KBBI via a kbbi-api server, Not sure]
+  - type: textarea
+    id: logs
+    attributes:
+      label: Messages, console errors or screenshots
+      description: Browser console (F12) or the server's terminal output. Remove anything private.

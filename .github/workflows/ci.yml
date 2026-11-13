@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Tests and checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Stemmer tests
+        run: node --test tests/*.test.js
+
+      - name: JavaScript syntax (separate scripts)
+        run: for f in static/*.js; do node --check "$f"; done
+
+      - name: Python syntax
+        run: python -m compileall -q *.py scripts/*.py
+
+      - name: credits.json is complete
+        run: python scripts/check_credits.py
+
+      - name: Nothing private is tracked
+        run: |
+          if git ls-files | grep -E '\.(db|pem|key|crt|apkg)$|^models/|^static/vendor/|^tts_cache/'; then
+            echo "These files must stay out of git (see .gitignore)"; exit 1
+          fi
+          if git grep -nIE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[a-z]{2,}' -- . ':!LICENSE' ':!CODE_OF_CONDUCT.md' ':!package-lock.json' | grep -vE 'noreply|example\.(com|org)'; then
+            echo "Personal email address found"; exit 1
+          fi
+          if git grep -nIE 'AIza[0-9A-Za-z_-]{20,}'; then
+            echo "A Google API key is committed (the Firebase config belongs in the browser, not in the repo)"; exit 1
+          fi
+
+      - name: Install server dependencies
+        run: pip install -r requirements.txt
+
+      - name: Server smoke test
+        run: scripts/smoke_test.sh
+
+  vendor:
+    name: Vendored libraries can be fetched
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run scripts/fetch_vendor.sh
+        run: |
+          scripts/fetch_vendor.sh
+          for f in ort/ort-wasm-simd-threaded.wasm transformers/transformers.min.js apkg/sql-wasm.wasm apkg/jszip.min.js firebase/firebase-app-compat.js qr/qrcode.js qr/jsQR.js; do
+            test -s "static/vendor/$f" || { echo "missing static/vendor/$f"; exit 1; }
+          done

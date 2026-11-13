@@ -1,6 +1,8 @@
 # Kamus
 
-Source: https://github.com/martin-awal/kamus · Licence: AGPL-3.0
+[![CI](https://github.com/martin-awal/kamus/actions/workflows/ci.yml/badge.svg)](https://github.com/martin-awal/kamus/actions/workflows/ci.yml)
+
+Source: https://github.com/martin-awal/kamus · Licence: AGPL-3.0 · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
 
 A personal Indonesian dictionary for learners, run on your own computer. Look up a word and get Indonesian definitions (Indonesian Wiktionary by default, KBBI optional),
 English glosses from Wiktionary, example sentences, pronunciation (several text-to-speech engines), and turn what you
@@ -89,7 +91,7 @@ Update both whenever you add or swap a dependency (see `CLAUDE.md`).
 - Your cards live in the browser (IndexedDB), per browser and address, so make backups. An old `cards.db` from earlier versions is copied into the browser once. Never commit `cards.db`, `cache.db`, `tts_cache/` or the downloaded models; `.gitignore` covers them.
 
 ## Tests
-`node --test tests/` runs the stemmer tests (no network needed).
+`node --test tests/*.test.js` runs the stemmer tests (no network needed).
 
 ## Project layout
 `server.py` (HTTP server), `kbbi.py` / `wiktionary.py` (server-side sources; Wiktionary and Tatoeba are fetched by the page itself), `static/cards-store.js` (cards, kept in the browser) + `static/anki-model.json` (the Anki note type) + `static/apkg.js` (.apkg export), `translate.py`, `wikidepia*.py` (TTS), `static/index.html` (the whole UI), `static/*-worker.js`
