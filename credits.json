@@ -24,7 +24,7 @@
       "name": "Wiktionary (English edition)",
       "url": "https://en.wiktionary.org/",
       "license": "CC BY-SA 4.0",
-      "role": "English glosses, example translations, IPA, audio recordings and word suggestions.",
+      "role": "English glosses, example translations, IPA, audio recordings and word suggestions. Titles of its Indonesian lemmas also form the word list the stemmer checks base words against.",
       "note": "Text is available under CC BY-SA 4.0 (and GFDL). Reuse needs attribution and the same licence. Read straight from the browser through the official REST and Action APIs (they allow cross-origin reads), with the last answer kept in the browser for offline use.",
       "attribution": "Definitions, examples and pronunciation by Wiktionary contributors, CC BY-SA 4.0 (en.wiktionary.org); reformatted for display."
     },

@@ -10,6 +10,7 @@ find into Anki flashcards. It is a Material Design 3 web app (installable as a P
 
 ## Features
 - **Lookup**: Indonesian Wiktionary (default) or optionally KBBI, English Wiktionary, Tatoeba, with history, a quick-look chip for any word you select, and suggestions.
+- **Base words**: a rule-based Indonesian stemmer (berlari → ber- + lari) in the browser, checked against a word list of Wiktionary titles that you download once (about 350 KB). It finds the entry for derived words and shows their word parts.
 - **Pronunciation**: browser voice, edge-tts, or the offline Wikidepia voices (on the server or inside the browser).
 - **Anki bridge**: save cards (stored in your browser) (4 card types per note, each can be switched off), edit them, send them to Anki desktop
   through AnkiConnect, read review progress back, or export an `.apkg`.
@@ -86,6 +87,9 @@ Update both whenever you add or swap a dependency (see `CLAUDE.md`).
 - **Wikidepia voices are non-commercial** (and the model repository has no licence file). They are not included; you
   download them yourself. The AGPL licence of this code does not change that.
 - Your cards live in the browser (IndexedDB), per browser and address, so make backups. An old `cards.db` from earlier versions is copied into the browser once. Never commit `cards.db`, `cache.db`, `tts_cache/` or the downloaded models; `.gitignore` covers them.
+
+## Tests
+`node --test tests/` runs the stemmer tests (no network needed).
 
 ## Project layout
 `server.py` (HTTP server), `kbbi.py` / `wiktionary.py` (server-side sources; Wiktionary and Tatoeba are fetched by the page itself), `static/cards-store.js` (cards, kept in the browser) + `static/anki-model.json` (the Anki note type) + `static/apkg.js` (.apkg export), `translate.py`, `wikidepia*.py` (TTS), `static/index.html` (the whole UI), `static/*-worker.js`

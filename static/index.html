@@ -312,6 +312,7 @@ button.badge.stat{border:0;cursor:help}
 .tile>svg:last-child{color:var(--on-surface-variant)}
 .backrow{margin-bottom:8px}.backrow .text-btn{display:inline-flex;align-items:center;gap:4px}.backrow svg{width:20px;height:20px;transform:rotate(180deg)}
 .scan-vid{width:100%;max-height:50vh;border-radius:var(--shape-m);background:#000;object-fit:cover}.qr-box{background:#fff;padding:8px;border-radius:var(--shape-m);width:min(280px,100%);margin:8px 0}.qr-box svg{display:block;width:100%;height:auto}
+.morph{margin:4px 0 8px;font:400 14px/20px Roboto,sans-serif;color:var(--on-surface-variant)}.morph a{color:var(--primary);text-decoration:none;font-weight:500}.morph a:hover{text-decoration:underline}
 .sync-st{display:flex;align-items:center;gap:8px;margin:8px 0}.sync-st .dot{flex:none}
 .sync-err{color:var(--error);margin:8px 0;font:400 14px/20px Roboto,sans-serif}
 .sync-cfg{width:100%;min-height:96px;font:400 12px/16px ui-monospace,Menlo,monospace;border:1px solid var(--outline);border-radius:var(--shape-m);background:var(--surface-container-high);color:var(--on-surface);padding:8px;letter-spacing:0}
@@ -392,7 +393,7 @@ audio{height:36px;max-width:100%;vertical-align:middle;margin-left:8px}
 .empty .h{font:400 22px/28px Roboto;letter-spacing:0;color:var(--on-surface);margin:0 0 4px}
 @media(max-width:480px){h2{font-size:30px;line-height:38px}.title{font-size:24px}}
 </style>
-<script src="/theme.js"></script><script src="/cards-store.js"></script><script src="/apkg.js"></script><script src="/sync.js"></script><script src="/vendor/qr/qrcode.js"></script></head><body>
+<script src="/theme.js"></script><script src="/cards-store.js"></script><script src="/apkg.js"></script><script src="/sync.js"></script><script src="/stemmer.js"></script><script src="/vendor/qr/qrcode.js"></script></head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-search" viewBox="0 -960 960 960"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/></symbol>
   <symbol id="i-vol" viewBox="0 -960 960 960"><path d="M560-131v-82q90-26 145-100t55-168q0-94-55-168T560-749v-82q124 28 202 125.5T840-481q0 127-78 224.5T560-131ZM120-360v-240h160l200-200v640L280-360H120Zm440 40v-322q47 22 73.5 66t26.5 96q0 51-26.5 94.5T560-320Z"/></symbol>
@@ -1210,9 +1211,41 @@ async function idLookup(word){   // -> {entries, base, src, warnings}
 }
 const kbbiData=async w=>{   // quick-look sheet: the same source as the main lookup
   const src=getIdSrc();
-  if(src==='wikt'){try{return await idwiktLookup(w);}catch{return {error:true};}}
+  if(src==='wikt'){
+    try{
+      const r=await idwiktLookup(w);
+      if(!r.entries.length&&KamusStem.hasWordlist())for(const c of KamusStem.candidates(w).slice(0,3)){const x=await idwiktLookup(c.stem).catch(()=>null);if(x&&x.entries.length)return {entries:x.entries,base:c.stem};}
+      return r;
+    }catch{return {error:true};}
+  }
   return getJSON(kcache,'/api/kbbi?q='+encodeURIComponent(w)+'&src='+idApi(src));
 };
+
+// ---- Word list for the stemmer: titles of English Wiktionary's Indonesian lemmas (about 34,000 words), downloaded once on request and kept in IndexedDB
+const WL_KEY='wordlist:v1',wlState={has:false,n:0,bytes:0,at:0,progress:0,busy:false,error:''};
+async function wlLoad(){
+  try{const v=await idb.get('wiki',WL_KEY);if(v&&v.words){KamusStem.setWordlist(new Set(v.words.split('\n')));Object.assign(wlState,{has:true,n:v.n,bytes:v.words.length,at:v.at});}}catch{}
+}
+async function wlDownload(){
+  if(wlState.busy)return;wlState.busy=true;wlState.error='';wlState.progress=0;
+  try{
+    const words=new Set();
+    for(const cat of ['Category:Indonesian_lemmas','Category:Indonesian_non-lemma_forms']){
+      let cont='';
+      do{
+        const j=await fetchJSON(`https://en.wiktionary.org/w/api.php?action=query&list=categorymembers&cmtitle=${cat}&cmlimit=500&cmnamespace=0&cmprop=title&format=json&origin=*`+(cont?`&cmcontinue=${encodeURIComponent(cont)}`:''),20000);
+        if(!j)throw new Error('Wiktionary did not answer');
+        for(const m of j.query.categorymembers)if(/^[a-z]+$/.test(m.title))words.add(m.title);   // single lowercase words only (no names, no phrases)
+        cont=(j.continue&&j.continue.cmcontinue)||'';wlState.progress=words.size;if(typeof renderStorage==='function'&&document.body.dataset.view==='settings')renderStorage();
+      }while(cont);
+    }
+    const text=[...words].sort().join('\n');await idb.put('wiki',WL_KEY,{words:text,n:words.size,at:Date.now()});
+    KamusStem.setWordlist(words);Object.assign(wlState,{has:true,n:words.size,bytes:text.length,at:Date.now()});
+  }catch(err){wlState.error=err.message||String(err);}
+  wlState.busy=false;if(document.body.dataset.view==='settings')renderStorage();
+}
+async function wlRemove(){try{await idb.del('wiki',WL_KEY);}catch{}KamusStem.setWordlist(null);Object.assign(wlState,{has:false,n:0,bytes:0,at:0});}
+wlLoad();
 
 // ---- Wiktionary, called straight from the browser (it sends CORS headers; KBBI and Tatoeba do not, so those stay on the server)
 const WIKI_REST='https://en.wiktionary.org/api/rest_v1/page/definition/',WIKI_API='https://en.wiktionary.org/w/api.php';
@@ -1660,6 +1693,8 @@ async function renderStorage(){
    +row('Voice model (Wikidepia)','Downloaded for offline voices. Download it again in the voice settings.',fmtB(wd.bytes),`<button type="button" class="text-btn" data-st="wd" ${wd.n?'':'disabled'}>Remove</button>`)
    +row('Translation models (Opus-MT)','Downloaded for offline translation.',fmtB(mt.bytes),`<button type="button" class="text-btn" data-st="mt" ${mt.n?'':'disabled'}>Remove</button>`)
    +(appFiles?row('App files','The offline copy of the page and recent lookups (service worker).',fmtB(appFiles),''):'')
+   +row('Word list (stemming)',wlState.busy?`Downloading… ${wlState.progress.toLocaleString()} words so far.`:wlState.has?`${wlState.n.toLocaleString()} Indonesian words from Wiktionary; used to find base words (berlari → lari).`:wlState.error?`Failed: ${esc(wlState.error)}`:'Not downloaded: needed to find base words and show word parts (about 350 KB).',fmtB(wlState.bytes),
+     wlState.busy?'':wlState.has?`<button type="button" class="text-btn" data-st="wlrm">Remove</button>`:`<button type="button" class="text-btn" data-st="wldl">Download</button>`)
    +row('Keep my data',persisted?'The browser has agreed not to delete Kamus data when space runs low.':'The browser may delete Kamus data when space runs low.',persisted?'Protected':'Not protected',persisted?'':`<button type="button" class="text-btn" data-st="persist">Protect</button>`);
 }
 document.getElementById('storageBox').addEventListener('click',async e=>{
@@ -1669,6 +1704,8 @@ document.getElementById('storageBox').addEventListener('click',async e=>{
   else if(k==='wav'){await idb.clear('wav');toast('Audio cache cleared.');}
   else if(k==='wd'){await wdRemove();toast('Voice model removed.');}
   else if(k==='mt'){for(const d of mtDirs)await mtRemove(d);toast('Translation models removed.');}
+  else if(k==='wldl'){wlDownload();renderStorage();return;}
+  else if(k==='wlrm'){await wlRemove();toast('Word list removed.');}
   else if(k==='persist'){let ok=false;try{ok=await navigator.storage.persist();}catch{}toast(ok?'Kamus data is now protected.':'The browser did not agree (it decides by itself, for example for installed apps).');}
   renderStorage();
 });
@@ -1845,25 +1882,38 @@ document.addEventListener('click',e=>{
   if(m&&e.target.closest('#mineFloat')){minePinned=true;return;}   // a click on the opened card (mouse) keeps it open
   if(m&&m.classList.contains('open')&&minePinned){minePinned=false;mineSet(false);}   // tap elsewhere = minimise
 });
+const morphHtml=a=>{const pre=a.steps.filter(x=>x.kind==='prefix').map(x=>`<b>${esc(x.text)}</b>`),suf=a.steps.filter(x=>x.kind==='suffix').map(x=>`<b>${esc(x.text)}</b>`);
+  return [...pre,`<a href="#" class="morph-w" data-gow="${esc(a.stem)}">${esc(a.stem)}</a>`,...suf].join(' + ')+(a.steps.some(x=>x.kind==='redup')?' <span class="muted">(repeated)</span>':'');};
+out.addEventListener('click',async e=>{
+  const g=e.target.closest('[data-gow]');if(g){e.preventDefault();q.value=g.dataset.gow;fitIdle();syncBtn();go(g.dataset.gow);return;}
+  const f=e.target.closest('[data-wl=find]');if(f){const w=f.dataset.w;f.disabled=true;f.textContent='Downloading the word list…';await wlDownload();if(wlState.has)go(w);else toast('Could not download the word list: '+wlState.error);}
+});
 async function go(word){
   pg.classList.add('on');hideChip();const minePromise=mineLoad();const oldMine=document.getElementById('mineFloat');if(oldMine)oldMine.remove();
   try{
     let r;try{r=await idLookup(word);}catch(err){buildToc(null);out.innerHTML=snack(err.message,true);return;}
-    const d={word,kbbi:r.entries,kbbi_base:r.base,wiktionary:null,sentences:[],warnings:r.warnings,source:r.src},wiktOnly=r.src==='wikt';
+    let morph=null;   // how the word is built: ber- + lari (needs the word list)
+    if(r.src==='wikt'&&KamusStem.hasWordlist()){
+      if(!r.entries.length){for(const c of KamusStem.candidates(word).slice(0,4)){const x=await idwiktLookup(c.stem).catch(()=>null);if(x&&x.entries.length){r={...r,entries:x.entries,base:c.stem};morph=c;break;}}}
+      else if(!KamusStem.isKnown(word))morph=KamusStem.analyze(word);   // a word that is itself a known entry is not cut up
+    }
+    const d={word,kbbi:r.entries,kbbi_base:r.base,wiktionary:null,sentences:[],warnings:r.warnings,source:r.src,morph},wiktOnly=r.src==='wikt';
     buildToc(null);
-    const emptyHtml=`<div class="empty"><svg><use href="#i-search"/></svg><p class="h">Tidak ditemukan</p><div>No entry for “${esc(word)}”. Try the base form (makan, not memakan)${wiktOnly?'. Indonesian Wiktionary does not have every word; KBBI can be switched on in Settings → Indonesian definitions':''}.</div></div>`;
+    const emptyHtml=`<div class="empty"><svg><use href="#i-search"/></svg><p class="h">Tidak ditemukan</p><div>No entry for “${esc(word)}”. Try the base form (makan, not memakan)${wiktOnly?'. Indonesian Wiktionary does not have every word; KBBI can be switched on in Settings → Indonesian definitions':''}.</div>${wiktOnly&&!KamusStem.hasWordlist()?`<p style="margin-top:12px"><button type="button" class="btn-tonal" data-wl="find" data-w="${esc(word)}">Look for the base word</button><br><span class="muted">Downloads a word list of about 350 KB once (from Wiktionary) and keeps it in this browser.</span></p>`:''}</div>`;
     if(!d.kbbi.length&&!wiktOnly){out.innerHTML=emptyHtml;return;}
     lastResult=d;d.wiktionary=null;
     const warn=d.warnings.length?snack('Some sources failed: '+d.warnings.join('; '),true):'';
     const srcLine=r.src==='wikt'?`<p class="src"><a href="https://id.wiktionary.org/wiki/${encodeURIComponent(word)}#Bahasa_Indonesia" target="_blank" rel="noopener">Source: Wiktionary (Indonesian)</a> · CC BY-SA 4.0</p>`:r.src==='kbbi-api'?'<p class="src">Source: KBBI (via the kbbi-api server set up on this Kamus server)</p>':'<p class="src">Source: KBBI (kbbi.web.id)</p>';
     const kb=d.kbbi.map((e,i)=>`<section class="card ${i==0?'hero':''}" ${i<2?`id="${i?'sec-rel':'sec-kbbi'}"`:''}>
       <div class="hero-row"><h2>${esc(e.syllables)}</h2>${say(e.headword,'tonal')}</div>
+      ${i==0&&d.morph?`<p class="morph">Word parts: ${morphHtml(d.morph)}</p>`:''}
       ${e.ipa?`<p class="pron">${esc(e.ipa)}${e.exactIpa?'':' · approx.'}</p>`:''}
       <ol>${e.senses.map((s,j)=>`<li class="has-add">${s.pos.length?`<span class="pos">${esc(s.pos.join(' '))}</span>`:''}<span class="def">${esc(s.definition)}</span>${s.examples.map(x=>ex(x)).join('')}<button class="icon-btn sm addcard" data-add="kb" data-e="${i}" data-s="${j}" title="Create Anki card" aria-label="Create Anki card">${ico('add')}</button></li>`).join('')}</ol>
       ${i==0?srcLine:''}</section>`).join('');
-    const note=d.kbbi_base?`<div class="snack">${ico('book')}<span>KBBI lists “${esc(word)}” under its base word “${esc(d.kbbi_base)}”.</span></div>`:'';
+    const note=d.kbbi_base?`<div class="snack">${ico('book')}<span>${wiktOnly?`“${esc(word)}” has no entry of its own: showing its base word “${esc(d.kbbi_base)}”.`:`KBBI lists “${esc(word)}” under its base word “${esc(d.kbbi_base)}”.`}</span></div>`:'';
+    const baseHint=wiktOnly&&!d.kbbi.length&&!KamusStem.hasWordlist()?`<div class="snack">${ico('book')}<span>Indonesian Wiktionary has no definition for “${esc(word)}”. <button type="button" class="text-btn" data-wl="find" data-w="${esc(word)}">Look for the base word</button> <span class="muted">(downloads a word list of about 350 KB once)</span></span></div>`:'';
     await minePromise;
-    d.sentences=[];out.innerHTML=note+warn+kb+wikiCardHtml(null);buildToc(d);remember(word,'');renderMine();
+    d.sentences=[];out.innerHTML=note+baseHint+warn+kb+wikiCardHtml(null);buildToc(d);remember(word,'');renderMine();
     const tat=tatoebaLookup(word).then(list=>{if(lastResult!==d||!list.length)return;d.sentences=list;
       out.insertAdjacentHTML('beforeend',`<section class="card" id="sec-sn"><h3>More example sentences <span class="badge">Tatoeba</span></h3>${list.map(s=>ex(s.id,s.en)).join('')}<p class="src">Tatoeba · CC BY 2.0 FR</p></section>`);buildToc(d);}).catch(()=>{});
     const wik=wikiLookup(word).then(wk=>{if(lastResult!==d)return;d.wiktionary=wk;swapWikiCard(wikiCardHtml(wk));buildToc(d);if(wk.senses[0])remember(word,wk.senses[0].gloss);})

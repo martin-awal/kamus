@@ -87,7 +87,7 @@ def suggest(prefix):
     return result
 
 
-STATIC_FILES = {"/sw.js", "/wd-worker.js", "/tr-worker.js", "/cards-store.js", "/apkg.js", "/sync.js", "/auth.html", "/anki-model.json", "/theme.js", "/manifest.webmanifest", "/icon.svg"}
+STATIC_FILES = {"/sw.js", "/wd-worker.js", "/tr-worker.js", "/cards-store.js", "/apkg.js", "/sync.js", "/auth.html", "/stemmer.js", "/anki-model.json", "/theme.js", "/manifest.webmanifest", "/icon.svg"}
 STATIC_TYPES = {".html": "text/html; charset=utf-8", ".mjs": "text/javascript", ".wasm": "application/wasm", ".onnx": "application/octet-stream", ".json": "application/json", ".js": "text/javascript", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml", ".png": "image/png"}
 QUICK, KB = {}, {}
 TTS_DIR = HERE / "tts_cache"
