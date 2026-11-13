@@ -1,13 +1,22 @@
 {
-  "updated": "2026-11-12",
+  "updated": "2026-11-13",
   "items": [
     {
       "kind": "data",
-      "name": "KBBI (via kbbi.web.id)",
+      "name": "Wiktionary (Indonesian edition)",
+      "url": "https://id.wiktionary.org/",
+      "license": "CC BY-SA 4.0",
+      "role": "Default source of Indonesian definitions, examples and syllable breaks.",
+      "note": "Text is available under CC BY-SA 4.0 (and GFDL). Read straight from the browser through the Action API (it allows cross-origin reads), with the last answer kept in the browser for offline use. Community-written: coverage is uneven.",
+      "attribution": "Definitions from id.wiktionary.org contributors, CC BY-SA 4.0; each entry links to its source page."
+    },
+    {
+      "kind": "data",
+      "name": "KBBI (optional)",
       "url": "https://kbbi.web.id/",
       "license": "No open licence",
-      "role": "Indonesian definitions, word classes, example sentences and syllable breaks.",
-      "note": "KBBI content belongs to Badan Pengembangan dan Pembinaan Bahasa (Kemendikbudristek). Fetched from kbbi.web.id, a third-party site, for personal study only; do not redistribute. Requests are throttled to 0.6 s apart.",
+      "role": "Optional source of Indonesian definitions (off by default): word classes, example sentences and syllable breaks.",
+      "note": "KBBI content belongs to Badan Pengembangan dan Pembinaan Bahasa (Kemendikbudristek) and has no open licence. Off unless you choose it in Settings; then it is fetched by your own Kamus server from kbbi.web.id (a third-party site) or from a kbbi-api server you configure, for personal study only. Nothing from KBBI is distributed with Kamus. Requests to kbbi.web.id are throttled to 0.6 s apart.",
       "attribution": "© Badan Pengembangan dan Pembinaan Bahasa, Kemendikbudristek; presented by kbbi.web.id."
     },
     {
@@ -50,6 +59,14 @@
       "license": "Service terms",
       "role": "Optional engine that fills in missing translations of card text (Indonesian ↔ English).",
       "note": "Text you translate is sent to their server; anonymous use has a daily quota. Quality varies (it mixes translation memory and machine translation). Called directly from the browser (it sends CORS headers), so the text goes from your device to MyMemory without passing the Kamus server."
+    },
+    {
+      "kind": "service",
+      "name": "kbbi-api server (optional, not bundled)",
+      "url": "https://github.com/raf555/kbbi-api",
+      "license": "MIT (code); data owned by Badan Bahasa",
+      "role": "Optional KBBI source: any server that speaks the kbbi-api JSON format, named in KAMUS_KBBI_API_URL on the Kamus server.",
+      "note": "Only used if you set it up. The project's own README says its data is owned by Badan Pengembangan dan Pembinaan Bahasa and may not be used commercially."
     },
     {
       "kind": "service",

@@ -9,6 +9,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 import kbbi
+import kbbi_api
 import translate
 import wikidepia
 import edge_tts
@@ -20,17 +21,27 @@ DB = sqlite3.connect(HERE / "cache.db", check_same_thread=False)
 DB.execute("create table if not exists cache4 (word text primary key, data text)")
 
 
-def lookup(word):
-    row = DB.execute("select data from cache4 where word=?", (word,)).fetchone()
+KBBI_SOURCES = {"web": kbbi.lookup, "api": kbbi_api.lookup}   # kbbi.web.id scraper | a kbbi-api compatible server (KAMUS_KBBI_API_URL)
+
+
+def kbbi_source(src):
+    if src not in KBBI_SOURCES:
+        raise ValueError("choose a KBBI source (Settings → Indonesian definitions)")
+    return KBBI_SOURCES[src]
+
+
+def lookup(word, src="web"):
+    key = word if src == "web" else f"{src}:{word}"   # old cache rows (kbbi.web.id) keep their plain-word keys
+    row = DB.execute("select data from cache4 where word=?", (key,)).fetchone()
     if row:
         return json.loads(row[0])
-    entries, base = kbbi.lookup(word)
+    entries, base = kbbi_source(src)(word)
     for e in entries:
         e["ipa"] = ipa(e["headword"])
     # Wiktionary and Tatoeba are fetched by the browser itself (both allow cross-origin reads); only KBBI needs this server.
     result = {"word": word, "kbbi": entries, "kbbi_base": base, "wiktionary": None, "sentences": [], "warnings": []}
     if entries and not result["warnings"]:
-        DB.execute("insert or replace into cache4 values (?,?)", (word, json.dumps(result)))
+        DB.execute("insert or replace into cache4 values (?,?)", (key, json.dumps(result)))
         DB.commit()
     return result
 
@@ -130,14 +141,14 @@ def quick(word):
     return QUICK[word]
 
 
-def kbbi_only(word):
+def kbbi_only(word, src="web"):
     word = _clean(word)
-    if word not in KB:
-        entries, base = kbbi.lookup(word)
+    if (src, word) not in KB:
+        entries, base = kbbi_source(src)(word)
         for e in entries:
             e["ipa"] = ipa(e["headword"])
-        KB[word] = {"word": word, "entries": entries, "base": base}
-    return KB[word]
+        KB[(src, word)] = {"word": word, "entries": entries, "base": base}
+    return KB[(src, word)]
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -202,13 +213,20 @@ class Handler(BaseHTTPRequestHandler):
             if not word:
                 return self._send("{}", "application/json", 400)
             try:
-                self._send(json.dumps(lookup(word)), "application/json")
+                self._send(json.dumps(lookup(word, parse_qs(u.query).get("src", [""])[0])), "application/json")
+            except ValueError as exc:
+                self._send(json.dumps({"error": str(exc)}), "application/json", 400)
             except Exception as exc:
                 self._send(json.dumps({"error": str(exc)}), "application/json", 502)
+        elif u.path == "/api/kbbi/status":   # which optional KBBI sources this server offers (the page shows them in Settings)
+            self._send(json.dumps({"web": True, "api": bool(kbbi_api.base_url())}), "application/json")
         elif u.path in ("/api/quick", "/api/kbbi"):
-            fn = quick if u.path == "/api/quick" else kbbi_only
+            qs = parse_qs(u.query)
             try:
-                self._send(json.dumps(fn(parse_qs(u.query).get("q", [""])[0])), "application/json")
+                out = quick(qs.get("q", [""])[0]) if u.path == "/api/quick" else kbbi_only(qs.get("q", [""])[0], qs.get("src", [""])[0])
+                self._send(json.dumps(out), "application/json")
+            except ValueError as exc:
+                self._send(json.dumps({"error": str(exc)}), "application/json", 400)
             except Exception as exc:
                 self._send(json.dumps({"error": str(exc)}), "application/json", 502)
         elif u.path == "/api/tts":

@@ -2,14 +2,14 @@
 
 Source: https://github.com/martin-awal/kamus · Licence: AGPL-3.0
 
-A personal Indonesian dictionary for learners, run on your own computer. Look up a word and get KBBI definitions,
+A personal Indonesian dictionary for learners, run on your own computer. Look up a word and get Indonesian definitions (Indonesian Wiktionary by default, KBBI optional),
 English glosses from Wiktionary, example sentences, pronunciation (several text-to-speech engines), and turn what you
 find into Anki flashcards. It is a Material Design 3 web app (installable as a PWA); the server is plain Python.
 
-> Status: a personal learning tool, published as-is. See [Before you publish or share a copy](#legal-notes) about KBBI.
+> Status: a personal learning tool, published as-is. See [Legal notes](#legal-notes) about KBBI, which is optional and off by default.
 
 ## Features
-- **Lookup**: KBBI + Wiktionary + Tatoeba, with history, a quick-look chip for any word you select, and suggestions.
+- **Lookup**: Indonesian Wiktionary (default) or optionally KBBI, English Wiktionary, Tatoeba, with history, a quick-look chip for any word you select, and suggestions.
 - **Pronunciation**: browser voice, edge-tts, or the offline Wikidepia voices (on the server or inside the browser).
 - **Anki bridge**: save cards (stored in your browser) (4 card types per note, each can be switched off), edit them, send them to Anki desktop
   through AnkiConnect, read review progress back, or export an `.apkg`.
@@ -57,7 +57,8 @@ details in it, so set `KAMUS_CONTACT="you@example.com"` (or a URL) before starti
 
 | Source / model | Runs on | Licence / terms | Notes |
 |---|---|---|---|
-| KBBI (via kbbi.web.id) | server fetches it | No open licence (Badan Bahasa) | **Unresolved**, see below |
+| Wiktionary, Indonesian edition | browser, directly | CC BY-SA 4.0 | the default source of Indonesian definitions |
+| KBBI (optional, off by default) | via the Kamus server: kbbi.web.id, or a kbbi-api server you configure | No open licence (Badan Bahasa); personal use only | **Unresolved**, see below |
 | Wiktionary | browser, directly | CC BY-SA 4.0 | attribution shown in the app |
 | Tatoeba | browser, directly (api.tatoeba.org/v1) | CC BY 2.0 FR (some CC0) | attribution shown in the app |
 | edge-tts (Microsoft read-aloud) | server calls Microsoft | Microsoft terms; unofficial | may break any time; opt-in |
@@ -75,9 +76,13 @@ The full, per-package list is in `credits.json` and on the app's Settings → Le
 Update both whenever you add or swap a dependency (see `CLAUDE.md`).
 
 ## Legal notes
-- **KBBI is unresolved.** Its content belongs to Badan Pengembangan dan Pembinaan Bahasa and has no open licence;
-  Kamus fetches it from a third-party site for personal use. Do not publish KBBI text or the lookup cache, and check the
-  source site's terms before relying on this. Wiktionary and Tatoeba are openly licensed alternatives.
+- **KBBI is optional and off by default.** Its content belongs to Badan Pengembangan dan Pembinaan Bahasa and has no open licence, so
+  nothing from it is shipped or cached in this repository. To use it, choose it in Settings → Indonesian definitions: either
+  `kbbi.web.id` through your own Kamus server, or a [kbbi-api](https://github.com/raf555/kbbi-api)-compatible server whose address you
+  put in the server's environment (`KAMUS_KBBI_API_URL=https://… .venv/bin/python server.py`). For personal, non-commercial study only;
+  check the terms of whichever service you use. Do not publish KBBI text or the server's `cache.db`.
+- Indonesian Wiktionary is community-written; some entries may be adapted from other dictionaries despite its own rules. Check an entry
+  before relying on it, and keep its CC BY-SA attribution (the app shows a source link under each entry).
 - **Wikidepia voices are non-commercial** (and the model repository has no licence file). They are not included; you
   download them yourself. The AGPL licence of this code does not change that.
 - Your cards live in the browser (IndexedDB), per browser and address, so make backups. An old `cards.db` from earlier versions is copied into the browser once. Never commit `cards.db`, `cache.db`, `tts_cache/` or the downloaded models; `.gitignore` covers them.
