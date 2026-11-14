@@ -70,3 +70,19 @@ jobs:
           done
       - name: Tests again, now including the .apkg export
         run: node --test tests/*.test.js
+
+  static-site:
+    name: Works as a static site (no server)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: scripts/fetch_vendor.sh
+      - name: Install Playwright (not a project dependency)
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Browser test against a plain file server
+        run: node tests/e2e/static-site.e2e.js

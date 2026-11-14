@@ -31,6 +31,17 @@ python3 -m venv .venv
 PWA install, multi-threaded WebAssembly and service workers need https or `localhost`.
 AnkiConnect also wants port 8765, so run Kamus with `--port` on the computer where Anki runs.
 
+## Running without the server (static website)
+Most of Kamus runs in the browser: Indonesian and English Wiktionary, Tatoeba, cards (stored in the browser), backup, sync, `.apkg` export, the
+base-word finder, MyMemory and Opus-MT translation, and the browser voice. Without the Kamus server only these things are switched off:
+KBBI, edge-tts, the Wikidepia voices, Argos and LibreTranslate. The page notices on its own and locks those options in Settings.
+```bash
+scripts/build_static.sh      # makes dist/ (fetches the vendored libraries first)
+python3 -m http.server --directory dist 8000     # or upload the CONTENTS of dist/ to the ROOT of any static host
+```
+The page uses absolute paths (`/vendor/...`), so it must be served from the root of a site, not from a sub-folder.
+Use https for installing the app and for the camera (QR scanner). `tests/e2e/static-site.e2e.js` checks this mode (CI runs it).
+
 ## Optional cloud sync (your own Firebase project)
 Kamus can keep cards and search history in step across devices with Google sign-in and Firestore. It is off until you paste a
 Firebase web config in **Settings → Sync**, so no one else's account is involved and the data lives in your own Firebase project.

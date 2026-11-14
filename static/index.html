@@ -488,6 +488,10 @@ audio{height:36px;max-width:100%;vertical-align:middle;margin-left:8px}
     <h3>Appearance</h3>
     <div id="themeBox"></div>
   </section>
+  <section class="card" id="serverCard" hidden>
+    <h3>No Kamus server</h3>
+    <p class="muted">This copy runs without the Kamus server (for example as a static website). Everything that works in the browser is available: Wiktionary and Tatoeba lookups, cards, backup, sync, <code>.apkg</code> export, the base-word finder, MyMemory and Opus-MT translation, learning pages and the browser voice. These need the server and are switched off: KBBI, edge-tts, the Wikidepia voices, Argos and LibreTranslate.</p>
+  </section>
   <section class="card" id="idsrcCard">
     <h3>Indonesian definitions</h3>
     <div id="idsrcOptions" role="radiogroup" aria-label="Source of Indonesian definitions"></div>
@@ -564,11 +568,17 @@ const ico=n=>`<svg><use href="#i-${n}"/></svg>`;
 // ---- text-to-speech: engine + voice come from Settings (localStorage), fallback = browser voice
 const TTS_KEY='kamus-tts',ENGINES=['browser','edge','wikidepia','wikidepia-web'];
 const TTS_DEFAULT={engine:'edge',edge:'gadis',wikidepia:'wibowo','wikidepia-web':'wibowo',speed:1};
+// Is the Kamus server there? (Kamus also works as a plain static website: everything that runs in the browser keeps working.)
+let serverUp;   // undefined until probed, then true/false
+const noServer=()=>serverUp===false;
+const serverProbe=fetch('/api/kbbi/status').then(r=>r.ok?r.json():Promise.reject()).then(j=>{serverUp=true;return j;}).catch(()=>{serverUp=false;return null;})
+  .then(j=>{if(typeof onServerKnown==='function')onServerKnown();return j;});
+const ttsDefault=()=>({...TTS_DEFAULT,engine:noServer()?'browser':'edge'});
 function getTts(){const c=getTtsRaw();c.speed=Math.min(1.5,Math.max(.5,+c.speed||1));return c;}
 function getTtsRaw(){
-  try{const s=JSON.parse(localStorage.getItem(TTS_KEY));if(s&&ENGINES.includes(s.engine))return {...TTS_DEFAULT,...s};}catch{}
-  try{const old=localStorage.getItem('kamus-voice');if(old==='browser')return {...TTS_DEFAULT,engine:'browser'};if(old==='ardi')return {...TTS_DEFAULT,edge:'ardi'};}catch{}
-  return {...TTS_DEFAULT};
+  try{const s=JSON.parse(localStorage.getItem(TTS_KEY));if(s&&ENGINES.includes(s.engine))return {...ttsDefault(),...s};}catch{}
+  try{const old=localStorage.getItem('kamus-voice');if(old==='browser')return {...ttsDefault(),engine:'browser'};if(old==='ardi')return {...ttsDefault(),edge:'ardi'};}catch{}
+  return {...ttsDefault()};
 }
 function setTts(patch){try{localStorage.setItem(TTS_KEY,JSON.stringify({...getTts(),...patch}));}catch{}}
 function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),4000);}
@@ -584,7 +594,7 @@ function speak(t,btn,override){
   if(btn.classList.contains('speaking')){stopSpeech();return;}   // tap again while it is loading or playing = stop
   stopSpeech();
   const cfg={...getTts(),...override};
-  if(cfg.engine==='browser'){browserSpeak(t,btn,cfg.speed);return;}
+  if(cfg.engine==='browser'||noServer()){browserSpeak(t,btn,cfg.speed);return;}   // without the server only the browser voice exists
   btn.classList.add('speaking','loading');   // the spinner shows until the voice is actually playing
   if(cfg.engine==='wikidepia-web'){
     webSpeak(t,cfg['wikidepia-web'],btn,cfg.speed).catch(err=>{btn.classList.remove('speaking','loading');toast('In-browser Wikidepia: '+err.message+'. Using the browser voice.');browserSpeak(t,btn,cfg.speed);});return;}
@@ -1016,7 +1026,8 @@ ankiDlg.addEventListener('change',e=>{
   if(e.target.id==='aKey'){try{localStorage.setItem(ANKI_KEY_KEY,e.target.value);}catch{}checkAnki();}
 });
 const audioFor=()=>{const c=getTts();if(c.engine==='wikidepia-web')return {e:'web',voice:c['wikidepia-web'],ext:'wav'};const e=c.engine==='browser'?'edge':c.engine;return {e,voice:c[e],ext:e==='wikidepia'?'wav':'mp3'};};
-async function audioSpec(text,a,filename,field){return a.e==='web'?{data:await webWavBase64(text,a.voice),filename,fields:[field]}:{url:absTts(text,a),filename,fields:[field]};}
+async function audioSpec(text,a,filename,field){if(noServer()&&a.e!=='web')return null;   // AnkiConnect would fetch the audio from a server that is not there
+  return a.e==='web'?{data:await webWavBase64(text,a.voice),filename,fields:[field]}:{url:absTts(text,a),filename,fields:[field]};}
 const absTts=(t,a)=>`${location.origin}/api/tts?engine=${a.e}&voice=${a.voice}&text=${encodeURIComponent(t)}`;
 const escSearch=s=>s.replace(/[\\"*_]/g,'\\$&');
 async function reportCards(updates){if(updates.length)await KamusCards.report(updates);}
@@ -1040,6 +1051,7 @@ async function syncToAnki(){
       const f={...c.fields,Audio:'',ExampleAudio:''};
       const audio=[await audioSpec(f.Word,a,`kamus-${c.id}-w.${a.ext}`,'Audio')];
       if(f.Example)audio.push(await audioSpec(f.Example,a,`kamus-${c.id}-e.${a.ext}`,'ExampleAudio'));
+      for(let k=audio.length-1;k>=0;k--)if(!audio[k])audio.splice(k,1);
       try{const id=await ac('addNote',{note:{deckName:m.deck,modelName:m.name,fields:f,options:{allowDuplicate:false},tags:['kamus'],audio}},120000);updates.push({id:c.id,note_id:id});}
       catch(err){
         if(/duplicate/i.test(err.message)){const ids=await ac('findNotes',{query:`"note:${m.name}" "Index:${escSearch(f.Index)}"`});if(ids[0]){updates.push({id:c.id,note_id:ids[0]});continue;}}
@@ -1441,9 +1453,9 @@ function openEditCard(c){
 }
 async function pushNoteUpdate(card,old){   // old = the fields before the edit (null = refresh all audio)
   const f={...card.fields};delete f.Audio;delete f.ExampleAudio;
-  const a=audioFor(),audio=[];
-  if(!old||card.fields.Word!==old.Word)audio.push(await audioSpec(card.fields.Word,a,`kamus-${card.id}-w.${a.ext}`,'Audio'));
-  if(card.fields.Example&&(!old||card.fields.Example!==old.Example))audio.push(await audioSpec(card.fields.Example,a,`kamus-${card.id}-e.${a.ext}`,'ExampleAudio'));
+  const a=audioFor(),audio=[];const addAudio=x=>{if(x)audio.push(x);};
+  if(!old||card.fields.Word!==old.Word)addAudio(await audioSpec(card.fields.Word,a,`kamus-${card.id}-w.${a.ext}`,'Audio'));
+  if(card.fields.Example&&(!old||card.fields.Example!==old.Example))addAudio(await audioSpec(card.fields.Example,a,`kamus-${card.id}-e.${a.ext}`,'ExampleAudio'));
   const note={id:card.note_id,fields:f};if(audio.length)note.audio=audio;
   try{await ac('updateNoteFields',{note},120000);}
   catch(err){if(audio.length&&/audio/i.test(err.message)){delete note.audio;await ac('updateNoteFields',{note},120000);}else throw err;}
@@ -1555,8 +1567,8 @@ function renderTr(){
   const c=getTr(),st=trStatus||{};
   document.getElementById('trAuto').checked=!!c.auto;
   document.getElementById('trOptions').innerHTML=['mymemory','argos','opusmt','libretranslate'].map(e=>{
-    const sel=c.engine===e,locked=(e==='argos'&&trStatus&&!(st.argos||{}).ready)||(e==='opusmt'&&!(MT.has['id-en']||MT.has['en-id']));
-    const status=e==='opusmt'?(MT.err||(MT.has['id-en']&&MT.has['en-id']?'Ready · offline'+(MT.info?` · last ${MT.info.ms} ms`:''):locked?'Download a direction to use it.':'One direction missing: that direction will not translate.')):e==='argos'?(!trStatus?'':locked?'Not installed (run scripts/install_argos.sh).':'Ready · offline'):e==='libretranslate'?(c.url?'Server set.':'Add the server address above.'):'Ready.';
+    const sel=c.engine===e,needsServer=(e==='argos'||e==='libretranslate')&&noServer(),locked=needsServer||(e==='argos'&&trStatus&&!(st.argos||{}).ready)||(e==='opusmt'&&!(MT.has['id-en']||MT.has['en-id']));
+    const status=needsServer?'Needs the Kamus server (not reachable).':e==='opusmt'?(MT.err||(MT.has['id-en']&&MT.has['en-id']?'Ready · offline'+(MT.info?` · last ${MT.info.ms} ms`:''):locked?'Download a direction to use it.':'One direction missing: that direction will not translate.')):e==='argos'?(!trStatus?'':locked?'Not installed (run scripts/install_argos.sh).':'Ready · offline'):e==='libretranslate'?(c.url?'Server set.':'Add the server address above.'):'Ready.';
     return `<div class="opt ${sel?'sel':''}" role="radio" aria-checked="${sel}" tabindex="0" data-tr="${e}" data-locked="${locked}">
       <span class="radio"></span><div class="opt-main"><div class="opt-title">${TR_NAME[e]}</div><div class="opt-desc">${TR_INFO[e].desc}</div>
       ${e==='opusmt'?`<div class="opt-status">${mtDirs.map(d=>{const info=((st.opusmt||{})[d])||{};const lbl=d==='id-en'?'Indonesian → English':'English → Indonesian';
@@ -1732,6 +1744,13 @@ document.getElementById('idsrcOptions').addEventListener('click',e=>{
 document.getElementById('idsrcOptions').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-idsrc]')){e.preventDefault();e.target.click();}});
 renderIdSrc();
 
+// ---- no server: the page keeps working, server-only options are locked
+function onServerKnown(){
+  const note=document.getElementById('serverCard');if(note)note.hidden=!noServer();
+  if(noServer()&&getIdSrc()!=='wikt')setIdSrc('wikt');   // KBBI cannot work without the server
+  if(document.body.dataset.view==='settings'){renderTts();renderTr();loadIdSrc();}
+}
+
 // ---- Settings page
 let ttsStatus=null;
 const SAMPLE='Selamat pagi, apa kabar?';
@@ -1744,6 +1763,7 @@ const ENGINE_INFO={
 function renderTts(){
   const cfg=getTts(),st=ttsStatus||{},wd=st.wikidepia||{};
   const status=e=>{
+    if(e!=='browser'&&noServer())return 'Needs the Kamus server (not reachable).';
     if(e==='browser')return speechSynthesis.getVoices().some(v=>v.lang.replace('_','-').startsWith('id'))?'Indonesian system voice found.':'No Indonesian system voice found.';
     if(e==='edge')return ttsStatus?'Ready.':'';
     if(!ttsStatus)return '';
@@ -1755,7 +1775,7 @@ function renderTts(){
     return 'Ready · CPU'+(wd.last_seconds?` · last sentence ${wd.last_seconds}s`:'')+(wd.error?` · error: ${wd.error}`:'');
   };
   document.getElementById('ttsOptions').innerHTML=ENGINES.map(e=>{
-    const info=ENGINE_INFO[e],disabled=e==='wikidepia'&&ttsStatus&&!wd.ready,locked=e==='wikidepia-web'&&ttsStatus&&!wdState.has,sel=cfg.engine===e;   // locked: can be chosen only after the model is downloaded; its Download button stays usable
+    const info=ENGINE_INFO[e],needsServer=e!=='browser'&&noServer(),disabled=needsServer||(e==='wikidepia'&&ttsStatus&&!wd.ready),locked=needsServer||(e==='wikidepia-web'&&ttsStatus&&!wdState.has),sel=cfg.engine===e;   // locked: can be chosen only after the model is downloaded; its Download button stays usable
     return `<div class="opt ${sel?'sel':''} ${disabled?'disabled':''}" role="radio" aria-checked="${sel}" aria-disabled="${disabled}" tabindex="0" data-engine="${e}" data-locked="${!!locked}">
       <span class="radio"></span>
       <div class="opt-main"><div class="opt-title">${esc(info.title)}</div><div class="opt-desc">${esc(info.desc)}</div>
@@ -1824,7 +1844,7 @@ function route(){
   document.getElementById('pageTitle').innerHTML=v==='kamus'?'Kamus <small>Indonesian ⇄ English</small>':TITLES[v];
   document.title=v==='kamus'?'Kamus':TITLES[v]+' · Kamus';
   stopSpeech();closeSheet();closeQuick();hideChip();closeCard();
-  if(v==='settings'){loadIdSrc();renderSync();renderStorage();renderInstall();loadTrStatus();renderTheme();showSpeed();renderTts();loadStatus();loadCredits();}
+  if(v==='settings'){onServerKnown();loadIdSrc();renderSync();renderStorage();renderInstall();loadTrStatus();renderTheme();showSpeed();renderTts();loadStatus();loadCredits();}
   if(v==='legal')loadCredits();
   if(v==='anki')loadAnki();if(v!=='kamus')closeCard();
   if(v!=='anki'&&ankiDlg.open)ankiDlg.close();

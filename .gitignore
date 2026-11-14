@@ -25,3 +25,5 @@ static/vendor/
 *.crt
 .env
 .claude/
+dist/
+node_modules/
