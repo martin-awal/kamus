@@ -24,7 +24,7 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      - name: Stemmer tests
+      - name: Tests (the .apkg test is skipped here; it needs the vendored libraries)
         run: node --test tests/*.test.js
 
       - name: JavaScript syntax (separate scripts)
@@ -68,3 +68,5 @@ jobs:
           for f in ort/ort-wasm-simd-threaded.wasm transformers/transformers.min.js apkg/sql-wasm.wasm apkg/jszip.min.js firebase/firebase-app-compat.js qr/qrcode.js qr/jsQR.js; do
             test -s "static/vendor/$f" || { echo "missing static/vendor/$f"; exit 1; }
           done
+      - name: Tests again, now including the .apkg export
+        run: node --test tests/*.test.js

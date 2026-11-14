@@ -91,7 +91,7 @@ Update both whenever you add or swap a dependency (see `CLAUDE.md`).
 - Your cards live in the browser (IndexedDB), per browser and address, so make backups. An old `cards.db` from earlier versions is copied into the browser once. Never commit `cards.db`, `cache.db`, `tts_cache/` or the downloaded models; `.gitignore` covers them.
 
 ## Tests
-`node --test tests/*.test.js` runs the stemmer tests (no network needed).
+`node --test tests/*.test.js` runs the tests: stemmer, card rules, cloud-sync merging and the `.apkg` export (the last one needs `scripts/fetch_vendor.sh` first and is skipped without it). No network needed.
 
 ## Project layout
 `server.py` (HTTP server), `kbbi.py` / `wiktionary.py` (server-side sources; Wiktionary and Tatoeba are fetched by the page itself), `static/cards-store.js` (cards, kept in the browser) + `static/anki-model.json` (the Anki note type) + `static/apkg.js` (.apkg export), `translate.py`, `wikidepia*.py` (TTS), `static/index.html` (the whole UI), `static/*-worker.js`
