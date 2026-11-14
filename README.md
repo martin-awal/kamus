@@ -12,7 +12,7 @@ find into Anki flashcards. It is a Material Design 3 web app (installable as a P
 
 ## Features
 - **Lookup**: Indonesian Wiktionary (default) or optionally KBBI, English Wiktionary, Tatoeba, with history, a quick-look chip for any word you select, and suggestions.
-- **Base words**: a rule-based Indonesian stemmer (berlari → ber- + lari) in the browser, checked against a word list of Wiktionary titles that you download once (about 350 KB). It finds the entry for derived words and shows their word parts.
+- **Base words**: a rule-based Indonesian stemmer (berlari → ber- + lari) in the browser, checked against a word list of Wiktionary titles (a snapshot ships with Kamus; Settings can update it). It finds the entry for derived words and shows their word parts.
 - **Pronunciation**: browser voice, edge-tts, or the offline Wikidepia voices (on the server or inside the browser).
 - **Anki bridge**: save cards (stored in your browser) (4 card types per note, each can be switched off), edit them, send them to Anki desktop
   through AnkiConnect, read review progress back, or export an `.apkg`.

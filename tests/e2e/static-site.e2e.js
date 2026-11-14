@@ -47,9 +47,11 @@ const fx = n => fs.readFileSync(path.join(ROOT, 'tests', 'fixtures', n), 'utf8')
     assert.deepStrictEqual(apkg, [1, 3, true]);   // no audio without a server voice, so no listening card
     console.log('ok   cards persist in the browser and the .apkg export builds without a server');
 
-    const stem = await page.evaluate(() => { KamusStem.setWordlist(new Set(['lari', 'baik'])); return [KamusStem.describe(KamusStem.analyze('berlari')), KamusStem.describe(KamusStem.analyze('memperbaiki'))]; });
-    assert.deepStrictEqual(stem, ['ber- + lari', 'memper- + baik + -i']);
-    console.log('ok   stemmer works in the page');
+    await page.waitForFunction(() => wlState.has, null, { timeout: 10000 });
+    const stem = await page.evaluate(() => ({ source: wlState.source, n: wlState.n, parts: ['berlari', 'memperbaiki', 'dimakannya', 'terbang'].map(w => KamusStem.analyze(w) ? KamusStem.describe(KamusStem.analyze(w)) : null) }));
+    assert.strictEqual(stem.source, 'snapshot'); assert.ok(stem.n > 20000);
+    assert.deepStrictEqual(stem.parts, ['ber- + lari', 'memper- + baik + -i', 'di- + makan + -nya', null]);
+    console.log('ok   the shipped word list loads by itself and the stemmer uses it (' + stem.n + ' words)');
 
     assert.deepStrictEqual(errors, [], 'no script errors: ' + errors.join('; '));
     console.log('all static-site checks passed');
