@@ -9,7 +9,7 @@ PID=$!
 for i in $(seq 1 30); do curl -s -o /dev/null "http://127.0.0.1:$PORT/" && break; sleep 0.5; done
 kill -0 $PID 2>/dev/null || { echo "server did not start:"; cat "$LOG"; exit 1; }
 fail=0
-for path in / /theme.js /cards-store.js /apkg.js /sync.js /stemmer.js /auth.html /anki-model.json /manifest.webmanifest /sw.js /api/kbbi/status /api/translate/status; do
+for path in / /theme.js /cards-store.js /apkg.js /sync.js /stemmer.js /srs.js /learn.js /learn.css /data/affixes.js /data/core-words.js /data/malay-diff.js /data/drills.js /data/wordlist-id.txt /auth.html /anki-model.json /manifest.webmanifest /sw.js /api/kbbi/status /api/translate/status; do
   code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT$path")
   [ "$code" = "200" ] && echo "ok   $path" || { echo "FAIL $path -> $code"; fail=1; }
 done

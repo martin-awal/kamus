@@ -275,6 +275,14 @@
       "url": "https://m3.material.io/",
       "license": "Design guidelines",
       "role": "Colours, shapes, navigation rail, side sheets, chips and typography follow Google's Material Design 3 guidelines."
+    },
+    {
+      "kind": "asset",
+      "name": "Learning content (vocabulary, affix lessons, Malay/Indonesian differences, drills)",
+      "url": "https://github.com/martin-awal/kamus",
+      "license": "AGPL-3.0",
+      "role": "The starter word list, affix lessons, curated Indonesian/Malay differences and pronunciation drills shown on the Learn and Affixes pages (static/data/).",
+      "note": "Written for Kamus. Hand-written from general knowledge of the languages: usage varies by region and register, so treat it as a guide and report mistakes. The live Malay comparison reads English Wiktionary (CC BY-SA)."
     }
   ]
 }
