@@ -955,14 +955,15 @@ async function importFromAnki(){   // notes that use the Kamus note type in Anki
 }
 async function backupCards(){
   const cards=await KamusCards.list();if(!cards.length)return;
-  const blob=new Blob([JSON.stringify({kamus_cards:1,exported:new Date().toISOString(),cards},null,1)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  const reviews=await KamusCards.reviewAll();
+  const blob=new Blob([JSON.stringify({kamus_cards:1,exported:new Date().toISOString(),cards,reviews},null,1)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download='kamus-cards-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
   toast(`Backed up ${cards.length} card${cards.length===1?'':'s'}.`);
 }
 async function restoreCards(file){
   try{
     const j=JSON.parse(await file.text());if(!j||!Array.isArray(j.cards))throw new Error('this is not a Kamus backup');
-    const n=await KamusCards.importCards(j.cards);toast(n?`Restored ${n} card${n===1?'':'s'} (${j.cards.length-n} already here).`:'Nothing new: all those cards are already here.');await loadCards();
+    const n=await KamusCards.importCards(j.cards);for(const r of Array.isArray(j.reviews)?j.reviews:[])if(r&&r.id&&!(await KamusCards.reviewGet(r.id)))await KamusCards.reviewPut(r);toast(n?`Restored ${n} card${n===1?'':'s'} (${j.cards.length-n} already here).`:'Nothing new: all those cards are already here.');await loadCards();
   }catch(err){toast('Could not restore: '+err.message);}
 }
 document.addEventListener('change',e=>{if(e.target.id==='aRestore'&&e.target.files[0]){restoreCards(e.target.files[0]);e.target.value='';}});

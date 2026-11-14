@@ -76,14 +76,20 @@
   // --- IndexedDB
   let dbp = null;
   const open = () => dbp || (dbp = new Promise((res, rej) => {
-    const r = indexedDB.open('kamus-cards', 1);
-    r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('cards')) r.result.createObjectStore('cards', { keyPath: 'id' }); };
+    const r = indexedDB.open('kamus-cards', 2);   // v2 adds the 'reviews' store (Kamus' own spaced-repetition states, see srs.js)
+    r.onupgradeneeded = () => { for (const n of ['cards', 'reviews']) if (!r.result.objectStoreNames.contains(n)) r.result.createObjectStore(n, { keyPath: 'id' }); };
     r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
   }));
-  async function tx(mode, fn) {
+  async function txs(store, mode, fn) {
     const db = await open();
-    return new Promise((res, rej) => { const t = db.transaction('cards', mode), req = fn(t.objectStore('cards')); t.oncomplete = () => res(req && req.result); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error); });
+    return new Promise((res, rej) => { const t = db.transaction(store, mode), req = fn(t.objectStore(store)); t.oncomplete = () => res(req && req.result); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error); });
   }
+  const tx = (mode, fn) => txs('cards', mode, fn);
+  // review states (one per card id); they stay on this device
+  const reviewAll = async () => (await txs('reviews', 'readonly', o => o.getAll())) || [];
+  const reviewGet = id => txs('reviews', 'readonly', o => o.get(id));
+  const reviewPut = st => txs('reviews', 'readwrite', o => o.put(st));
+  const reviewDelete = id => txs('reviews', 'readwrite', o => o.delete(id));
   // `updated` (ms) changes only when the card's CONTENT changes (not for Anki note id/progress); `sync_u` = the `updated` the cloud sync last agreed on.
   // A deleted card stays as a tombstone ({deleted:true}) so the deletion can sync too.
   const norm = c => { const o = { note_id: null, synced_at: null, progress: null, progress_at: null, dirty: false, deleted: false, sync_u: null, ...c }; if (o.updated == null) o.updated = Math.round((o.created || 0) * 1000); return o; };
@@ -157,5 +163,5 @@
       dirty: local && !local.deleted && local.note_id ? true : false }));   // already in Anki: the next Anki sync sends the changed text
     return true;
   }
-  window.KamusCards = { onChange, listRaw, pending, markSynced, resetSyncMarks, applyRemote, stats, list, get, create, update, remove, report, importCards, migrateFromServer, clean, ankiGuid, sha1hex, sha256, utf8 };
+  window.KamusCards = { reviewAll, reviewGet, reviewPut, reviewDelete, onChange, listRaw, pending, markSynced, resetSyncMarks, applyRemote, stats, list, get, create, update, remove, report, importCards, migrateFromServer, clean, ankiGuid, sha1hex, sha256, utf8 };
 })();

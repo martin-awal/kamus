@@ -88,3 +88,11 @@ test('onChange fires for content changes, not for Anki reports', async () => {
   await K.update(a.id, { ...a.fields, Example: 'x y z' }); await K.report([{ id: a.id, note_id: 1 }]); await K.remove(a.id);
   assert.strictEqual(n, 3);
 });
+test('review states are stored per card id and stay local', async () => {
+  const { K } = await loadDevice();
+  assert.deepStrictEqual(await K.reviewAll(), []);
+  await K.reviewPut({ id: 'a', state: 'review', interval: 3 }); await K.reviewPut({ id: 'b', state: 'new' });
+  assert.strictEqual((await K.reviewGet('a')).interval, 3); assert.strictEqual((await K.reviewAll()).length, 2);
+  await K.reviewPut({ id: 'a', state: 'review', interval: 8 }); assert.strictEqual((await K.reviewGet('a')).interval, 8);
+  await K.reviewDelete('b'); assert.deepStrictEqual((await K.reviewAll()).map(r => r.id), ['a']);
+});
