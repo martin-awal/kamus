@@ -106,8 +106,10 @@
     return pick(pool, n, mulberry(hash(today())));
   }
   const POS = { v: 'verb', n: 'noun', adj: 'adjective', adv: 'adverb', pron: 'pronoun', prep: 'preposition', conj: 'conjunction', num: 'number', part: 'particle' };
-  const wordRow = w => `<li class="dw"><div class="dw-main"><b lang="id">${esc(w.w)}</b> <span class="pos">${esc(POS[w.p] || w.p)}</span> <span class="dw-g" lang="en">${esc(w.g)}</span></div>
-    <div class="dw-act"><button type="button" class="icon-btn sm" data-say="${esc(w.w)}" aria-label="Listen: ${esc(w.w)}">${ico('vol')}</button><button type="button" class="text-btn" data-lw="${esc(w.w)}">Look up</button><button type="button" class="text-btn" data-know="${esc(w.w)}" title="Do not offer this word again">I know it</button></div></li>`;
+  // audio | word (a link: looks it up) · part of speech · meaning || I know it · [->] (the primary button also looks it up)
+  const wordRow = w => `<li class="dw"><button type="button" class="icon-btn sm" data-say="${esc(w.w)}" aria-label="Listen: ${esc(w.w)}">${ico('vol')}</button>
+    <div class="dw-main"><a href="#kamus" class="dw-w" lang="id" data-lw="${esc(w.w)}">${esc(w.w)}</a> <span class="pos">${esc(POS[w.p] || w.p)}</span> <span class="dw-g" lang="en">${esc(w.g)}</span></div>
+    <div class="dw-act"><button type="button" class="text-btn" data-know="${esc(w.w)}" title="Do not offer this word again">I know it</button><button type="button" class="icon-btn go" data-lw="${esc(w.w)}" aria-label="Look up ${esc(w.w)}" title="Look up">${ico('arrow')}</button></div></li>`;
 
   // ================= Home page (Kamus) =================
   async function renderHome() {
@@ -252,7 +254,7 @@
       <section class="card"><h3>${esc(L.title)} <small class="muted">${esc(L.form)}</small></h3><p>${esc(L.lead)}</p>
         <div class="tablewrap"><table class="cmp"><thead><tr><th>When</th><th>Form</th><th>Example</th></tr></thead><tbody>${L.rules.map(r => `<tr><td>${esc(r[0])}</td><td><b>${esc(r[1])}</b></td><td lang="id">${esc(r[2])}</td></tr>`).join('')}</tbody></table></div>
         <p class="af-tip">${ico('info')}<span>${esc(L.tip)}</span></p>
-        <h4 class="sub">Examples</h4><ul class="dw-list">${L.examples.map(e => `<li class="dw"><div class="dw-main"><b lang="id">${esc(e.word)}</b> <span class="muted">= ${esc(e.root)} + ${esc(L.title.replace(/…/g, '').replace(/^meN-$/, 'meN-'))}</span> <span class="dw-g" lang="en">${esc(e.gloss)}</span></div><div class="dw-act"><button type="button" class="icon-btn sm" data-say="${esc(e.word)}" aria-label="Listen: ${esc(e.word)}">${ico('vol')}</button><button type="button" class="text-btn" data-lw="${esc(e.word)}">Look up</button></div></li>`).join('')}</ul></section>
+        <h4 class="sub">Examples</h4><ul class="dw-list">${L.examples.map(e => `<li class="dw"><button type="button" class="icon-btn sm" data-say="${esc(e.word)}" aria-label="Listen: ${esc(e.word)}">${ico('vol')}</button><div class="dw-main"><a href="#kamus" class="dw-w" lang="id" data-lw="${esc(e.word)}">${esc(e.word)}</a> <span class="muted">= ${esc(e.root)} + ${esc(L.title.replace(/…/g, ''))}</span> <span class="dw-g" lang="en">${esc(e.gloss)}</span></div><div class="dw-act"><button type="button" class="icon-btn go" data-lw="${esc(e.word)}" aria-label="Look up ${esc(e.word)}" title="Look up">${ico('arrow')}</button></div></li>`).join('')}</ul></section>
       <section class="card"><h3>Practise</h3><p class="muted">Ten questions: build the word, or find the root.</p><p><button type="button" class="btn-filled" data-af="start">Practise ${esc(L.title)}</button> <button type="button" class="text-btn" data-af="mix">Mix of all lessons</button></p><div id="afQuiz"></div></section>
       <section class="card"><h3>Your own words</h3><p class="muted">Finds affixed words in your cards and search history and takes them apart.</p><p><button type="button" class="btn-tonal" data-af="mine">Analyse my words</button></p><div id="afMine"></div></section>`;
   }
@@ -292,7 +294,7 @@
     if (!KamusStem.hasWordlist()) { box.innerHTML = '<p class="muted">The word list is not loaded yet (Settings → Storage → Word list).</p>'; return; }
     const words = new Set([...(await KamusCards.list()).map(c => c.word.toLowerCase()), ...hist().map(h => h.w.toLowerCase())]);
     const rows = [...words].map(w => ({ w, a: KamusStem.analyze(w) })).filter(x => x.a).sort((a, b) => a.w.localeCompare(b.w));
-    box.innerHTML = rows.length ? `<ul class="dw-list">${rows.map(r => `<li class="dw"><div class="dw-main"><b lang="id">${esc(r.w)}</b> <span class="muted">= ${esc(KamusStem.describe(r.a))}</span></div><div class="dw-act"><button type="button" class="text-btn" data-lw="${esc(r.w)}">Look up</button></div></li>`).join('')}</ul>` : `<p class="muted">None of your ${words.size} words has an affix that I can take apart. Look up a few derived words (berlari, dimakan, kesehatan) and try again.</p>`;
+    box.innerHTML = rows.length ? `<ul class="dw-list">${rows.map(r => `<li class="dw"><button type="button" class="icon-btn sm" data-say="${esc(r.w)}" aria-label="Listen: ${esc(r.w)}">${ico('vol')}</button><div class="dw-main"><a href="#kamus" class="dw-w" lang="id" data-lw="${esc(r.w)}">${esc(r.w)}</a> <span class="muted">= ${esc(KamusStem.describe(r.a))}</span></div><div class="dw-act"><button type="button" class="icon-btn go" data-lw="${esc(r.w)}" aria-label="Look up ${esc(r.w)}" title="Look up">${ico('arrow')}</button></div></li>`).join('')}</ul>` : `<p class="muted">None of your ${words.size} words has an affix that I can take apart. Look up a few derived words (berlari, dimakan, kesehatan) and try again.</p>`;
   }
   function renderAffix() { const r = $('affixRoot'); if (r) r.innerHTML = affixHtml(); }
 
@@ -315,7 +317,7 @@
   function wireCommon() {
     document.addEventListener('click', e => {   // buttons that appear on several pages (home, hub, affix page)
       const t = e.target; let b;
-      if ((b = t.closest('[data-lw]')) && (t.closest('#learnRoot, #affixRoot, #homeLearn'))) goWord(b.dataset.lw);
+      if ((b = t.closest('[data-lw]')) && (t.closest('#learnRoot, #affixRoot, #homeLearn'))) { e.preventDefault(); goWord(b.dataset.lw); }
       else if ((b = t.closest('[data-say]')) && t.closest('#learnRoot, #affixRoot, #homeLearn')) speak(b.dataset.say, b);
       else if ((b = t.closest('[data-know]'))) { cfg.known = [...new Set([...cfg.known, b.dataset.know])]; save(); refreshAll(); }
       else if ((b = t.closest('[data-hl=review]')) && t.closest('#homeLearn')) startReview();

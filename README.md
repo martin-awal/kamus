@@ -35,14 +35,18 @@ AnkiConnect also wants port 8765, so run Kamus with `--port` on the computer whe
 
 ## Running without the server (static website)
 Most of Kamus runs in the browser: Indonesian and English Wiktionary, Tatoeba, cards (stored in the browser), backup, sync, `.apkg` export, the
-base-word finder, MyMemory and Opus-MT translation, and the browser voice. Without the Kamus server only these things are switched off:
+base-word finder, MyMemory and Opus-MT translation, the learning pages and the browser voice. Without the Kamus server only these things are switched off:
 KBBI, edge-tts, the Wikidepia voices, Argos and LibreTranslate. The page notices on its own and locks those options in Settings.
 ```bash
-scripts/build_static.sh      # makes dist/ (fetches the vendored libraries first)
-python3 -m http.server --directory dist 8000     # or upload the CONTENTS of dist/ to the ROOT of any static host
+scripts/build_static.sh                  # dist/ for the root of a site
+BASE=/kamus scripts/build_static.sh      # dist/ for a sub-folder such as https://USER.github.io/kamus/
+python3 -m http.server --directory dist 8000
 ```
-The page uses absolute paths (`/vendor/...`), so it must be served from the root of a site, not from a sub-folder.
-Use https for installing the app and for the camera (QR scanner). `tests/e2e/static-site.e2e.js` checks this mode (CI runs it).
+**GitHub Pages:** yes. Settings → Pages → Source: *GitHub Actions*, then run the workflow *Deploy to GitHub Pages* (Actions tab). It builds with the
+right sub-path for a project site (`https://USER.github.io/REPO/`) and at the root for a user site (a repository named `USER.github.io`) or a custom
+domain (a `CNAME` file). Pages cannot send the headers that allow multi-threaded WebAssembly, so the in-browser voice models would be slower; the
+Wikidepia model is not part of the site anyway. Add the site's address to Firebase's *Authorised domains* if you use sync, and use https for the QR scanner.
+`tests/e2e/*.e2e.js` check this mode at the root and in a sub-folder (CI runs both).
 
 ## Optional cloud sync (your own Firebase project)
 Kamus can keep cards and search history in step across devices with Google sign-in and Firestore. It is off until you paste a

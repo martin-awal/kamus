@@ -88,3 +88,9 @@ jobs:
         run: node tests/e2e/static-site.e2e.js
       - name: Learning pages in a browser (fake microphone)
         run: node tests/e2e/learn.e2e.js
+      - name: The same, built for a sub-folder (GitHub project pages)
+        run: |
+          BASE=/kamus scripts/build_static.sh
+          mkdir -p /tmp/site/kamus && cp -R dist/. /tmp/site/kamus/
+          KAMUS_E2E_DIR=/tmp/site KAMUS_BASE=/kamus node tests/e2e/static-site.e2e.js
+          KAMUS_E2E_DIR=/tmp/site KAMUS_BASE=/kamus node tests/e2e/learn.e2e.js

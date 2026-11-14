@@ -1,11 +1,11 @@
 // The learning pages in a real browser, against a plain file server (no Kamus server). Wiktionary is mocked, the microphone is a fake device.
 // Needs playwright (npm i --no-save playwright) and static/vendor.   node tests/e2e/learn.e2e.js
 const { chromium } = require('playwright'), { spawn } = require('child_process'), path = require('path'), assert = require('assert');
-const ROOT = path.join(__dirname, '..', '..'), PORT = 8802, APP = `http://127.0.0.1:${PORT}`;
+const ROOT = path.join(__dirname, '..', '..'), PORT = 8802, BASE = process.env.KAMUS_BASE || '', APP = `http://127.0.0.1:${PORT}${BASE}`;   // KAMUS_E2E_DIR / KAMUS_BASE: see static-site.e2e.js
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 (async () => {
-  const srv = spawn('python3', ['-m', 'http.server', String(PORT), '--bind', '127.0.0.1', '--directory', path.join(ROOT, 'static')], { stdio: 'ignore' });
+  const srv = spawn('python3', ['-m', 'http.server', String(PORT), '--bind', '127.0.0.1', '--directory', process.env.KAMUS_E2E_DIR || path.join(ROOT, 'static')], { stdio: 'ignore' });
   await sleep(1200);
   const browser = await chromium.launch({ args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] }), errors = [];
   try {
@@ -45,10 +45,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     // ---- learn hub
     await page.goto(APP + '/#learn'); await page.waitForSelector('#lh-review');
     assert.strictEqual(await page.locator('#lh-words .dw').count(), 5);
-    const before = await page.$$eval('#lh-words .dw b', e => e.map(x => x.textContent)); await page.reload(); await page.waitForSelector('#lh-words .dw');
-    assert.deepStrictEqual(await page.$$eval('#lh-words .dw b', e => e.map(x => x.textContent)), before, 'the same five words all day');
+    const before = await page.$$eval('#lh-words .dw .dw-w', e => e.map(x => x.textContent)); await page.reload(); await page.waitForSelector('#lh-words .dw');
+    assert.deepStrictEqual(await page.$$eval('#lh-words .dw .dw-w', e => e.map(x => x.textContent)), before, 'the same five words all day');
     await page.click('#lh-words [data-know]'); await sleep(500);
-    const after = await page.$$eval('#lh-words .dw b', e => e.map(x => x.textContent)); assert.strictEqual(after.length, 5); assert.ok(!after.includes(before[0]));
+    const after = await page.$$eval('#lh-words .dw .dw-w', e => e.map(x => x.textContent)); assert.strictEqual(after.length, 5); assert.ok(!after.includes(before[0]));
     console.log('ok   hub: review stats, five stable words of the day, "I know it" swaps a word');
 
     await page.fill('#cmpIn', 'kereta'); await page.click('#cmpForm button'); await page.waitForSelector('.cmp-cols');

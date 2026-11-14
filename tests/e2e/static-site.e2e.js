@@ -1,12 +1,13 @@
 // Kamus with NO server: python's plain file server stands in for a static host. External services are mocked, so this runs offline.
+// KAMUS_E2E_DIR=<folder to serve> KAMUS_BASE=/kamus  tests a build that lives in a sub-folder (see scripts/build_static.sh); by default it serves static/ at the root.
 // Needs playwright (npm i --no-save playwright) and static/vendor (scripts/fetch_vendor.sh).   node tests/e2e/static-site.e2e.js
 const { chromium } = require('playwright'), { spawn } = require('child_process'), fs = require('fs'), path = require('path'), assert = require('assert');
-const ROOT = path.join(__dirname, '..', '..'), PORT = 8801, APP = `http://127.0.0.1:${PORT}`;
+const ROOT = path.join(__dirname, '..', '..'), PORT = 8801, BASE = process.env.KAMUS_BASE || '', APP = `http://127.0.0.1:${PORT}${BASE}`;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const fx = n => fs.readFileSync(path.join(ROOT, 'tests', 'fixtures', n), 'utf8');
 
 (async () => {
-  const srv = spawn('python3', ['-m', 'http.server', String(PORT), '--bind', '127.0.0.1', '--directory', path.join(ROOT, 'static')], { stdio: 'ignore' });
+  const srv = spawn('python3', ['-m', 'http.server', String(PORT), '--bind', '127.0.0.1', '--directory', process.env.KAMUS_E2E_DIR || path.join(ROOT, 'static')], { stdio: 'ignore' });
   await sleep(1200);
   const browser = await chromium.launch(), errors = [];
   try {
