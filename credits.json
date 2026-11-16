@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-14",
+  "updated": "2026-11-16",
   "items": [
     {
       "kind": "data",
@@ -231,6 +231,22 @@
       "version": "1.4.0",
       "role": "Reads that QR code from the camera in the in-app scanner (static/vendor/qr/).",
       "note": "Copied from the npm package jsqr 1.4.0 by scripts/fetch_vendor.sh."
+    },
+    {
+      "kind": "software",
+      "name": "Playwright (development only)",
+      "url": "https://playwright.dev/",
+      "license": "Apache-2.0",
+      "role": "Runs the browser tests (viewport matrix, accessibility, task flows) in Chromium, WebKit and Firefox. Not part of the app.",
+      "note": "devDependency @playwright/test; licence from its package.json."
+    },
+    {
+      "kind": "software",
+      "name": "axe-core (development only)",
+      "url": "https://github.com/dequelabs/axe-core",
+      "license": "MPL-2.0",
+      "role": "Accessibility rules engine used by the browser tests (through @axe-core/playwright). Not part of the app.",
+      "note": "devDependencies @axe-core/playwright and axe-core; both declare MPL-2.0 in their package.json."
     },
     {
       "kind": "software",

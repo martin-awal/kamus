@@ -1860,7 +1860,8 @@ const SOURCE_URL='https://github.com/martin-awal/kamus';
 async function loadCredits(){
   if(creditsLoaded)return;
   try{
-    const d=await (await fetch('/api/credits')).json(),it=d.items;
+    let d;try{const r=await fetch('/api/credits');if(!r.ok)throw 0;d=await r.json();}catch{d=await (await fetch('credits.json')).json();}   // static site: the build copies credits.json next to the page
+    const it=d.items;
     const restricted=it.filter(i=>i.kind==='software'&&/non-commercial/i.test(i.license)),software=it.filter(i=>i.kind==='software'&&!restricted.includes(i));
     const OTHER='Other or combined licences',groups={};software.forEach(i=>{const k=LIC_ORDER.includes(i.license)?i.license:OTHER;(groups[k]=groups[k]||[]).push(i);});
     const order=Object.keys(groups).sort((a,b)=>{const x=LIC_ORDER.indexOf(a),y=LIC_ORDER.indexOf(b);return (x<0?99:x)-(y<0?99:y);});

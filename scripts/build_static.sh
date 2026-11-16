@@ -10,5 +10,6 @@ cd "$(dirname "$0")/.."
 mkdir dist && cp -R static/. dist/
 [ -f CNAME ] && cp CNAME dist/CNAME   # a custom domain for GitHub Pages
 touch dist/.nojekyll
+cp credits.json dist/credits.json   # the Legal page reads it when there is no server
 [ -n "${BASE:-}" ] && python3 scripts/set_base.py dist "$BASE"
 echo "dist/ is ready ($(du -sh dist | cut -f1)). Serve it over https for installing the app and the camera/QR scanner."

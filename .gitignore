@@ -28,3 +28,6 @@ static/vendor/
 dist/
 node_modules/
 .server.log
+tests/ui/.snapshots/
+test-results/
+playwright-report/
