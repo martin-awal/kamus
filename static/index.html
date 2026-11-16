@@ -69,7 +69,7 @@ input[type=search]::-webkit-search-cancel-button{filter:grayscale(1) opacity(.6)
 .card:not(.hero) h2{font-size:28px;line-height:36px}
 .lead{color:var(--on-surface-variant)}
 .dock{position:fixed;left:var(--left);right:var(--right);bottom:calc(16px + var(--bnav) + env(safe-area-inset-bottom,0px));z-index:45;padding:0 16px;pointer-events:none}   /* above every other floating element (sheets 30-37, contents 25, selection chip 44) */
-.dock-in{width:100%;max-width:var(--idle-w,128px);margin:0 auto;display:flex;flex-direction:column;pointer-events:auto;transition:max-width .25s cubic-bezier(.2,0,0,1)}
+.dock-in{width:100%;max-width:var(--idle-w,128px);margin:0 auto;display:flex;flex-direction:column;pointer-events:auto;transition:max-width .25s var(--motion-spatial)}
 .dock-in.open{max-width:640px}   /* .open = mouse over it or focus inside (set in JS, so touch screens have no sticky-hover) */
 form{box-shadow:var(--elev3)}
 .dock-in:not(.open) form{height:36px;border-radius:18px;padding:0 16px}
@@ -105,8 +105,8 @@ form{position:relative}
 .rail-item[aria-expanded=true]{color:var(--on-surface)}
 .rail-item:focus-visible{outline:none}.rail-item:focus-visible .rail-ind{outline:2px solid var(--primary);outline-offset:2px}
 /* side sheet */
-.sheet{position:fixed;left:var(--rail);top:0;bottom:calc(var(--bnav) + env(safe-area-inset-bottom,0px));width:min(360px,calc(100vw - var(--rail)));z-index:30;background:var(--surface-container);border-radius:0 var(--shape-l) var(--shape-l) 0;box-shadow:var(--elev2);display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateX(-24px);transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s .25s}
-.sheet.open{opacity:1;visibility:visible;transform:none;transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s}
+.sheet{position:fixed;left:var(--rail);top:0;bottom:calc(var(--bnav) + env(safe-area-inset-bottom,0px));width:min(360px,calc(100vw - var(--rail)));z-index:30;background:var(--surface-container);border-radius:0 var(--shape-l) var(--shape-l) 0;box-shadow:var(--elev2);display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateX(-24px);transition:transform .25s var(--motion-spatial),opacity .2s,visibility 0s .25s}
+.sheet.open{opacity:1;visibility:visible;transform:none;transition:transform .25s var(--motion-spatial),opacity .2s,visibility 0s}
 .sheet-head{display:flex;align-items:center;gap:4px;padding:12px 8px 8px 24px}
 .sheet-head h2{font:400 22px/28px Roboto,sans-serif;letter-spacing:0;flex:1}
 .sheet-body{overflow-y:auto;padding:8px 16px 24px;display:grid;grid-auto-rows:max-content;gap:8px;align-content:start}
@@ -192,8 +192,8 @@ body{--left:var(--rail);--right:0px}                                   /* where 
 .qchip .icon-btn.speaking{background:var(--primary);color:var(--on-primary)}.qchip .icon-btn .li{width:20px;height:20px;margin:-10px 0 0 -10px}
 .qchip .qm{overflow:hidden;text-overflow:ellipsis;padding:0 2px}
 .qchip.muted{color:var(--on-surface-variant);font-weight:400}
-.qsheet{position:fixed;right:0;top:0;bottom:calc(var(--bnav) + env(safe-area-inset-bottom,0px));width:min(380px,100vw);z-index:35;background:var(--surface-container);border-radius:var(--shape-l) 0 0 var(--shape-l);box-shadow:var(--elev2);display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateX(24px);transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s .25s}
-.qsheet.open{opacity:1;visibility:visible;transform:none;transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s}
+.qsheet{position:fixed;right:0;top:0;bottom:calc(var(--bnav) + env(safe-area-inset-bottom,0px));width:min(380px,100vw);z-index:35;background:var(--surface-container);border-radius:var(--shape-l) 0 0 var(--shape-l);box-shadow:var(--elev2);display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateX(24px);transition:transform .25s var(--motion-spatial),opacity .2s,visibility 0s .25s}
+.qsheet.open{opacity:1;visibility:visible;transform:none;transition:transform .25s var(--motion-spatial),opacity .2s,visibility 0s}
 .qhead{display:flex;align-items:center;gap:4px;padding:12px 8px 8px 24px}
 .qhead .qw{font:400 28px/36px Roboto,sans-serif;letter-spacing:0;flex:1;overflow-wrap:anywhere}
 .qbody{overflow-y:auto;padding:0 24px 24px}
@@ -337,7 +337,7 @@ button.badge.stat{border:0;cursor:help}
   .toc-wrap.stuck .toc{background:var(--surface-container);box-shadow:var(--elev1)}
 }
 .mine{background:var(--tertiary-container);color:var(--on-tertiary-container)}
-.mine-float{overflow:hidden;background:var(--tertiary-container);border-radius:20px;box-shadow:var(--elev2);transition:width .35s cubic-bezier(.2,0,0,1),height .35s cubic-bezier(.2,0,0,1),border-radius .35s cubic-bezier(.2,0,0,1);position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:28;animation:rise .25s ease-out both}   /* floats over the content, below the search bar (elevation 3, z 45) */
+.mine-float{overflow:hidden;background:var(--tertiary-container);border-radius:20px;box-shadow:var(--elev2);transition:width .35s var(--motion-spatial),height .35s var(--motion-spatial),border-radius .35s var(--motion-spatial);position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:28;animation:rise .25s ease-out both}   /* floats over the content, below the search bar (elevation 3, z 45) */
 .mine-chip{display:inline-flex;align-items:center;gap:8px;height:40px;max-width:240px;padding:0 16px 0 12px;border:0;border-radius:20px;background:none;color:var(--on-tertiary-container);position:absolute;right:0;bottom:0;transition:opacity .15s ease .12s,visibility 0s .12s;font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px;cursor:pointer;white-space:nowrap}
 .mine-chip span{overflow:hidden;text-overflow:ellipsis}.mine-chip svg{width:20px;height:20px;flex:none}
 .mine-body{position:absolute;right:0;bottom:0;box-sizing:border-box;width:min(340px,calc(100vw - var(--rail) - 32px));max-height:40vh;overflow-y:auto;padding:10px 8px 8px 12px;background:none;opacity:0;visibility:hidden;transition:opacity .12s ease,visibility 0s .12s}
@@ -387,9 +387,9 @@ button.badge.stat{border:0;cursor:help}
 .hdrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .ankichip{display:none;align-items:center;justify-content:flex-end;height:36px;flex:none}   /* wrapper: stable hover area (min-width is set from the collapsed width in JS) */
 body[data-view=anki] .ankichip{display:flex}
-.chipbody{display:inline-flex;align-items:center;height:36px;padding:0 12px;border-radius:18px;background:var(--surface-container-highest);color:var(--on-surface);font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px;white-space:nowrap;transition:padding .28s cubic-bezier(.2,0,0,1)}
+.chipbody{display:inline-flex;align-items:center;height:36px;padding:0 12px;border-radius:18px;background:var(--surface-container-highest);color:var(--on-surface);font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px;white-space:nowrap;transition:padding .28s var(--motion-spatial)}
 .ankichip.open .chipbody{padding:0 4px 0 12px}
-.gx{display:grid;grid-template-columns:1fr;opacity:1;transition:grid-template-columns .28s cubic-bezier(.2,0,0,1),opacity .2s}
+.gx{display:grid;grid-template-columns:1fr;opacity:1;transition:grid-template-columns .28s var(--motion-spatial),opacity .2s}
 .gx>.gi{overflow:hidden;min-width:0;display:flex;align-items:center;white-space:nowrap}
 .chipbody .lbl{margin-left:8px}
 .ankichip.open .lbl{grid-template-columns:0fr;opacity:0;margin-left:0}   /* open: only the coloured dot is left of the actions */
@@ -447,6 +447,32 @@ audio{height:36px;max-width:100%;vertical-align:middle;margin-left:8px}
 .empty{text-align:center;padding:48px 16px;color:var(--on-surface-variant)}
 .empty svg{width:48px;height:48px;margin-bottom:8px;opacity:.6}
 .empty .h{font:400 22px/28px Roboto;letter-spacing:0;color:var(--on-surface);margin:0 0 4px}
+/* ===== Material 3 Expressive layer. Interpreted for the web (no official web spec): see docs/expressive-notes.md =====
+   emphasised type, a wider shape range with shape morphing on press, spring motion for things that move, a stronger active indicator. */
+:root{
+  --motion-spatial:cubic-bezier(.2,0,0,1);                 /* fallback where linear() easing is missing */
+  --motion-effects:cubic-bezier(.2,0,0,1);                 /* colour and opacity: never overshoot */
+  --shape-xs:4px;--shape-l:20px;--shape-xl:28px;--shape-full:999px;
+}
+@supports (transition-timing-function:linear(0,1)){
+  :root{--motion-spatial:linear(0,.17 4%,.56 10%,.89 16%,1.06 22%,1.11 27%,1.09 33%,1.03 42%,1 52%,.99 62%,1)}   /* a damped spring: fast start, small overshoot, settles */
+}
+.title{font-weight:700;letter-spacing:-.2px}.title small{font-weight:500}
+.hero h2{font-weight:500;letter-spacing:-.5px}
+.card>h3,.home-tile h3,.sheet-head h2,.mdialog h2{font-weight:700}
+.card.hero{border-radius:var(--shape-xl)}
+/* buttons: pill at rest, squarer while pressed (shape morph), with a spring */
+.btn-filled,.btn-tonal,.text-btn,.icon-btn,.vchip,.choice,.rev-g,.hcard,.rail-ind{transition:border-radius .35s var(--motion-spatial),background-color .2s var(--motion-effects),transform .35s var(--motion-spatial)}
+.btn-filled:active,.btn-tonal:active,.text-btn:active,.choice:active{border-radius:12px}
+.icon-btn:active{border-radius:32%}
+.icon-btn.speaking{border-radius:32%}                      /* playing = a different shape, not only a different icon */
+.vchip{border-radius:var(--shape-s)}.vchip.on{border-radius:var(--shape-full)}   /* selected chips become pills */
+.hcard:active,.rev-g:active{transform:scale(.97)}
+/* navigation: the active destination gets a wider, filled indicator and a heavier label */
+.rail-ind{transition:width .4s var(--motion-spatial),background-color .2s var(--motion-effects),border-radius .35s var(--motion-spatial)}
+.rail-item[aria-current=page] .rail-ind{width:64px}
+.rail-item[aria-current=page]{font-weight:700}
+.rail-item:active .rail-ind{width:48px}
 /* touch devices: every control is at least 48x48 (Material minimum touch target); mouse layouts keep the compact sizes */
 @media(pointer:coarse){
   .icon-btn,.icon-btn.sm,.qchip .icon-btn{width:48px;height:48px}
