@@ -1,7 +1,8 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#6750a4">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f3edf7">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#211f26">
 <title>Kamus</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -24,7 +25,6 @@
   /* layout tokens, set per window size class below (the only width media queries): components read these or use container queries */
   --rail:80px;       /* navigation rail width (0 when the bottom bar is used) */
   --bnav:0px;        /* bottom navigation bar height (compact only) */
-  --pane:0px;        /* supporting pane (History) width, expanded and up */
   --gutter:24px;     /* page side padding */
   --content-max:720px;
 
@@ -118,32 +118,30 @@ form{position:relative}
 .hempty svg{width:48px;height:48px;opacity:.6}
 /* ===== Material 3 window size classes. These four queries only set tokens and switch the navigation/pane pattern. =====
    compact < 600 (phone portrait): bottom navigation bar, History behind a header button
-   medium 600-839: navigation rail, History as a sheet
-   expanded 840-1199: rail + History as a persistent supporting pane
-   large >= 1200: wider rail and pane; extra-large >= 1600 adds a persistent contents list and a wider text column */
+   medium 600-839: navigation rail
+   expanded 840-1199: rail; Anki and the affix lessons become list-detail
+   large >= 1200: wider rail; extra-large >= 1600 adds a persistent contents list and a wider text column
+   History is a sheet at every size and stays hidden until it is asked for. */
 body{--left:var(--rail);--right:0px}                                   /* where the page content starts (rail, plus the pane on Kamus) */
 @media(max-width:599.98px){
   :root{--rail:0px;--bnav:64px;--gutter:12px}
   .rail{top:auto;left:0;right:0;bottom:0;width:auto;height:calc(var(--bnav) + env(safe-area-inset-bottom,0px));padding:0 4px env(safe-area-inset-bottom,0px);flex-direction:row;justify-content:space-around;align-items:center;gap:0;border-right:0;border-top:1px solid var(--outline-variant)}
-  .rail-item{width:auto;flex:1 1 0;min-width:0;padding:10px 0 8px;gap:4px}
-  .rail-ind{width:56px;height:28px}
+  .rail-item{width:auto;flex:1 1 0;min-width:0;height:var(--bnav);padding:6px 0;gap:4px;justify-content:center}
+  .rail-ind{width:56px;height:32px}
   .rail-div,.rail-spacer,#histBtn{display:none}
   body:has(.qsheet.open) .dock{display:none}   /* a full-width sheet is open: the floating search chip would cover its fields */
   .dock-in.open{max-width:100%}
-  body .toc-wrap{right:64px}   /* beside the History button in the header */
-  body[data-view=kamus] #histTop{display:inline-grid}
+  .ftb #histTop{display:inline-grid}   /* History joins the floating toolbar (the bottom bar has no room for page functions) */
   h2{font-size:30px;line-height:38px}.title{font-size:24px}
 }
-@media(min-width:840px){
-  :root{--pane:320px;--gutter:16px}
-  body[data-view=kamus]{--left:calc(var(--rail) + var(--pane))}
-  /* History is a persistent supporting pane here, not an overlay */
-  body[data-view=kamus] .sheet{opacity:1;visibility:visible;transform:none;transition:none;width:var(--pane);z-index:20;box-shadow:none;border-radius:0;border-right:1px solid var(--outline-variant);background:var(--surface)}
-  #histBtn,#railDiv,#closeSheet{display:none}
-}
-@media(min-width:1200px){:root{--rail:96px;--pane:360px;--gutter:24px}}
+@media(min-width:1200px){:root{--rail:96px}}
 @media(min-width:1600px){:root{--content-max:840px}body[data-view=kamus]{--right:264px}}   /* room on the right for the persistent contents list */
 #histTop{display:none}
+/* floating toolbar, top right of the Kamus page: contents of the page + History (compact) */
+.ftb{display:flex;align-items:center;gap:4px;padding:4px;border-radius:999px;background:var(--surface-container-high);box-shadow:var(--elev2)}
+.ftb .icon-btn{color:var(--on-surface)}
+.toc-wrap.notoc #tocBtn,.toc-wrap.notoc .toc{display:none}
+@media(min-width:600px){.toc-wrap.notoc .ftb{display:none}}   /* nothing to show: History is on the rail, no contents yet */
 /* list-detail (Anki): one column with inline previews below 840px, list + detail pane from 840px */
 .ld-detail{display:none}
 @media(min-width:840px){
@@ -176,7 +174,6 @@ body{--left:var(--rail);--right:0px}                                   /* where 
 .sg .tag{margin-left:auto;font:500 12px/16px Roboto,sans-serif;letter-spacing:.5px;color:var(--on-surface-variant)}
 /* table of contents */
 .toc-wrap{position:fixed;top:12px;right:16px;z-index:25;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
-.toc-btn{box-shadow:var(--elev1)}
 .toc{display:none;width:232px;background:var(--surface-container);border-radius:var(--shape-l);box-shadow:var(--elev2);padding:12px 8px 8px}
 .toc-wrap.open .toc{display:block}
 .toc h4{margin:0 0 4px;padding:0 16px;font:500 12px/16px Roboto,sans-serif;letter-spacing:.5px;color:var(--on-surface-variant);text-transform:uppercase}
@@ -184,7 +181,7 @@ body{--left:var(--rail);--right:0px}                                   /* where 
 .toc a:hover{background:color-mix(in srgb,var(--on-surface) 8%,transparent)}
 .toc a.active{background:var(--secondary-container);color:var(--on-secondary-container)}
 .card{scroll-margin-top:16px}
-@media(min-width:1600px){.toc-btn{display:none}.toc{display:block}}
+@media(min-width:1600px){.ftb{display:none}.toc{display:block}}
 /* quick look: chip beside a selected word + right side sheet */
 .qchip{position:fixed;z-index:44;display:inline-flex;align-items:center;gap:2px;height:28px;max-width:min(260px,calc(100vw - 16px));padding:0 10px 0 2px;border:1px solid var(--outline-variant);border-radius:14px;background:var(--surface-container-high);color:var(--on-surface);box-shadow:var(--elev1);font:500 13px/18px Roboto,sans-serif;letter-spacing:.1px;cursor:pointer;white-space:nowrap}
 .qchip.nosay{padding-left:10px}
@@ -555,7 +552,7 @@ audio{height:36px;max-width:100%;vertical-align:middle;margin-left:8px}
   <div class="sheet-body" id="hist"></div>
 </aside>
 
-<header id="hd"><div class="wrap hdrow"><h1 class="title" id="pageTitle">Kamus <small>Indonesian ⇄ English</small></h1><button type="button" class="icon-btn" id="histTop" aria-label="Search history" title="History"><svg><use href="#i-history"/></svg></button><div class="ankichip" id="ankiChip" role="group" aria-label="Anki connection"></div></div></header>
+<header id="hd"><div class="wrap hdrow"><h1 class="title" id="pageTitle">Kamus <small>Indonesian ⇄ English</small></h1><div class="ankichip" id="ankiChip" role="group" aria-label="Anki connection"></div></div></header>
 <aside class="qsheet" id="qsheet" aria-label="Quick look" aria-hidden="true" inert>
   <div class="qhead"><div class="qw" id="qw"></div><span id="qsay"></span>
     <button class="icon-btn" id="qclose" type="button" aria-label="Close quick look"><svg><use href="#i-close"/></svg></button></div>
@@ -569,8 +566,11 @@ audio{height:36px;max-width:100%;vertical-align:middle;margin-left:8px}
   <div class="cfoot"><span class="grow" id="cnote"></span><button class="text-btn" id="ccancel" type="button">Cancel</button><button class="btn-filled" id="csave" type="button">Add card</button></div>
 </aside>
 
-<div class="toc-wrap" id="tocWrap" hidden>
-  <button class="icon-btn tonal toc-btn" id="tocBtn" type="button" aria-label="On this page" aria-expanded="false" aria-controls="toc"><svg><use href="#i-list"/></svg></button>
+<div class="toc-wrap notoc" id="tocWrap">
+  <div class="ftb" role="toolbar" aria-label="Page tools">
+    <button class="icon-btn" id="tocBtn" type="button" aria-label="On this page" title="On this page" aria-expanded="false" aria-controls="toc"><svg><use href="#i-list"/></svg></button>
+    <button class="icon-btn" id="histTop" type="button" aria-label="Search history" title="History"><svg><use href="#i-history"/></svg></button>
+  </div>
   <nav class="toc" id="toc" aria-label="On this page"><h4>On this page</h4><div id="tocList"></div></nav>
 </div>
 <div class="progress" id="pg" role="progressbar" aria-label="Loading"></div>
@@ -736,11 +736,7 @@ renderHist();
 const sheet=document.getElementById('sheet'),histBtn=document.getElementById('histBtn');
 let pinned=false,closeT;
 const isOpen=()=>sheet.classList.contains('open');
-// expanded and large windows: History is a persistent pane (CSS shows it); keep it reachable for keyboards and screen readers
-const paneMq=matchMedia('(min-width:840px)'),isPane=()=>paneMq.matches&&document.body.dataset.view==='kamus';
-function syncPane(){if(isPane()){sheet.classList.remove('open');pinned=false;sheet.inert=false;sheet.setAttribute('aria-hidden','false');}else if(!isOpen()){sheet.inert=true;sheet.setAttribute('aria-hidden','true');}}
-paneMq.addEventListener('change',syncPane);
-function setSheet(open){if(isPane()){syncPane();return;}sheet.classList.toggle('open',open);sheet.inert=!open;sheet.setAttribute('aria-hidden',!open);histBtn.setAttribute('aria-expanded',open);}
+function setSheet(open){sheet.classList.toggle('open',open);sheet.inert=!open;sheet.setAttribute('aria-hidden',!open);histBtn.setAttribute('aria-expanded',open);}
 const closeSheet=()=>{pinned=false;setSheet(false);};
 document.getElementById('histTop').onclick=()=>histBtn.click();   // phones: History lives in the header, the bottom bar has no room for page functions
 histBtn.onclick=()=>{if(isOpen()&&!pinned){pinned=true;}else if(isOpen()){closeSheet();}else{pinned=true;setSheet(true);}};
@@ -811,13 +807,13 @@ const tocWrap=document.getElementById('tocWrap'),tocList=document.getElementById
 let tocT;
 const setToc=o=>{tocWrap.classList.toggle('open',o);tocBtn.setAttribute('aria-expanded',o);};
 function buildToc(d){
-  if(!d||!d.kbbi||!d.kbbi.length){tocWrap.hidden=true;return;}
+  if(!d||!d.kbbi||!d.kbbi.length){tocWrap.classList.add('notoc');setToc(false);return;}
   const items=[['sec-kbbi',idLabel(d.source)+' · '+d.kbbi[0].headword]];
   if(d.kbbi.length>1)items.push(['sec-rel','Related words ('+(d.kbbi.length-1)+')']);
   if(document.getElementById('sec-en'))items.push(['sec-en','English · Wiktionary']);
   if(document.getElementById('sec-sn'))items.push(['sec-sn','Examples · Tatoeba']);
   tocList.innerHTML=items.map(([id,l])=>`<a href="#${id}" data-t="${id}">${esc(l)}</a>`).join('');
-  tocWrap.hidden=false;setToc(false);updateToc();tocPlace();
+  tocWrap.classList.remove('notoc');setToc(false);updateToc();tocPlace();
 }
 function updateToc(){
   const links=[...tocList.children];if(!links.length)return;
@@ -836,7 +832,7 @@ tocList.addEventListener('click',e=>{const a=e.target.closest('[data-t]');if(!a)
   document.getElementById(a.dataset.t).scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'start'});
   if(!matchMedia('(min-width:1600px)').matches)setToc(false);});
 tocBtn.onclick=()=>setToc(!tocWrap.classList.contains('open'));
-tocWrap.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'){clearTimeout(tocT);setToc(true);}});
+tocWrap.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'&&!tocWrap.classList.contains('notoc')){clearTimeout(tocT);setToc(true);}});
 tocWrap.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){clearTimeout(tocT);tocT=setTimeout(()=>setToc(false),220);}});
 document.addEventListener('click',e=>{if(!tocWrap.contains(e.target))setToc(false);});
 
@@ -1993,7 +1989,7 @@ function route(){
   const TITLES={kamus:'Kamus',learn:'Learn',anki:'Anki',affix:'Affix lessons',settings:'Settings',legal:'Legal information'};
   document.getElementById('pageTitle').innerHTML=v==='kamus'?'Kamus <small>Indonesian ⇄ English</small>':TITLES[v];
   document.title=v==='kamus'?'Kamus':TITLES[v]+' · Kamus';
-  stopSpeech();closeSheet();syncPane();closeQuick();hideChip();closeCard();
+  stopSpeech();closeSheet();closeQuick();hideChip();closeCard();
   if(v==='settings'){onServerKnown();loadIdSrc();renderSync();renderStorage();renderInstall();loadTrStatus();renderTheme();showSpeed();renderTts();loadStatus();loadCredits();}
   if(v==='legal')loadCredits();
   if(window.KamusLearn&&(v==='learn'||v==='affix'||(v==='kamus'&&!lastResult)))cardsReady.then(()=>KamusLearn.enter(v));

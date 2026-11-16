@@ -142,7 +142,7 @@ Scope: four tracks, ordered so that tests exist before the code they protect is 
 3. **Screenshot baselines:** CI artifacts, not in the repo, at least at first; a small committed set (key views, three sizes) may be added later.
 4. **Thumb reachability:** primary actions (search, navigation, Start review, speaker) in the lower 60% of a portrait phone or reachable from the bottom bar; a warning, not a failure.
 5. **Contrast seeds:** default purple, teal and red in light and dark on every run; all `SEEDS` as a nightly job.
-6. **History:** persistent pane at 840px and up, sheet below; hover-open sheet kept for mouse users on medium screens.
+6. **History:** REVISED by the owner after trying it: History is a sheet at every size and hidden by default (no persistent pane). On phones it opens from a floating toolbar at the top right that also holds the contents button; from 600px it opens from the rail (hover or click).
 7. **Target size:** 48px hard failure on `pointer: coarse`; 32px warning on `pointer: fine`.
 
 Still open: nothing from the owner's list; new questions are added here as steps reveal them.

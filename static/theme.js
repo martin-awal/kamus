@@ -66,8 +66,13 @@
     const text = isDefault ? '' : css(seed);
     inject(text);
     try { isDefault ? localStorage.removeItem(KEY) : localStorage.setItem(KEY, JSON.stringify({ seed, css: text })); } catch (e) {}
-    const meta = document.querySelector('meta[name=theme-color]');
-    if (meta) meta.setAttribute('content', isDefault ? DEFAULT : tokens(seed, false).primary);
+    updateMeta();
+  }
+  // browser/system bars take the header colour (surface-container) of the scheme in use, so they blend with the page
+  function updateMeta() {
+    const seed = current(), m = mode(), def = seed === DEFAULT;
+    const col = dark => def ? (dark ? '#211f26' : '#f3edf7') : tokens(seed, dark)['surface-container'];
+    document.querySelectorAll('meta[name=theme-color]').forEach(el => { const isDark = /dark/.test(el.media || ''); el.setAttribute('content', col(m === 'system' ? isDark : m === 'dark')); });
   }
   function current() { try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); return s && s.seed ? s.seed : DEFAULT; } catch (e) { return DEFAULT; } }
   // light / dark / system: an explicit choice is stamped on <html data-theme>; 'system' leaves only prefers-color-scheme
@@ -77,11 +82,13 @@
     const el = document.documentElement;
     m === 'light' || m === 'dark' ? el.setAttribute('data-theme', m) : el.removeAttribute('data-theme');
     try { m === 'light' || m === 'dark' ? localStorage.setItem(MODE_KEY, m) : localStorage.removeItem(MODE_KEY); } catch (e) {}
+    updateMeta();
   }
   setMode(mode());
   window.KamusTheme = { DEFAULT, apply, current, tokens, css, mode, setMode };
   try {   // before first paint
     const s = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (s && s.css) { inject(s.css); const meta = document.querySelector('meta[name=theme-color]'); if (meta) meta.setAttribute('content', tokens(s.seed, false).primary); }
+    if (s && s.css) inject(s.css);
+    updateMeta();
   } catch (e) {}
 })();
