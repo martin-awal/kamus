@@ -5,6 +5,7 @@ Thanks for helping. Kamus is a small personal-learning tool made public, so the 
 ## Set up
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+npm ci && npm run build            # the page is built from src/ into static/ (re-run after editing src/)
 scripts/fetch_vendor.sh            # browser libraries (needs node/npm)
 .venv/bin/python server.py         # http://localhost:8765
 ```
@@ -26,13 +27,13 @@ CI runs the same checks. If you change behaviour, add or update a test where it 
 - **KBBI stays optional.** It belongs to Badan Bahasa; the app must work without it and must not contact it unless the user chose it in Settings.
 - **No personal data:** no emails, hostnames or API keys in the repository. Firebase config values live in the user's browser only.
 - **Servers you start in tests:** stop them afterwards (a stale server on the same port will serve old code).
-- **Forks:** if you run a modified copy for other people, change `SOURCE_URL` in `static/index.html` to your repository (AGPL section 13).
+- **Forks:** if you run a modified copy for other people, change `SOURCE_URL` in `src/app/21-settings.js` to your repository (AGPL section 13).
 
 ## How the code is laid out
 `CLAUDE.md` is the working notes file: every subsystem (cards in the browser, sync, `.apkg` export, stemmer, sources) has a short note with the gotchas learned the hard way. Read the section you are about to touch.
 
 ## Style
-Match the surrounding code: plain JavaScript without a build step, standard-library Python. Keep comments short and explain *why*. UI follows Material Design 3; see the UI rules in `CLAUDE.md` (pickers look like menu buttons, the search bar is the highest floating element, and so on).
+Match the surrounding code: plain JavaScript modules in `src/app` (built with Vite), standard-library Python. Never edit `static/index.html` or `static/assets/`: they are build output. Keep comments short and explain *why*. UI follows Material Design 3; see the UI rules in `CLAUDE.md` (pickers look like menu buttons, the search bar is the highest floating element, and so on).
 
 ## Reporting problems
 Use the issue templates. For security problems, do **not** open a public issue: see `SECURITY.md`.

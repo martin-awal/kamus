@@ -1,6 +1,6 @@
 # Plan: adaptive UI, automated HCI tests, code quality, real-user testing
 
-Status: approved and in progress. Done: steps 1-12 and 14. Not started: step 13 (Vite + TypeScript split), which needs a separate go-ahead.
+Status: all 14 steps done. Step 13 was done as a first stage: the page is built by Vite from `src/` (markup, four CSS files, 22 ES modules). The modules are still plain JavaScript joined by a window bridge for 40 cross-references; converting them to TypeScript and removing the bridge is follow-up work, module by module.
 
 Progress notes:
 - Steps 2-5 found and fixed real problems: the New card sheet's buttons were hidden behind the bottom bar on phones, the Legal page was empty on static hosts, 170 small touch targets, nested interactive controls in Settings, card-preview contrast, sideways scroll in Settings at 360px.

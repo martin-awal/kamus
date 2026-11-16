@@ -17,7 +17,7 @@ module.exports = defineConfig({
   timeout: 45000,
   expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.01, animations: 'disabled' } },
   use: { baseURL: `http://127.0.0.1:${PORT}`, reducedMotion: 'reduce', serviceWorkers: 'block', locale: 'en-GB', timezoneId: 'UTC' },
-  webServer: { command: `python3 -m http.server ${PORT} --bind 127.0.0.1 --directory static`, port: PORT, reuseExistingServer: false, stdout: 'ignore', stderr: 'ignore' },
+  webServer: { command: `npm run build --silent && python3 -m http.server ${PORT} --bind 127.0.0.1 --directory static`, port: PORT, reuseExistingServer: false, timeout: 120000, stdout: 'ignore', stderr: 'ignore' },
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' } },
     ...(withWebkit ? [{ name: 'webkit', use: { browserName: 'webkit' } }] : []),

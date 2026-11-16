@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-16",
+  "updated": "2026-11-17",
   "items": [
     {
       "kind": "data",
@@ -263,6 +263,14 @@
       "license": "Apache-2.0",
       "role": "Type-checks the JavaScript modules (checkJs, no build output). Not part of the app.",
       "note": "devDependency typescript; licence from its package.json."
+    },
+    {
+      "kind": "software",
+      "name": "Vite (development only)",
+      "url": "https://vite.dev/",
+      "license": "MIT",
+      "role": "Bundles the app shell (src/ into static/index.html and static/assets). Its output ships; Vite itself does not.",
+      "note": "devDependency vite; licence from its package.json."
     },
     {
       "kind": "software",

@@ -1,0 +1,23 @@
+// Entry point. The modules are evaluated in this order (each one imports only earlier ones), which is the order of the old single script.
+import './01-core.js';
+import './02-speech-history-toc.js';
+import './03-quicklook.js';
+import './04-cards-anki.js';
+import './05-idb.js';
+import './06-loading-indicator.js';
+import './07-id-source.js';
+import './08-wordlist.js';
+import './09-wiktionary.js';
+import './10-tatoeba.js';
+import './11-wikidepia-web.js';
+import './12-appearance.js';
+import './13-install.js';
+import './14-edit-card.js';
+import './15-translation.js';
+import './16-sync-tile.js';
+import './17-sync-import.js';
+import './18-storage-tile.js';
+import './19-id-source-settings.js';
+import './20-no-server.js';
+import './21-settings.js';
+import './22-routing-lookup.js';

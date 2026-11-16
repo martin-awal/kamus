@@ -26,6 +26,8 @@ find into Anki flashcards. It is a Material Design 3 web app (installable as a P
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
+npm ci && npm run build               # builds the page: src/ -> static/index.html + static/assets (needs Node 20+)
+scripts/fetch_vendor.sh               # browser libraries
 .venv/bin/python server.py            # http://localhost:8765  (this computer only)
 .venv/bin/python server.py --lan      # whole local network
 .venv/bin/python server.py --port 8770 --cert cert.pem --key key.pem   # https
@@ -111,8 +113,8 @@ Update both whenever you add or swap a dependency (see `CLAUDE.md`).
 `node --test tests/*.test.js` runs the tests: stemmer, card rules, cloud-sync merging, spaced repetition, the learning data and the `.apkg` export (the last one needs `scripts/fetch_vendor.sh` first and is skipped without it). No network needed.
 
 ## Project layout
-`server.py` (HTTP server), `kbbi.py` / `wiktionary.py` (server-side sources; Wiktionary and Tatoeba are fetched by the page itself), `static/cards-store.js` (cards, kept in the browser) + `static/anki-model.json` (the Anki note type) + `static/apkg.js` (.apkg export), `translate.py`, `wikidepia*.py` (TTS), `static/index.html` (the whole UI), `static/*-worker.js`
+`server.py` (HTTP server), `kbbi.py` / `wiktionary.py` (server-side sources; Wiktionary and Tatoeba are fetched by the page itself), `static/cards-store.js` (cards, kept in the browser) + `static/anki-model.json` (the Anki note type) + `static/apkg.js` (.apkg export), `translate.py`, `wikidepia*.py` (TTS), `src/` (the page: markup, styles and 22 app modules, built by Vite into `static/`), `static/*-worker.js`
 (in-browser TTS and translation), `scripts/` (installers). `CLAUDE.md` holds the working notes.
 
 ## Licence
-Kamus is free software under the **GNU Affero General Public License v3.0** (see `LICENSE`). If you run a modified copy for other people over a network, offer them its source: change `SOURCE_URL` in `static/index.html` to your fork (shown on Settings → Legal information). Third-party components keep their own licences.
+Kamus is free software under the **GNU Affero General Public License v3.0** (see `LICENSE`). If you run a modified copy for other people over a network, offer them its source: change `SOURCE_URL` in `src/app/21-settings.js` to your fork (shown on Settings → Legal information). Third-party components keep their own licences.

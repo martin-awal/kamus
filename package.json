@@ -1,14 +1,16 @@
 {
   "name": "kamus",
   "private": true,
-  "description": "Dev tooling only: the app itself has no build step (see README).",
+  "description": "Dev tooling: Vite builds the app shell (src/ -> static/index.html + static/assets); tests, lint and type check.",
   "license": "AGPL-3.0-only",
   "scripts": {
     "test": "node --test tests/*.test.js",
     "test:ui": "playwright test",
     "test:e2e": "node tests/e2e/static-site.e2e.js && node tests/e2e/learn.e2e.js",
     "lint": "eslint .",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "node scripts/clean_assets.js && vite build",
+    "dev": "vite"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.0",
@@ -16,6 +18,7 @@
     "@playwright/test": "^1.50.0",
     "eslint": "^9.39.5",
     "globals": "^17.14.0",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
   }
 }

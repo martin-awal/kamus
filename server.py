@@ -88,7 +88,7 @@ def suggest(prefix):
 
 
 STATIC_FILES = {"/sw.js", "/wd-worker.js", "/tr-worker.js", "/cards-store.js", "/apkg.js", "/sync.js", "/auth.html", "/stemmer.js", "/srs.js", "/learn.js", "/learn.css", "/anki-model.json", "/theme.js", "/manifest.webmanifest", "/icon.svg"}
-STATIC_TYPES = {".html": "text/html; charset=utf-8", ".txt": "text/plain; charset=utf-8", ".css": "text/css; charset=utf-8", ".mjs": "text/javascript", ".wasm": "application/wasm", ".onnx": "application/octet-stream", ".json": "application/json", ".js": "text/javascript", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml", ".png": "image/png"}
+STATIC_TYPES = {".html": "text/html; charset=utf-8", ".txt": "text/plain; charset=utf-8", ".map": "application/json", ".css": "text/css; charset=utf-8", ".mjs": "text/javascript", ".wasm": "application/wasm", ".onnx": "application/octet-stream", ".json": "application/json", ".js": "text/javascript", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml", ".png": "image/png"}
 QUICK, KB = {}, {}
 TTS_DIR = HERE / "tts_cache"
 TTS_DIR.mkdir(exist_ok=True)
@@ -207,7 +207,10 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         u = urlparse(self.path)
         if u.path == "/":
-            self._send((HERE / "static/index.html").read_text(), "text/html; charset=utf-8")
+            page = HERE / "static/index.html"
+            if not page.exists():   # the page is a build product now (src/ -> static/ with Vite)
+                return self._send("Kamus has not been built yet. Run:  npm ci && npm run build", "text/plain; charset=utf-8", 503)
+            self._send(page.read_text(), "text/html; charset=utf-8")
         elif u.path == "/api/lookup":
             word = parse_qs(u.query).get("q", [""])[0].strip().lower()
             if not word:
@@ -241,7 +244,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.wfile.write(data)
             except Exception as exc:
                 self._send(json.dumps({"error": str(exc)}), "application/json", 502)
-        elif u.path in STATIC_FILES or u.path.startswith(("/icons/", "/vendor/", "/data/", "/models/wikidepia/", "/models/opus-mt/")):
+        elif u.path in STATIC_FILES or u.path.startswith(("/icons/", "/vendor/", "/data/", "/assets/", "/models/wikidepia/", "/models/opus-mt/")):
             if u.path.startswith("/models/wikidepia/"):
                 root, rel = (HERE / "models" / "wikidepia-v1.2" / "web").resolve(), u.path[len("/models/wikidepia/"):]
             elif u.path.startswith("/models/opus-mt/"):

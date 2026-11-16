@@ -51,6 +51,9 @@ jobs:
       - name: Install server dependencies
         run: pip install -r requirements.txt
 
+      - name: Build the app shell (src/ -> static/)
+        run: npm ci && npm run build
+
       - name: Server smoke test
         run: scripts/smoke_test.sh
 
@@ -80,9 +83,9 @@ jobs:
         with:
           node-version: 22
       - run: scripts/fetch_vendor.sh
-      - name: Install Playwright (not a project dependency)
+      - name: Build and install the browser
         run: |
-          npm install --no-save playwright
+          npm ci && npm run build
           npx playwright install --with-deps chromium
       - name: Browser test against a plain file server
         run: node tests/e2e/static-site.e2e.js

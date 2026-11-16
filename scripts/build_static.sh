@@ -6,6 +6,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 [ -s static/vendor/apkg/sql-wasm.wasm ] || scripts/fetch_vendor.sh
+[ -d node_modules ] || npm ci
+npm run build --silent   # src/ -> static/index.html + static/assets (Vite)
 [ -d dist ] && rm -r dist
 mkdir dist && cp -R static/. dist/
 [ -f CNAME ] && cp CNAME dist/CNAME   # a custom domain for GitHub Pages

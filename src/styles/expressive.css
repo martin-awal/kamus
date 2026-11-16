@@ -1,0 +1,26 @@
+/* ===== Material 3 Expressive layer. Interpreted for the web (no official web spec): see docs/expressive-notes.md =====
+   emphasised type, a wider shape range with shape morphing on press, spring motion for things that move, a stronger active indicator. */
+:root{
+  --motion-spatial:cubic-bezier(.2,0,0,1);                 /* fallback where linear() easing is missing */
+  --motion-effects:cubic-bezier(.2,0,0,1);                 /* colour and opacity: never overshoot */
+  --shape-xs:4px;--shape-l:20px;--shape-xl:28px;--shape-full:999px;
+}
+@supports (transition-timing-function:linear(0,1)){
+  :root{--motion-spatial:linear(0,.17 4%,.56 10%,.89 16%,1.06 22%,1.11 27%,1.09 33%,1.03 42%,1 52%,.99 62%,1)}   /* a damped spring: fast start, small overshoot, settles */
+}
+.title{font-weight:700;letter-spacing:-.2px}.title small{font-weight:500}
+.hero h2{font-weight:500;letter-spacing:-.5px}
+.card>h3,.home-tile h3,.sheet-head h2,.mdialog h2{font-weight:700}
+.card.hero{border-radius:var(--shape-xl)}
+/* buttons: pill at rest, squarer while pressed (shape morph), with a spring */
+.btn-filled,.btn-tonal,.text-btn,.icon-btn,.vchip,.choice,.rev-g,.hcard,.rail-ind{transition:border-radius .35s var(--motion-spatial),background-color .2s var(--motion-effects),transform .35s var(--motion-spatial)}
+.btn-filled:active,.btn-tonal:active,.text-btn:active,.choice:active{border-radius:12px}
+.icon-btn:active{border-radius:32%}
+.icon-btn.speaking{border-radius:32%}                      /* playing = a different shape, not only a different icon */
+.vchip{border-radius:var(--shape-s)}.vchip.on{border-radius:var(--shape-full)}   /* selected chips become pills */
+.hcard:active,.rev-g:active{transform:scale(.97)}
+/* navigation: the active destination gets a wider, filled indicator and a heavier label */
+.rail-ind{transition:width .4s var(--motion-spatial),background-color .2s var(--motion-effects),border-radius .35s var(--motion-spatial)}
+.rail-item[aria-current=page] .rail-ind{width:64px}
+.rail-item[aria-current=page]{font-weight:700}
+.rail-item:active .rail-ind{width:48px}

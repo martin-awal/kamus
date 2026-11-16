@@ -31,3 +31,7 @@ node_modules/
 tests/ui/.snapshots/
 test-results/
 playwright-report/
+
+# build products of the app shell (npm run build: src/ -> static/)
+static/index.html
+static/assets/

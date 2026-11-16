@@ -1,0 +1,19 @@
+/* touch devices: every control is at least 48x48 (Material minimum touch target); mouse layouts keep the compact sizes */
+@media(pointer:coarse){
+  .icon-btn,.icon-btn.sm,.qchip .icon-btn{width:48px;height:48px}
+  .btn-filled,.btn-tonal,.text-btn,.vchip,.choice,.seg button,.rev-g,.mine-chip,.pick,.as-btn,.hcard,.toc a{min-height:48px;min-width:48px}
+  .face-tabs .vchip,.opt-status .text-btn,.st-row .text-btn,.dw-act .text-btn{height:auto;min-height:48px}
+  .swatch{width:48px;height:48px}
+  input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]),select,textarea{min-height:48px}
+  input[type=range]{min-height:48px}input[type=checkbox],input[type=radio]{min-width:24px;min-height:24px}
+  .switchrow,.face-on,summary{min-height:48px;display:flex;align-items:center}
+  .cw,.cred-name,.dw-w,.morph-w,.mine-go{display:inline-flex;align-items:center;min-height:48px;min-width:48px}
+  .dock-in:not(.open) form{height:48px;border-radius:24px}
+  .qchip{height:48px;border-radius:24px}
+  .chip-re{min-height:48px}
+  button.radio{width:48px;height:48px;border:0;margin:-12px -14px;position:relative}
+  button.radio::before{content:"";position:absolute;width:20px;height:20px;border:2px solid var(--outline);border-radius:50%;box-sizing:border-box}
+  .opt.sel button.radio::before{border-color:var(--primary)}
+  .ankichip .icon-btn{width:48px;height:48px}
+  #q{min-height:48px}.dock-in:not(.open) form{padding:0 8px}
+}
