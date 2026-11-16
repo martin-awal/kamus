@@ -27,3 +27,4 @@ static/vendor/
 .claude/
 dist/
 node_modules/
+.server.log

@@ -151,9 +151,12 @@ form{position:relative}
 .card{scroll-margin-top:16px}
 @media(min-width:1280px){.toc-btn{display:none}.toc{display:block}}
 /* quick look: chip beside a selected word + right side sheet */
-.qchip{position:fixed;z-index:44;display:inline-flex;align-items:center;gap:6px;height:32px;max-width:min(280px,calc(100vw - 16px));padding:0 12px 0 2px;border:0;border-radius:16px;background:var(--tertiary-container);color:var(--on-tertiary-container);box-shadow:var(--elev2);font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px;cursor:pointer;white-space:nowrap}
-.qchip .icon-btn{width:28px;height:28px;color:inherit}.qchip .icon-btn svg{width:18px;height:18px}.qchip .qm{overflow:hidden;text-overflow:ellipsis;padding:0 2px}
-.qchip.muted{background:var(--surface-container-highest);color:var(--on-surface-variant)}
+.qchip{position:fixed;z-index:44;display:inline-flex;align-items:center;gap:2px;height:28px;max-width:min(260px,calc(100vw - 16px));padding:0 10px 0 2px;border:1px solid var(--outline-variant);border-radius:14px;background:var(--surface-container-high);color:var(--on-surface);box-shadow:var(--elev1);font:500 13px/18px Roboto,sans-serif;letter-spacing:.1px;cursor:pointer;white-space:nowrap}
+.qchip.nosay{padding-left:10px}
+.qchip .icon-btn{width:24px;height:24px;color:var(--primary)}.qchip .icon-btn svg{width:16px;height:16px}
+.qchip .icon-btn.speaking{background:var(--primary);color:var(--on-primary)}.qchip .icon-btn .li{width:20px;height:20px;margin:-10px 0 0 -10px}
+.qchip .qm{overflow:hidden;text-overflow:ellipsis;padding:0 2px}
+.qchip.muted{color:var(--on-surface-variant);font-weight:400}
 .qsheet{position:fixed;right:0;top:0;bottom:0;width:min(380px,100vw);z-index:35;background:var(--surface-container);border-radius:var(--shape-l) 0 0 var(--shape-l);box-shadow:var(--elev2);display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateX(24px);transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s .25s}
 .qsheet.open{opacity:1;visibility:visible;transform:none;transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s}
 .qhead{display:flex;align-items:center;gap:4px;padding:12px 8px 8px 24px}
@@ -768,15 +771,15 @@ function placeChip(){
   const rects=qRange.getClientRects();if(!rects.length)return;
   const l=rects[rects.length-1],w=qchip.offsetWidth;
   // sits just under the selected word; above it only if there is no room below
-  let x=Math.max(8,Math.min(l.left,innerWidth-w-8)),y=l.bottom+6;
-  if(y+32>innerHeight-8)y=l.top-32-6;
+  let x=Math.max(8,Math.min(l.left,innerWidth-w-8)),y=l.bottom+3;
+  if(y+28>innerHeight-8)y=l.top-28-3;
   qchip.style.left=x+'px';qchip.style.top=Math.max(8,y)+'px';
 }
 const hideChip=()=>{qchip.hidden=true;};
 const shortGloss=g=>g.replace(/\s*\([^)]*\)/g,'').trim()||g;
 function setChip(text,muted,say){   // [speaker] meaning ; the speaker plays `say` (the Indonesian word)
-  qchip.className='qchip'+(muted?' muted':'');
-  qchip.innerHTML=(say?`<button type="button" class="icon-btn sm" data-say="${esc(say)}" aria-label="Listen: ${esc(say)}" title="Listen">${ico('vol')}</button>`:ico('book'))+'<span class="qm">'+esc(text)+'</span>';
+  qchip.className='qchip'+(muted?' muted':'')+(say?'':' nosay');
+  qchip.innerHTML=(say?`<button type="button" class="icon-btn sm" data-say="${esc(say)}" aria-label="Listen: ${esc(say)}" title="Listen">${ico('vol')}</button>`:'')+'<span class="qm">'+esc(text)+'</span>';
   qchip.hidden=false;placeChip();
 }
 function onSel(){
