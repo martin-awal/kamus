@@ -151,9 +151,8 @@ form{position:relative}
 .card{scroll-margin-top:16px}
 @media(min-width:1280px){.toc-btn{display:none}.toc{display:block}}
 /* quick look: chip beside a selected word + right side sheet */
-.qchip{position:fixed;z-index:44;display:inline-flex;align-items:center;gap:6px;height:32px;max-width:min(280px,calc(100vw - 16px));padding:0 12px 0 8px;border:0;border-radius:var(--shape-s);background:var(--tertiary-container);color:var(--on-tertiary-container);box-shadow:var(--elev2);font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px;cursor:pointer;white-space:nowrap}
-.qchip span{overflow:hidden;text-overflow:ellipsis}
-.qchip svg{width:18px;height:18px}
+.qchip{position:fixed;z-index:44;display:inline-flex;align-items:center;gap:6px;height:32px;max-width:min(280px,calc(100vw - 16px));padding:0 12px 0 2px;border:0;border-radius:16px;background:var(--tertiary-container);color:var(--on-tertiary-container);box-shadow:var(--elev2);font:500 14px/20px Roboto,sans-serif;letter-spacing:.1px;cursor:pointer;white-space:nowrap}
+.qchip .icon-btn{width:28px;height:28px;color:inherit}.qchip .icon-btn svg{width:18px;height:18px}.qchip .qm{overflow:hidden;text-overflow:ellipsis;padding:0 2px}
 .qchip.muted{background:var(--surface-container-highest);color:var(--on-surface-variant)}
 .qsheet{position:fixed;right:0;top:0;bottom:0;width:min(380px,100vw);z-index:35;background:var(--surface-container);border-radius:var(--shape-l) 0 0 var(--shape-l);box-shadow:var(--elev2);display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateX(24px);transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s .25s}
 .qsheet.open{opacity:1;visibility:visible;transform:none;transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s}
@@ -750,7 +749,7 @@ tocWrap.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){clearTim
 document.addEventListener('click',e=>{if(!tocWrap.contains(e.target))setToc(false);});
 
 // ---- quick look: select a word on the page -> chip with its English gloss -> right side sheet
-const qchip=document.createElement('button');qchip.type='button';qchip.className='qchip';qchip.hidden=true;document.body.appendChild(qchip);
+const qchip=document.createElement('div');qchip.setAttribute('role','group');qchip.className='qchip';qchip.hidden=true;document.body.appendChild(qchip);
 const qsheet=document.getElementById('qsheet'),qbody=document.getElementById('qbody');
 const qcache=new Map(),kcache=new Map();
 const getJSON=(cache,url)=>{if(!cache.has(url))cache.set(url,fetch(url).then(r=>r.json()).catch(()=>({error:true})));return cache.get(url);};
@@ -762,38 +761,43 @@ function selectedWord(){
   if(!el||!el.closest('#out,#qsheet,#ankiList,#viewLegal'))return null;
   const t=s.toString().replace(/·/g,'').replace(/\s+/g,' ').trim().replace(/^[^\p{L}]+|[^\p{L}]+$/gu,'').toLowerCase();
   if(t.length<2||t.length>40||t.split(' ').length>3||!/^[\p{L}\- ]+$/u.test(t))return null;
-  return {t,r,lang:el.closest('[lang=en]')?'en':'id'};
+  return {t,r,lang:(el.closest('#out [lang],#qsheet [lang],#ankiList [lang],#viewLegal [lang]')||{getAttribute:()=>'id'}).getAttribute('lang')==='en'?'en':'id'   /* the page's own lang=en must not count */};
 }
 function placeChip(){
   if(!qRange||qchip.hidden)return;
   const rects=qRange.getClientRects();if(!rects.length)return;
   const l=rects[rects.length-1],w=qchip.offsetWidth;
-  // sits just above the selected word so it never covers the text next to it; below it if there is no room above
-  let x=Math.max(8,Math.min(l.left,innerWidth-w-8)),y=l.top-32-6;
-  if(y<8)y=l.bottom+6;
+  // sits just under the selected word; above it only if there is no room below
+  let x=Math.max(8,Math.min(l.left,innerWidth-w-8)),y=l.bottom+6;
+  if(y+32>innerHeight-8)y=l.top-32-6;
   qchip.style.left=x+'px';qchip.style.top=Math.max(8,y)+'px';
 }
 const hideChip=()=>{qchip.hidden=true;};
 const shortGloss=g=>g.replace(/\s*\([^)]*\)/g,'').trim()||g;
-function setChip(text,muted){qchip.className='qchip'+(muted?' muted':'');qchip.innerHTML=ico('book')+'<span>'+esc(text)+'</span>';qchip.hidden=false;placeChip();}
+function setChip(text,muted,say){   // [speaker] meaning ; the speaker plays `say` (the Indonesian word)
+  qchip.className='qchip'+(muted?' muted':'');
+  qchip.innerHTML=(say?`<button type="button" class="icon-btn sm" data-say="${esc(say)}" aria-label="Listen: ${esc(say)}" title="Listen">${ico('vol')}</button>`:ico('book'))+'<span class="qm">'+esc(text)+'</span>';
+  qchip.hidden=false;placeChip();
+}
 function onSel(){
   const s=selectedWord();if(!s){hideChip();return;}
-  qWord=s.t;qRange=s.r.cloneRange();qLang=s.lang;setChip('…',true);
-  if(s.lang==='en'){   // English text (Wiktionary glosses, translations): show its Indonesian translation; a tap looks that word up
+  qWord=s.t;qRange=s.r.cloneRange();qLang=s.lang;qTarget='';setChip('…',true);
+  if(s.lang==='en'){   // English text: show its Indonesian translation; the speaker and a tap use that word
     trText(s.t,'en','id').then(r=>{if(qWord!==s.t||qchip.hidden)return;const w=(r||'').trim().toLowerCase().replace(/[.!?]+$/,'');
-      qTarget=/^[\p{L}\-]+$/u.test(w)?w:'';setChip(w||'No translation',!w);}).catch(()=>{if(qWord===s.t&&!qchip.hidden)setChip('Translation unavailable',true);});
+      qTarget=/^[\p{L}\-]+$/u.test(w)?w:'';setChip(w||'No translation',!w,qTarget);}).catch(()=>{if(qWord===s.t&&!qchip.hidden)setChip('Translation unavailable',true);});
     return;
   }
-  quickData(qWord).then(d=>{
+  // Indonesian word: its English meaning from the translation engine chosen in Settings; Wiktionary's gloss if that fails
+  const fallback=()=>quickData(qWord).then(d=>{const g=d&&d.senses&&d.senses[0];return g?shortGloss(g.gloss):'';}).catch(()=>'');
+  trText(s.t,'id','en').then(r=>{const t=(r||'').trim().replace(/[.!?]+$/,'');if(!t)throw 0;return t;}).catch(fallback).then(t=>{
     if(qWord!==s.t||qchip.hidden)return;
-    const g=d&&d.senses&&d.senses[0];
-    g?setChip(shortGloss(g.gloss),false):setChip('No English entry',true);
+    t?setChip(t,false,s.t):setChip('No English meaning',true,s.t);
   });
 }
 document.addEventListener('selectionchange',()=>{clearTimeout(qTimer);qTimer=setTimeout(onSel,250);});
 addEventListener('scroll',placeChip,{passive:true});addEventListener('resize',placeChip);
 qchip.addEventListener('mousedown',e=>e.preventDefault());   // keep the text selected
-qchip.addEventListener('click',()=>{const w=qLang==='en'?qTarget:qWord;if(w)openQuick(w);});
+qchip.addEventListener('click',e=>{const sp=e.target.closest('[data-say]');if(sp){speak(sp.dataset.say,sp);return;}const w=qLang==='en'?qTarget:qWord;if(w)openQuick(w);});
 const closeQuick=()=>{qsheet.classList.remove('open');qsheet.inert=true;qsheet.setAttribute('aria-hidden','true');};
 document.getElementById('qclose').onclick=closeQuick;
 qsheet.addEventListener('click',e=>{const b=e.target.closest('[data-say]');if(b)speak(b.dataset.say,b);});
