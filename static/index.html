@@ -21,7 +21,13 @@
   --on-surface:#1d1b20;--on-surface-variant:#49454f;--outline:#79747e;--outline-variant:#cac4d0;--error:#b3261e;
   --shape-s:8px;--shape-m:12px;--shape-l:16px;--shape-xl:28px;
   --warn-container:#ffdcbe;--on-warn-container:#2c1600;
-  --rail:80px;--bnav:0px;   /* height of the bottom navigation bar (phones only) */
+  /* layout tokens, set per window size class below (the only width media queries): components read these or use container queries */
+  --rail:80px;       /* navigation rail width (0 when the bottom bar is used) */
+  --bnav:0px;        /* bottom navigation bar height (compact only) */
+  --pane:0px;        /* supporting pane (History) width, expanded and up */
+  --gutter:24px;     /* page side padding */
+  --content-max:720px;
+
   --elev1:0 1px 2px rgba(0,0,0,.3),0 1px 3px 1px rgba(0,0,0,.15);
   --elev2:0 1px 2px rgba(0,0,0,.3),0 2px 6px 2px rgba(0,0,0,.15);
   --elev3:0 1px 3px rgba(0,0,0,.3),0 4px 8px 3px rgba(0,0,0,.15);   /* the search bar only */
@@ -47,8 +53,8 @@
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box}
 body{margin:0;background:var(--surface);color:var(--on-surface);font:400 16px/24px Roboto,system-ui,sans-serif;letter-spacing:.5px}
-header{background:var(--surface-container);padding:20px 16px 16px calc(var(--rail) + 16px)}
-.wrap{max-width:720px;margin:0 auto}
+header{background:var(--surface-container);padding:20px calc(var(--gutter) + var(--right)) 16px calc(var(--left) + var(--gutter))}
+.wrap{max-width:var(--content-max);margin:0 auto}
 .title{font:400 28px/36px Roboto,sans-serif;letter-spacing:0;margin:0;display:flex;align-items:baseline;gap:12px}
 .title small{font:500 14px/20px Roboto;letter-spacing:.1px;color:var(--on-surface-variant)}
 /* search bar */
@@ -62,10 +68,9 @@ input[type=search]::-webkit-search-cancel-button{filter:grayscale(1) opacity(.6)
 #q::-webkit-search-cancel-button,#q::-webkit-search-decoration{-webkit-appearance:none;display:none}   /* the search bar has no clear (x) button */
 .card:not(.hero) h2{font-size:28px;line-height:36px}
 .lead{color:var(--on-surface-variant)}
-.dock{position:fixed;left:var(--rail);right:0;bottom:calc(16px + var(--bnav) + env(safe-area-inset-bottom,0px));z-index:45;padding:0 16px;pointer-events:none}   /* above every other floating element (sheets 30-37, contents 25, selection chip 44) */
+.dock{position:fixed;left:var(--left);right:var(--right);bottom:calc(16px + var(--bnav) + env(safe-area-inset-bottom,0px));z-index:45;padding:0 16px;pointer-events:none}   /* above every other floating element (sheets 30-37, contents 25, selection chip 44) */
 .dock-in{width:100%;max-width:var(--idle-w,128px);margin:0 auto;display:flex;flex-direction:column;pointer-events:auto;transition:max-width .25s cubic-bezier(.2,0,0,1)}
 .dock-in.open{max-width:640px}   /* .open = mouse over it or focus inside (set in JS, so touch screens have no sticky-hover) */
-@media(max-width:480px){.dock-in.open{max-width:100%}}
 form{box-shadow:var(--elev3)}
 .dock-in:not(.open) form{height:36px;border-radius:18px;padding:0 16px}
 .dock-in:not(.open) form .icon-btn{display:none}
@@ -100,7 +105,7 @@ form{position:relative}
 .rail-item[aria-expanded=true]{color:var(--on-surface)}
 .rail-item:focus-visible{outline:none}.rail-item:focus-visible .rail-ind{outline:2px solid var(--primary);outline-offset:2px}
 /* side sheet */
-.sheet{position:fixed;left:var(--rail);top:0;bottom:0;width:min(360px,calc(100vw - var(--rail)));z-index:30;background:var(--surface-container);border-radius:0 var(--shape-l) var(--shape-l) 0;box-shadow:var(--elev2);display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateX(-24px);transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s .25s}
+.sheet{position:fixed;left:var(--rail);top:0;bottom:calc(var(--bnav) + env(safe-area-inset-bottom,0px));width:min(360px,calc(100vw - var(--rail)));z-index:30;background:var(--surface-container);border-radius:0 var(--shape-l) var(--shape-l) 0;box-shadow:var(--elev2);display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateX(-24px);transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s .25s}
 .sheet.open{opacity:1;visibility:visible;transform:none;transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s}
 .sheet-head{display:flex;align-items:center;gap:4px;padding:12px 8px 8px 24px}
 .sheet-head h2{font:400 22px/28px Roboto,sans-serif;letter-spacing:0;flex:1}
@@ -111,23 +116,35 @@ form{position:relative}
 .hcard .g{font:400 14px/20px Roboto,sans-serif;letter-spacing:.25px;color:var(--on-surface-variant);margin-top:2px;overflow-wrap:anywhere}
 .hempty{text-align:center;padding:48px 16px;color:var(--on-surface-variant)}
 .hempty svg{width:48px;height:48px;opacity:.6}
-/* phones: the rail becomes a bottom navigation bar (Material 3), so the content gets the whole width */
-@media(max-width:600px){
-  :root{--rail:0px;--bnav:64px}
+/* ===== Material 3 window size classes. These four queries only set tokens and switch the navigation/pane pattern. =====
+   compact < 600 (phone portrait): bottom navigation bar, History behind a header button
+   medium 600-839: navigation rail, History as a sheet
+   expanded 840-1199: rail + History as a persistent supporting pane
+   large >= 1200: wider rail and pane; extra-large >= 1600 adds a persistent contents list and a wider text column */
+body{--left:var(--rail);--right:0px}                                   /* where the page content starts (rail, plus the pane on Kamus) */
+@media(max-width:599.98px){
+  :root{--rail:0px;--bnav:64px;--gutter:12px}
   .rail{top:auto;left:0;right:0;bottom:0;width:auto;height:calc(var(--bnav) + env(safe-area-inset-bottom,0px));padding:0 4px env(safe-area-inset-bottom,0px);flex-direction:row;justify-content:space-around;align-items:center;gap:0;border-right:0;border-top:1px solid var(--outline-variant)}
   .rail-item{width:auto;flex:1 1 0;min-width:0;padding:10px 0 8px;gap:4px}
   .rail-ind{width:56px;height:28px}
   .rail-div,.rail-spacer,#histBtn{display:none}
-  .sheet{bottom:calc(var(--bnav) + env(safe-area-inset-bottom,0px))}
   body:has(.qsheet.open) .dock{display:none}   /* a full-width sheet is open: the floating search chip would cover its fields */
-  .sheet{border-radius:0 var(--shape-l) var(--shape-l) 0}
-  header{padding-left:16px}
-  main{padding-left:12px;padding-right:12px}
-  .card{padding:16px}
+  .dock-in.open{max-width:100%}
   body .toc-wrap{right:64px}   /* beside the History button in the header */
   body[data-view=kamus] #histTop{display:inline-grid}
+  h2{font-size:30px;line-height:38px}.title{font-size:24px}
 }
+@media(min-width:840px){
+  :root{--pane:320px;--gutter:16px}
+  body[data-view=kamus]{--left:calc(var(--rail) + var(--pane))}
+  /* History is a persistent supporting pane here, not an overlay */
+  body[data-view=kamus] .sheet{opacity:1;visibility:visible;transform:none;transition:none;width:var(--pane);z-index:20;box-shadow:none;border-radius:0;border-right:1px solid var(--outline-variant);background:var(--surface)}
+  #histBtn,#railDiv,#closeSheet{display:none}
+}
+@media(min-width:1200px){:root{--rail:96px;--pane:360px;--gutter:24px}}
+@media(min-width:1600px){:root{--content-max:840px}body[data-view=kamus]{--right:264px}}   /* room on the right for the persistent contents list */
 #histTop{display:none}
+@media(pointer:coarse){#clearHist{min-height:48px;min-width:48px}}
 @media(prefers-reduced-motion:reduce){.dock-in,form,.sheet,.rail-ind{transition:none!important}}
 [hidden]{display:none!important}
 .icon-btn.filled:disabled{background:color-mix(in srgb,var(--on-surface) 12%,transparent);color:color-mix(in srgb,var(--on-surface) 38%,transparent);cursor:default}
@@ -150,7 +167,7 @@ form{position:relative}
 .toc a:hover{background:color-mix(in srgb,var(--on-surface) 8%,transparent)}
 .toc a.active{background:var(--secondary-container);color:var(--on-secondary-container)}
 .card{scroll-margin-top:16px}
-@media(min-width:1280px){.toc-btn{display:none}.toc{display:block}}
+@media(min-width:1600px){.toc-btn{display:none}.toc{display:block}}
 /* quick look: chip beside a selected word + right side sheet */
 .qchip{position:fixed;z-index:44;display:inline-flex;align-items:center;gap:2px;height:28px;max-width:min(260px,calc(100vw - 16px));padding:0 10px 0 2px;border:1px solid var(--outline-variant);border-radius:14px;background:var(--surface-container-high);color:var(--on-surface);box-shadow:var(--elev1);font:500 13px/18px Roboto,sans-serif;letter-spacing:.1px;cursor:pointer;white-space:nowrap}
 .qchip.nosay{padding-left:10px}
@@ -270,7 +287,7 @@ button.badge.stat{border:0;cursor:help}
 .badge.ok{background:var(--secondary-container);color:var(--on-secondary-container)}
 .crow-prev{margin-top:6px}
 .snd{font-size:.8em}
-@media(max-width:600px){.crow-top{flex-direction:column}.crow-side{align-items:flex-start;max-width:none}.crow-stats{text-align:left}}
+@container main (max-width:600px){.crow-top{flex-direction:column}.crow-side{align-items:flex-start;max-width:none}.crow-stats{text-align:left}.card{padding:16px}}
 /* loading spinner on audio buttons while the voice is being prepared */
 .icon-btn.loading>svg:not(.li){opacity:0}
 .icon-btn.loading{background:transparent!important;color:var(--primary)!important}   /* the indicator is the shape itself, in the primary colour (it was invisible on a primary-coloured button) */
@@ -295,7 +312,7 @@ button.badge.stat{border:0;cursor:help}
 .speed input[type=range]{flex:1;min-width:160px;accent-color:var(--primary)}
 .speed output{font:500 14px/20px Roboto,sans-serif;min-width:56px;text-align:right}
 /* table of contents: on wide screens it sits just under the title row without a container, and gets a floating container once content scrolls beneath it */
-@media(min-width:1280px){
+@media(min-width:1600px){
   .toc-wrap{top:var(--toc-top,80px)}
   .toc{background:transparent;box-shadow:none;transition:background .2s,box-shadow .2s}
   .toc-wrap.stuck .toc{background:var(--surface-container);box-shadow:var(--elev1)}
@@ -314,7 +331,7 @@ button.badge.stat{border:0;cursor:help}
 .mine-go:focus-visible,.mine-chip:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 .crow.focus{animation:crowflash 2.4s ease-out}
 @keyframes crowflash{0%,40%{background:var(--tertiary-container)}100%{background:transparent}}
-@media(max-width:1100px){.mine-float{bottom:calc(84px + var(--bnav) + env(safe-area-inset-bottom,0px))}}   /* narrow screens: sit above the search bar instead of beside it */
+@media(max-width:1599.98px){.mine-float{bottom:calc(84px + var(--bnav) + env(safe-area-inset-bottom,0px))}}   /* narrow screens: sit above the search bar instead of beside it */
 .mine h3{margin-bottom:2px}
 .mine-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:6px 0}
 .mine-m{font:500 18px/24px Roboto,sans-serif;letter-spacing:0}
@@ -377,7 +394,8 @@ body[data-view=anki] .ankichip{display:flex}
 .progress.on{opacity:1}
 .progress::before{content:"";position:absolute;inset:0;width:40%;background:var(--primary);animation:slide 1.2s ease-in-out infinite}
 @keyframes slide{0%{left:-40%}100%{left:100%}}
-main{padding:16px 16px calc(150px + var(--bnav) + env(safe-area-inset-bottom,0px)) calc(var(--rail) + 16px)}
+main{padding:16px calc(var(--gutter) + var(--right)) calc(150px + var(--bnav) + env(safe-area-inset-bottom,0px)) calc(var(--left) + var(--gutter))}
+main>.wrap{container:main/inline-size}   /* components inside adapt to the column they get, not to the window */
 /* cards */
 .card{background:var(--surface-container);border-radius:var(--shape-l);padding:16px 20px;margin-bottom:16px;animation:rise .25s ease-out both}
 .card.hero{background:var(--primary-container);color:var(--on-primary-container)}
@@ -409,7 +427,6 @@ audio{height:36px;max-width:100%;vertical-align:middle;margin-left:8px}
 .empty{text-align:center;padding:48px 16px;color:var(--on-surface-variant)}
 .empty svg{width:48px;height:48px;margin-bottom:8px;opacity:.6}
 .empty .h{font:400 22px/28px Roboto;letter-spacing:0;color:var(--on-surface);margin:0 0 4px}
-@media(max-width:480px){h2{font-size:30px;line-height:38px}.title{font-size:24px}}
 </style>
 <link rel="stylesheet" href="/learn.css"><script src="/theme.js"></script><script src="/cards-store.js"></script><script src="/apkg.js"></script><script src="/sync.js"></script><script src="/stemmer.js"></script><script src="/srs.js"></script><script src="/data/core-words.js"></script><script src="/data/malay-diff.js"></script><script src="/data/drills.js"></script><script src="/data/affixes.js"></script><script src="/learn.js"></script><script src="/vendor/qr/qrcode.js"></script></head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -650,9 +667,13 @@ function renderHist(){
 }
 renderHist();
 const sheet=document.getElementById('sheet'),histBtn=document.getElementById('histBtn');
-function setSheet(open){sheet.classList.toggle('open',open);sheet.inert=!open;sheet.setAttribute('aria-hidden',!open);histBtn.setAttribute('aria-expanded',open);}
 let pinned=false,closeT;
 const isOpen=()=>sheet.classList.contains('open');
+// expanded and large windows: History is a persistent pane (CSS shows it); keep it reachable for keyboards and screen readers
+const paneMq=matchMedia('(min-width:840px)'),isPane=()=>paneMq.matches&&document.body.dataset.view==='kamus';
+function syncPane(){if(isPane()){sheet.classList.remove('open');pinned=false;sheet.inert=false;sheet.setAttribute('aria-hidden','false');}else if(!isOpen()){sheet.inert=true;sheet.setAttribute('aria-hidden','true');}}
+paneMq.addEventListener('change',syncPane);
+function setSheet(open){if(isPane()){syncPane();return;}sheet.classList.toggle('open',open);sheet.inert=!open;sheet.setAttribute('aria-hidden',!open);histBtn.setAttribute('aria-expanded',open);}
 const closeSheet=()=>{pinned=false;setSheet(false);};
 document.getElementById('histTop').onclick=()=>histBtn.click();   // phones: History lives in the header, the bottom bar has no room for page functions
 histBtn.onclick=()=>{if(isOpen()&&!pinned){pinned=true;}else if(isOpen()){closeSheet();}else{pinned=true;setSheet(true);}};
@@ -665,7 +686,7 @@ document.getElementById('closeSheet').onclick=()=>{closeSheet();histBtn.focus();
 document.getElementById('clearHist').onclick=()=>{try{localStorage.removeItem(KEY);localStorage.removeItem('kamus-history');localStorage.setItem('kamus-history-cleared',String(Date.now()));}catch{}renderHist();if(window.KamusSync)KamusSync.schedule();};
 addEventListener('keydown',e=>{if(e.key==='Escape'&&isOpen()){closeSheet();histBtn.focus();}});
 document.getElementById('hist').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-w]')){e.preventDefault();e.target.click();}});
-document.getElementById('hist').addEventListener('click',e=>{const c=e.target.closest('[data-w]');if(!c)return;q.value=c.dataset.w;go(c.dataset.w);if(matchMedia('(max-width:600px)').matches)closeSheet();fitIdle();});
+document.getElementById('hist').addEventListener('click',e=>{const c=e.target.closest('[data-w]');if(!c)return;q.value=c.dataset.w;go(c.dataset.w);if(matchMedia('(max-width:599.98px)').matches)closeSheet();fitIdle();});
 
 // hovering the search bar focuses it and selects the text; leaving it unfocuses
 const dock=document.querySelector('.dock-in');
@@ -746,7 +767,7 @@ function tocPlace(){   // wide screens: just below the title row; the container 
 addEventListener('scroll',tocPlace,{passive:true});addEventListener('resize',tocPlace);
 tocList.addEventListener('click',e=>{const a=e.target.closest('[data-t]');if(!a)return;e.preventDefault();
   document.getElementById(a.dataset.t).scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'start'});
-  if(!matchMedia('(min-width:1280px)').matches)setToc(false);});
+  if(!matchMedia('(min-width:1600px)').matches)setToc(false);});
 tocBtn.onclick=()=>setToc(!tocWrap.classList.contains('open'));
 tocWrap.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'){clearTimeout(tocT);setToc(true);}});
 tocWrap.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){clearTimeout(tocT);tocT=setTimeout(()=>setToc(false),220);}});
@@ -1891,7 +1912,7 @@ function route(){
   const TITLES={kamus:'Kamus',learn:'Learn',anki:'Anki',affix:'Affix lessons',settings:'Settings',legal:'Legal information'};
   document.getElementById('pageTitle').innerHTML=v==='kamus'?'Kamus <small>Indonesian ⇄ English</small>':TITLES[v];
   document.title=v==='kamus'?'Kamus':TITLES[v]+' · Kamus';
-  stopSpeech();closeSheet();closeQuick();hideChip();closeCard();
+  stopSpeech();closeSheet();syncPane();closeQuick();hideChip();closeCard();
   if(v==='settings'){onServerKnown();loadIdSrc();renderSync();renderStorage();renderInstall();loadTrStatus();renderTheme();showSpeed();renderTts();loadStatus();loadCredits();}
   if(v==='legal')loadCredits();
   if(window.KamusLearn&&(v==='learn'||v==='affix'||(v==='kamus'&&!lastResult)))cardsReady.then(()=>KamusLearn.enter(v));

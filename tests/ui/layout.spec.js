@@ -12,7 +12,7 @@ for (const size of SIZES) {
           const rect = el => { const b = el.getBoundingClientRect(); return { l: b.left, t: b.top, r: b.right, b: b.bottom, w: b.width, h: b.height }; };
           const vis = el => { if (!el) return false; const s = getComputedStyle(el), b = el.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && +s.opacity > 0.05 && b.width > 1 && b.height > 1; };
           const fixed = {};
-          for (const [name, sel] of Object.entries({ nav: '.rail', search: '.dock form', toc: '#tocWrap #tocBtn', tocList: '#tocWrap .toc', mine: '#mineFloat', histTop: '#histTop', ankiChip: '#ankiChip' })) { const el = document.querySelector(sel); if (vis(el)) fixed[name] = rect(el); }
+          for (const [name, sel] of Object.entries({ nav: '.rail', history: '#sheet', search: '.dock form', toc: '#tocWrap #tocBtn', tocList: '#tocWrap .toc', mine: '#mineFloat', histTop: '#histTop', ankiChip: '#ankiChip' })) { const el = document.querySelector(sel); if (vis(el)) fixed[name] = rect(el); }
           const de = document.documentElement;
           window.scrollTo(0, de.scrollHeight);
           const last = [...document.querySelectorAll('main:not([hidden]) .wrap > *')].filter(vis).pop();
@@ -43,9 +43,32 @@ for (const size of SIZES) {
   });
 }
 
-// Not built yet: these describe the target layout of plan steps 7-8 and are switched on there.
-test.describe('adaptive layout targets', () => {
-  test.fixme('expanded/large: History is a persistent supporting pane (step 7)', async () => {});
+// The adaptive patterns themselves (plan steps 6-8)
+const at = (name) => SIZES.find(s => s.name === name);
+test.describe('adaptive layout', () => {
+  for (const size of SIZES) {
+    test(`${size.name}: History is a ${size.width >= 840 ? 'persistent pane' : 'sheet'} @smoke`, async ({ page }) => {
+      await page.setViewportSize({ width: size.width, height: size.height });
+      await openView(page, VIEWS[1]);
+      const r = await page.evaluate(() => { const s = document.getElementById('sheet'), b = s.getBoundingClientRect(), cs = getComputedStyle(s), m = document.querySelector('#viewKamus .wrap').getBoundingClientRect();
+        return { visible: cs.visibility !== 'hidden' && +cs.opacity > 0.5 && b.width > 1, right: b.right, contentLeft: m.left, inert: s.inert, histBtn: getComputedStyle(document.getElementById('histBtn')).display !== 'none', histTop: getComputedStyle(document.getElementById('histTop')).display !== 'none' }; });
+      if (size.width >= 840) {
+        expect(r.visible, 'pane shows without any interaction').toBe(true); expect(r.inert, 'pane is reachable').toBe(false);
+        expect(r.contentLeft, 'content starts to the right of the pane').toBeGreaterThanOrEqual(r.right);
+        expect(r.histBtn || r.histTop, 'no History button is needed').toBe(false);
+        await expect(page.locator('#hist .hcard').first()).toContainText('rumah');
+      } else {
+        expect(r.visible, 'History is closed until asked for').toBe(false); expect(r.inert).toBe(true);
+        expect(size.cls === 'compact' ? r.histTop : r.histBtn, 'a History button exists').toBe(true);
+      }
+    });
+    test(`${size.name}: text column is capped and other views ignore the pane @smoke`, async ({ page }) => {
+      await page.setViewportSize({ width: size.width, height: size.height });
+      await openView(page, VIEWS.find(v => v.name === 'settings'));
+      const w = await page.evaluate(() => { const b = document.querySelector('#viewSettings .wrap').getBoundingClientRect(), n = document.querySelector('.rail').getBoundingClientRect(); return { width: b.width, left: b.left, railRight: innerWidth < 600 ? 0 : n.right, paneVisible: getComputedStyle(document.getElementById('sheet')).display !== 'none' }; });
+      expect(w.width).toBeLessThanOrEqual(size.width >= 1600 ? 840 : 720);
+      expect(w.left).toBeGreaterThanOrEqual(w.railRight); expect(w.paneVisible, 'the History pane belongs to Kamus only').toBe(false);
+    });
+  }
   test.fixme('expanded/large: Anki is a list-detail layout (step 8)', async () => {});
-  test.fixme('large: content has a capped readable width with panes beside it (step 6)', async () => {});
 });

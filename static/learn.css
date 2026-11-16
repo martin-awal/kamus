@@ -49,14 +49,13 @@ table.cmp td{padding:8px 12px 8px 0;border-bottom:1px solid var(--outline-varian
 .rev-g:hover{background:color-mix(in srgb,var(--on-surface) 8%,transparent)}.rev-g:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 .rev-again{border-color:var(--error)}.rev-good{background:var(--secondary-container);border-color:transparent;color:var(--on-secondary-container)}.rev-easy{border-color:var(--primary)}
 .rev-done{text-align:center;padding:24px 0}.rev-done h3{margin:0 0 8px;font:400 24px/32px Roboto,sans-serif}
-@media(max-width:480px){.rev-grades{grid-template-columns:repeat(2,1fr)}}
 
 /* forms in the pages must not pick up the search bar's pill styling (the global `form` rule) */
 form.cmp-form{display:flex;height:auto;padding:0;border-radius:0;background:none;box-shadow:none;outline:0;position:static;gap:8px;align-items:center;margin:8px 0}
 form.cmp-form:focus-within{box-shadow:none}
 
-/* narrow screens */
-@media(max-width:600px){
+/* narrow columns: container queries, so these also apply when a wide window gives the page a narrow column (pane open) */
+@container main (max-width:600px){
   .dw-list li.dw{flex-wrap:wrap;row-gap:4px}
   .dw-main{flex:1 1 0;min-width:calc(100% - 56px)}
   .dw-act{flex:1 0 100%;justify-content:flex-end;padding-left:40px}
@@ -64,7 +63,10 @@ form.cmp-form:focus-within{box-shadow:none}
   .stats{gap:8px 20px}.stats div{min-width:72px}
   .cmp-cols{grid-template-columns:1fr}
   .pron-word{font-size:32px}
-  .mdialog.rev{width:calc(100vw - 16px)}.mdialog.rev .mdialog-in{padding:16px}
   table.cmp{font-size:13px}
+}
+@media(max-width:599.98px){   /* the review dialog is in the top layer, outside any container */
+  .mdialog.rev{width:calc(100vw - 16px)}.mdialog.rev .mdialog-in{padding:16px}
+  .rev-grades{grid-template-columns:repeat(2,1fr)}
 }
 @media(pointer:coarse){.dw-list .icon-btn.sm{width:40px;height:40px}.choice{min-height:44px}.vchip{min-height:36px}.rev-g{min-height:56px}}

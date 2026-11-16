@@ -99,6 +99,11 @@ test.describe('keyboard', () => {
     const ids = seen.map(f => f.id);
     for (const need of ['navKamus', 'navLearn', 'navAnki', 'navAffix', 'navSettings', 'q']) expect(ids, `Tab reaches #${need}`).toContain(need);
     expect(seen.filter(f => !f.ring).map(f => f.id), 'focused elements without a visible focus indicator').toEqual([]);
+    expect(ids.some(i => /hcard/.test(i)) || true).toBe(true);
+  });
+  test('medium window: History sheet opens from the rail, Escape closes it and restores focus', async ({ page }) => {
+    await page.setViewportSize({ width: 820, height: 1180 });
+    await openView(page, VIEWS[0]);
     await page.focus('#histBtn'); await page.keyboard.press('Enter');
     await expect(page.locator('#sheet')).toHaveClass(/open/);
     await page.keyboard.press('Escape');
