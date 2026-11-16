@@ -97,6 +97,12 @@ def stem_candidates(word):
         if len(c) >= 3 and c != word and c not in out:
             out.append(c)
 
+    for irregular in ("pel", "bel"):   # the only roots that take these: ajar (pelajar, pelajaran, belajar)
+        if word.startswith(irregular + "ajar"):
+            add(word[len(irregular):])
+            for suf in SUFFIXES:
+                if word.endswith(suf) and len(word) - len(suf) > len(irregular) + 3:
+                    add(word[len(irregular):-len(suf)])
     for suf in [""] + SUFFIXES:
         if suf and not word.endswith(suf):
             continue
