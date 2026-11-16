@@ -94,3 +94,37 @@ jobs:
           mkdir -p /tmp/site/kamus && cp -R dist/. /tmp/site/kamus/
           KAMUS_E2E_DIR=/tmp/site KAMUS_BASE=/kamus node tests/e2e/static-site.e2e.js
           KAMUS_E2E_DIR=/tmp/site KAMUS_BASE=/kamus node tests/e2e/learn.e2e.js
+
+  ui-matrix:
+    name: UI matrix (layout, HCI, flows, screenshots)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: scripts/fetch_vendor.sh
+      - name: "Install browsers (Chromium and WebKit full suite, Firefox smoke run)"
+        run: npx playwright install --with-deps chromium webkit firefox
+      - name: Restore screenshot baselines (kept out of git)
+        uses: actions/cache@v4
+        with:
+          path: tests/ui/.snapshots
+          key: ui-snapshots-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            ui-snapshots-${{ github.ref_name }}-
+            ui-snapshots-main-
+      - name: Run the matrix
+        run: npx playwright test --update-snapshots=missing
+      - name: Upload report, screenshots and diffs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-matrix
+          path: |
+            playwright-report
+            test-results
+            tests/ui/.snapshots
+          retention-days: 14

@@ -13,6 +13,7 @@ Optional extras (offline voices, Argos, models) are described in the README. You
 ## Before you open a pull request
 ```bash
 node --test tests/*.test.js        # stemmer, card rules, sync merging, .apkg export (needs scripts/fetch_vendor.sh)
+npm ci && npx playwright test      # UI matrix: layout, accessibility, task flows (needs scripts/fetch_vendor.sh)
 scripts/smoke_test.sh              # starts the server and checks the page and its scripts
 python3 scripts/check_credits.py   # credits.json is complete
 ```

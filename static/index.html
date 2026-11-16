@@ -118,7 +118,8 @@ form{position:relative}
   .rail-item{width:auto;flex:1 1 0;min-width:0;padding:10px 0 8px;gap:4px}
   .rail-ind{width:56px;height:28px}
   .rail-div,.rail-spacer,#histBtn{display:none}
-  .sheet,.qsheet{bottom:calc(var(--bnav) + env(safe-area-inset-bottom,0px))}
+  .sheet{bottom:calc(var(--bnav) + env(safe-area-inset-bottom,0px))}
+  body:has(.qsheet.open) .dock{display:none}   /* a full-width sheet is open: the floating search chip would cover its fields */
   .sheet{border-radius:0 var(--shape-l) var(--shape-l) 0}
   header{padding-left:16px}
   main{padding-left:12px;padding-right:12px}
@@ -157,7 +158,7 @@ form{position:relative}
 .qchip .icon-btn.speaking{background:var(--primary);color:var(--on-primary)}.qchip .icon-btn .li{width:20px;height:20px;margin:-10px 0 0 -10px}
 .qchip .qm{overflow:hidden;text-overflow:ellipsis;padding:0 2px}
 .qchip.muted{color:var(--on-surface-variant);font-weight:400}
-.qsheet{position:fixed;right:0;top:0;bottom:0;width:min(380px,100vw);z-index:35;background:var(--surface-container);border-radius:var(--shape-l) 0 0 var(--shape-l);box-shadow:var(--elev2);display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateX(24px);transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s .25s}
+.qsheet{position:fixed;right:0;top:0;bottom:calc(var(--bnav) + env(safe-area-inset-bottom,0px));width:min(380px,100vw);z-index:35;background:var(--surface-container);border-radius:var(--shape-l) 0 0 var(--shape-l);box-shadow:var(--elev2);display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateX(24px);transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s .25s}
 .qsheet.open{opacity:1;visibility:visible;transform:none;transition:transform .25s cubic-bezier(.2,0,0,1),opacity .2s,visibility 0s}
 .qhead{display:flex;align-items:center;gap:4px;padding:12px 8px 8px 24px}
 .qhead .qw{font:400 28px/36px Roboto,sans-serif;letter-spacing:0;flex:1;overflow-wrap:anywhere}

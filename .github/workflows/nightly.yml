@@ -1,0 +1,25 @@
+name: Nightly checks
+
+# Slower checks that do not need to run on every push: accessibility and contrast for every seed colour offered in Settings.
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  all-seed-colours:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: scripts/fetch_vendor.sh
+      - run: npx playwright install --with-deps chromium
+      - name: axe with every colour in SEEDS, light and dark
+        run: KAMUS_ALL_SEEDS=1 npx playwright test hci --project=chromium -g "accessibility"
