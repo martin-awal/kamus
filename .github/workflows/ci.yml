@@ -116,6 +116,8 @@ jobs:
           restore-keys: |
             ui-snapshots-${{ github.ref_name }}-
             ui-snapshots-main-
+      - name: Lint and type check
+        run: npm run lint && npm run typecheck
       - name: Run the matrix
         run: npx playwright test --update-snapshots=missing
       - name: Upload report, screenshots and diffs

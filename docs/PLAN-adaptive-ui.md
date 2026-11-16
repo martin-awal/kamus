@@ -1,6 +1,11 @@
 # Plan: adaptive UI, automated HCI tests, code quality, real-user testing
 
-Status: PROPOSAL with the owner's decisions recorded (section 6). Nothing here is implemented. Awaiting explicit approval to start.
+Status: approved and in progress. Done: steps 1-12 and 14. Not started: step 13 (Vite + TypeScript split), which needs a separate go-ahead.
+
+Progress notes:
+- Steps 2-5 found and fixed real problems: the New card sheet's buttons were hidden behind the bottom bar on phones, the Legal page was empty on static hosts, 170 small touch targets, nested interactive controls in Settings, card-preview contrast, sideways scroll in Settings at 360px.
+- `tests/ui/baseline.json` (known violations) is empty.
+- Local runs cover Chromium and Firefox. WebKit could not be run on this machine (system libraries need `sudo npx playwright install-deps webkit`); it runs in CI only, so its first CI run may show new failures.
 Scope: four tracks, ordered so that tests exist before the code they protect is changed.
 
 ## 0. Starting point (checked in the repo, not from memory)

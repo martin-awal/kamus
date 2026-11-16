@@ -23,7 +23,7 @@
   // --- sharing the config with another device: a link  <origin>/#sync=<base64url(apiKey|authDomain|projectId|appId)>  (the hash never goes to a server)
   const b64u = t => btoa(unescape(encodeURIComponent(t))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   const unb64u = t => decodeURIComponent(escape(atob(t.replace(/-/g, '+').replace(/_/g, '/'))));
-  const OK = /^[A-Za-z0-9_.:\-]{1,200}$/;
+  const OK = /^[A-Za-z0-9_.:-]{1,200}$/;
   function shareUrl() { const c = getConfig(); if (!c) return ''; return location.origin + '/#sync=' + b64u([c.apiKey, c.authDomain, c.projectId, c.appId || ''].join('|')); }
   function fromShared(text) {   // a share link, "#sync=…", or the pasted firebaseConfig snippet -> config object (throws when it is neither)
     const m = /#sync=([A-Za-z0-9_-]+)/.exec(text || '');

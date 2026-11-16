@@ -250,6 +250,22 @@
     },
     {
       "kind": "software",
+      "name": "ESLint (development only)",
+      "url": "https://eslint.org/",
+      "license": "MIT",
+      "role": "Lints the JavaScript files and tests. Not part of the app.",
+      "note": "devDependencies eslint, @eslint/js and globals; all declare MIT in their package.json."
+    },
+    {
+      "kind": "software",
+      "name": "TypeScript (development only)",
+      "url": "https://www.typescriptlang.org/",
+      "license": "Apache-2.0",
+      "role": "Type-checks the JavaScript modules (checkJs, no build output). Not part of the app.",
+      "note": "devDependency typescript; licence from its package.json."
+    },
+    {
+      "kind": "software",
       "name": "AnkiConnect (Anki add-on, not bundled)",
       "url": "https://github.com/FooSoft/anki-connect",
       "license": "GPL-3.0",

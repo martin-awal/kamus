@@ -44,7 +44,6 @@ for (const size of SIZES) {
 }
 
 // The adaptive patterns themselves (plan steps 6-8)
-const at = (name) => SIZES.find(s => s.name === name);
 test.describe('adaptive layout', () => {
   for (const size of SIZES) {
     test(`${size.name}: History is a ${size.width >= 840 ? 'persistent pane' : 'sheet'} @smoke`, async ({ page }) => {

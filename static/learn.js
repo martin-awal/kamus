@@ -156,10 +156,9 @@
   function refreshAll() { if (document.body.dataset.view === 'learn') renderHub(); else if (document.body.dataset.view === 'kamus') renderHome(); }
 
   // ---- Malay vs Indonesian
-  let cmpFilter = 'all', cmpAll = false;
-  const KIND = { word: 'Different word', false: 'False friend', spelling: 'Spelling', tech: 'Technology' };
+  let cmpAll = false;
   function renderCmpList(kind) {
-    cmpFilter = kind; const every = window.KAMUS_MALAY.pairs.filter(p => kind === 'all' || p.kind === kind), rows = kind === 'all' && !cmpAll ? every.slice(0, 12) : every;   // the full list only on request, so the page stays short
+    const every = window.KAMUS_MALAY.pairs.filter(p => kind === 'all' || p.kind === kind), rows = kind === 'all' && !cmpAll ? every.slice(0, 12) : every;   // the full list only on request, so the page stays short
     $('cmpList').innerHTML = `<div class="tablewrap"><table class="cmp"><thead><tr><th>Indonesian</th><th>Malay (Malaysia)</th><th>English</th></tr></thead><tbody>${rows.map((p, i) => `<tr data-cmprow="${i}" class="${p.kind === 'false' ? 'ff' : ''}"><td lang="id"><b>${esc(p.id)}</b></td><td lang="ms">${esc(p.my)}</td><td lang="en">${esc(p.en)}${p.note ? `<div class="cmp-note">${esc(p.note)}</div>` : ''}${p.kind === 'false' ? ' <span class="badge warn">false friend</span>' : ''}</td></tr>`).join('')}</tbody></table></div>${every.length > rows.length ? `<p><button type="button" class="text-btn" data-cmpall>Show all ${every.length}</button></p>` : ''}`;
   }
   async function compareWord(raw) {
