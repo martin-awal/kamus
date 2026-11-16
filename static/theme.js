@@ -72,7 +72,7 @@
   function updateMeta() {
     const seed = current(), m = mode(), def = seed === DEFAULT;
     const col = dark => def ? (dark ? '#211f26' : '#f3edf7') : tokens(seed, dark)['surface-container'];
-    document.querySelectorAll('meta[name=theme-color]').forEach(el => { const isDark = /dark/.test(el.media || ''); el.setAttribute('content', col(m === 'system' ? isDark : m === 'dark')); });
+    document.querySelectorAll('meta[name=theme-color]').forEach(el => { const isDark = /dark/.test(el.getAttribute('media') || ''); el.setAttribute('content', col(m === 'system' ? isDark : m === 'dark')); });
   }
   function current() { try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); return s && s.seed ? s.seed : DEFAULT; } catch (e) { return DEFAULT; } }
   // light / dark / system: an explicit choice is stamped on <html data-theme>; 'system' leaves only prefers-color-scheme
