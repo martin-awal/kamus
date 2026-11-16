@@ -69,4 +69,4 @@ form.cmp-form:focus-within{box-shadow:none}
   .mdialog.rev{width:calc(100vw - 16px)}.mdialog.rev .mdialog-in{padding:16px}
   .rev-grades{grid-template-columns:repeat(2,1fr)}
 }
-@media(pointer:coarse){.dw-list .icon-btn.sm{width:40px;height:40px}.choice{min-height:44px}.vchip{min-height:36px}.rev-g{min-height:56px}}
+@media(pointer:coarse){.rev-g{min-height:56px}}   /* the general 48px touch rules are in index.html */

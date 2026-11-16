@@ -144,7 +144,24 @@ body{--left:var(--rail);--right:0px}                                   /* where 
 @media(min-width:1200px){:root{--rail:96px;--pane:360px;--gutter:24px}}
 @media(min-width:1600px){:root{--content-max:840px}body[data-view=kamus]{--right:264px}}   /* room on the right for the persistent contents list */
 #histTop{display:none}
-@media(pointer:coarse){#clearHist{min-height:48px;min-width:48px}}
+/* list-detail (Anki): one column with inline previews below 840px, list + detail pane from 840px */
+.ld-detail{display:none}
+@media(min-width:840px){
+  body[data-view=anki]{--content-max:1120px}body[data-view=affix]{--content-max:1000px}
+  .ld{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,42%);gap:16px;align-items:start}
+  .ld-detail{display:block;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;margin-bottom:16px}
+  .ld .crow{cursor:pointer;border-radius:var(--shape-m);padding:14px 12px;margin:0 -12px}
+  .ld .crow.sel{background:var(--secondary-container);color:var(--on-secondary-container);border-top-color:transparent}.ld .crow.sel+.crow{border-top-color:transparent}
+  .ld .crow-prev,.ld [data-act=prev]{display:none}
+  .ld-detail h3{margin:0 0 4px}.ld-detail .ld-act{display:flex;gap:8px;margin:12px 0 4px}
+  /* affix lessons: lesson list on the left, lesson on the right */
+  #affixRoot{display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;align-items:start}
+  #affixRoot>.card:first-child{grid-row:1 / span 4;position:sticky;top:16px}
+  #affixRoot>.card:first-child .chips{flex-direction:column;align-items:stretch}
+  #affixRoot>.card:first-child .vchip{text-align:left;height:40px;border-color:transparent;border-radius:20px}
+  #affixRoot>.card:not(:first-child){grid-column:2}
+}
+}
 @media(prefers-reduced-motion:reduce){.dock-in,form,.sheet,.rail-ind{transition:none!important}}
 [hidden]{display:none!important}
 .icon-btn.filled:disabled{background:color-mix(in srgb,var(--on-surface) 12%,transparent);color:color-mix(in srgb,var(--on-surface) 38%,transparent);cursor:default}
@@ -196,7 +213,8 @@ code{font:13px/18px ui-monospace,Menlo,monospace;background:var(--surface-contai
 .opt{display:flex;gap:16px;align-items:flex-start;padding:16px;border:1px solid var(--outline-variant);border-radius:var(--shape-m);margin-top:12px;cursor:pointer;position:relative}
 .opt.sel{background:var(--secondary-container);color:var(--on-secondary-container);border-color:transparent}
 .opt.disabled{opacity:.62;cursor:not-allowed}
-.radio{width:20px;height:20px;border:2px solid var(--outline);border-radius:50%;flex:none;margin-top:2px;display:grid;place-items:center}
+.radio{width:20px;height:20px;border:2px solid var(--outline);border-radius:50%;flex:none;margin-top:2px;display:grid;place-items:center;padding:0;background:none;cursor:pointer;box-sizing:border-box}
+button.radio:focus-visible{outline:2px solid var(--primary);outline-offset:3px}
 .opt.sel .radio{border-color:var(--primary)}.opt.sel .radio::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--primary)}
 .opt-main{flex:1;min-width:0}
 .opt-title{font:500 16px/24px Roboto,sans-serif;letter-spacing:.15px}
@@ -245,6 +263,7 @@ li.has-add{padding-right:44px}
 .face-tabs{display:flex;gap:6px}
 .face-tabs .vchip{height:26px;padding:0 10px;font-size:12px;line-height:16px}
 .face .acard{padding:14px}
+.acard .pos{background:none;padding:0;margin:0;border-radius:0;display:inline;letter-spacing:0}   /* inside a card preview the Anki template's own .pos style applies, not the app's chip */
 .face.off .face-name{text-decoration:line-through;opacity:.7}.face.off{opacity:.75}
 .face-on{display:inline-flex;align-items:center;gap:8px;cursor:pointer}.face-on input{width:18px;height:18px;accent-color:var(--primary)}
 .face-none{padding:12px;font:400 13px/18px Roboto,sans-serif;color:var(--on-surface-variant)}
@@ -392,15 +411,16 @@ body[data-view=anki] .ankichip{display:flex}
 /* progress */
 .progress{position:fixed;top:0;left:0;right:0;z-index:20;height:4px;background:var(--primary-container);overflow:hidden;opacity:0;transition:opacity .2s}
 .progress.on{opacity:1}
-.progress::before{content:"";position:absolute;inset:0;width:40%;background:var(--primary);animation:slide 1.2s ease-in-out infinite}
+.progress::before{content:"";position:absolute;inset:0;width:40%;background:var(--primary)}
+.progress.on::before{animation:slide 1.2s ease-in-out infinite}
 @keyframes slide{0%{left:-40%}100%{left:100%}}
 main{padding:16px calc(var(--gutter) + var(--right)) calc(150px + var(--bnav) + env(safe-area-inset-bottom,0px)) calc(var(--left) + var(--gutter))}
 main>.wrap{container:main/inline-size}   /* components inside adapt to the column they get, not to the window */
 /* cards */
-.card{background:var(--surface-container);border-radius:var(--shape-l);padding:16px 20px;margin-bottom:16px;animation:rise .25s ease-out both}
+.card{overflow-wrap:anywhere;background:var(--surface-container);border-radius:var(--shape-l);padding:16px 20px;margin-bottom:16px;animation:rise .25s ease-out both}
 .card.hero{background:var(--primary-container);color:var(--on-primary-container)}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 .hero-row{display:flex;align-items:center;gap:12px}
 h2{margin:0;font:400 36px/44px Roboto,sans-serif;letter-spacing:0;flex:1;min-width:0;overflow-wrap:anywhere}
 h3{margin:0 0 4px;font:500 16px/24px Roboto;letter-spacing:.15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -427,6 +447,24 @@ audio{height:36px;max-width:100%;vertical-align:middle;margin-left:8px}
 .empty{text-align:center;padding:48px 16px;color:var(--on-surface-variant)}
 .empty svg{width:48px;height:48px;margin-bottom:8px;opacity:.6}
 .empty .h{font:400 22px/28px Roboto;letter-spacing:0;color:var(--on-surface);margin:0 0 4px}
+/* touch devices: every control is at least 48x48 (Material minimum touch target); mouse layouts keep the compact sizes */
+@media(pointer:coarse){
+  .icon-btn,.icon-btn.sm,.qchip .icon-btn{width:48px;height:48px}
+  .btn-filled,.btn-tonal,.text-btn,.vchip,.choice,.seg button,.rev-g,.mine-chip,.pick,.as-btn,.hcard,.toc a{min-height:48px;min-width:48px}
+  .face-tabs .vchip,.opt-status .text-btn,.st-row .text-btn,.dw-act .text-btn{height:auto;min-height:48px}
+  .swatch{width:48px;height:48px}
+  input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]),select,textarea{min-height:48px}
+  input[type=range]{min-height:48px}input[type=checkbox],input[type=radio]{min-width:24px;min-height:24px}
+  .switchrow,.face-on,summary{min-height:48px;display:flex;align-items:center}
+  .cw,.cred-name,.dw-w,.morph-w,.mine-go{display:inline-flex;align-items:center;min-height:48px;min-width:48px}
+  .dock-in:not(.open) form{height:48px;border-radius:24px}
+  .qchip{height:48px;border-radius:24px}
+  .chip-re{min-height:48px}
+  button.radio{width:48px;height:48px;border:0;margin:-12px -14px;position:relative}
+  button.radio::before{content:"";position:absolute;width:20px;height:20px;border:2px solid var(--outline);border-radius:50%;box-sizing:border-box}
+  .opt.sel button.radio::before{border-color:var(--primary)}
+  .ankichip .icon-btn{width:48px;height:48px}
+  #q{min-height:48px}.dock-in:not(.open) form{padding:0 8px}
 </style>
 <link rel="stylesheet" href="/learn.css"><script src="/theme.js"></script><script src="/cards-store.js"></script><script src="/apkg.js"></script><script src="/sync.js"></script><script src="/stemmer.js"></script><script src="/srs.js"></script><script src="/data/core-words.js"></script><script src="/data/malay-diff.js"></script><script src="/data/drills.js"></script><script src="/data/affixes.js"></script><script src="/learn.js"></script><script src="/vendor/qr/qrcode.js"></script></head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -521,13 +559,16 @@ audio{height:36px;max-width:100%;vertical-align:middle;margin-left:8px}
 <main id="viewAffix" hidden><div class="wrap" id="affixRoot"></div></main>
 <main id="viewAnki" hidden><div class="wrap">
   <div id="ankiNote"></div>
-  <section class="card">
+  <div class="ld">
+  <section class="card ld-list">
     <div class="a-tools"><input id="aSearch" type="search" placeholder="Search cards…" aria-label="Search cards" autocomplete="off">
       <button type="button" class="vchip on" data-filter="all">All</button><button type="button" class="vchip" data-filter="new">Not in Anki</button>
       <button type="button" class="vchip" data-filter="due">Due</button><button type="button" class="vchip" data-filter="learning">Learning</button></div>
     <div class="sum" id="ankiSummary"></div>
     <div id="ankiList"></div>
   </section>
+  <aside class="card ld-detail" id="ankiDetail" aria-label="Selected card" aria-live="polite"></aside>
+  </div>
 </div></main>
 
 <main id="viewSettings" hidden><div class="wrap">
@@ -1160,19 +1201,33 @@ function renderCards(){
             <button class="icon-btn sm" data-act="edit" title="Edit this card" aria-label="Edit"><svg><use href="#i-edit"/></svg></button>
             <button class="icon-btn sm" data-act="del" title="Delete from Kamus" aria-label="Delete"><svg><use href="#i-delete"/></svg></button></div></div></div>
         <div class="crow-prev" hidden></div></article>`;}).join('');
-  renderConn();
+  renderConn();renderAnkiDetail();
 }
 document.getElementById('ankiList').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.cw')){e.preventDefault();e.target.click();}});
+// list-detail: from 840px a row is selected and shown in the detail pane; below that the preview opens inside the row
+const ldMq=matchMedia('(min-width:840px)');let ankiSel=null;
+async function renderAnkiDetail(){
+  const box=document.getElementById('ankiDetail');if(!ldMq.matches){box.innerHTML='';return;}
+  let c=cardList.find(x=>x.id===ankiSel);
+  if(!c){const first=document.querySelector('#ankiList .crow');c=first&&cardList.find(x=>x.id===first.dataset.id);ankiSel=c?c.id:null;}
+  document.querySelectorAll('#ankiList .crow').forEach(r=>{const on=r.dataset.id===ankiSel;r.classList.toggle('sel',on);on?r.setAttribute('aria-current','true'):r.removeAttribute('aria-current');});
+  if(!c){box.innerHTML='<p class="muted">Select a card to see its card types.</p>';return;}
+  await getModel();
+  box.innerHTML=`<h3>${esc(c.word)} <span class="muted" lang="en">· ${esc(c.meaning)}</span></h3><div class="ld-act"><button type="button" class="btn-tonal" data-dact="edit">${ico('edit')}Edit</button><button type="button" class="text-btn" data-dact="del">Delete</button></div>${facesHtml(c.fields)}`;
+}
+ldMq.addEventListener('change',()=>{if(document.body.dataset.view==='anki')renderAnkiDetail();});
+async function deleteCard(c){if(confirm(`Delete “${c.word} · ${c.meaning}” from Kamus?`+(c.note_id?'\n\nIt stays in Anki (delete it there too if you want it gone).':''))){await KamusCards.remove(c.id);await loadCards();}}
+document.getElementById('ankiDetail').addEventListener('click',e=>{const b=e.target.closest('[data-dact]'),c=cardList.find(x=>x.id===ankiSel);if(!b||!c)return;b.dataset.dact==='edit'?openEditCard(c):deleteCard(c);});
 document.getElementById('ankiList').addEventListener('click',async e=>{
   if(getSelection().toString())return;   // the user is selecting text, not tapping
+  if(ldMq.matches&&!e.target.closest('[data-say],[data-word],[data-act=edit],[data-act=del],.statwrap')){const r=e.target.closest('.crow');if(r){ankiSel=r.dataset.id;renderAnkiDetail();}return;}
   
   const sp=e.target.closest('[data-say]');if(sp){speak(sp.dataset.say,sp);return;}   // pronunciation
   const wd=e.target.closest('[data-word]');if(wd){openQuick(wd.dataset.word);return;}   // look the word up in the side sheet
   const b=e.target.closest('[data-act]');if(!b)return;const row=b.closest('.crow'),c=cardList.find(x=>x.id===row.dataset.id);
   if(b.dataset.act==='prev'){const box=row.querySelector('.crow-prev');if(box.hidden){await getModel();box.innerHTML=facesHtml(c.fields);}box.hidden=!box.hidden;row.classList.toggle('open',!box.hidden);b.setAttribute('aria-expanded',!box.hidden);}
   else if(b.dataset.act==='edit'){openEditCard(c);}
-  else if(b.dataset.act==='del'&&confirm(`Delete “${c.word} · ${c.meaning}” from Kamus?`+(c.note_id?'\n\nIt stays in Anki (delete it there too if you want it gone).':''))){
-    await KamusCards.remove(c.id);await loadCards();}
+  else if(b.dataset.act==='del')deleteCard(c);
 });
 document.getElementById('aSearch').addEventListener('input',e=>{aText=e.target.value;renderCards();});
 document.querySelector('.a-tools').addEventListener('click',e=>{const b=e.target.closest('[data-filter]');if(!b)return;aFilter=b.dataset.filter;
@@ -1636,8 +1691,8 @@ function renderTr(){
   document.getElementById('trOptions').innerHTML=['mymemory','argos','opusmt','libretranslate'].map(e=>{
     const sel=c.engine===e,needsServer=(e==='argos'||e==='libretranslate')&&noServer(),locked=needsServer||(e==='argos'&&trStatus&&!(st.argos||{}).ready)||(e==='opusmt'&&!(MT.has['id-en']||MT.has['en-id']));
     const status=needsServer?'Needs the Kamus server (not reachable).':e==='opusmt'?(MT.err||(MT.has['id-en']&&MT.has['en-id']?'Ready · offline'+(MT.info?` · last ${MT.info.ms} ms`:''):locked?'Download a direction to use it.':'One direction missing: that direction will not translate.')):e==='argos'?(!trStatus?'':locked?'Not installed (run scripts/install_argos.sh).':'Ready · offline'):e==='libretranslate'?(c.url?'Server set.':'Add the server address above.'):'Ready.';
-    return `<div class="opt ${sel?'sel':''}" role="radio" aria-checked="${sel}" tabindex="0" data-tr="${e}" data-locked="${locked}">
-      <span class="radio"></span><div class="opt-main"><div class="opt-title">${TR_NAME[e]}</div><div class="opt-desc">${TR_INFO[e].desc}</div>
+    return `<div class="opt ${sel?'sel':''}" data-tr="${e}" data-locked="${locked}">
+      <button type="button" class="radio" role="radio" aria-checked="${sel}" aria-label="${esc(TR_NAME[e])}"></button><div class="opt-main"><div class="opt-title">${TR_NAME[e]}</div><div class="opt-desc">${TR_INFO[e].desc}</div>
       ${e==='opusmt'?`<div class="opt-status">${mtDirs.map(d=>{const info=((st.opusmt||{})[d])||{};const lbl=d==='id-en'?'Indonesian → English':'English → Indonesian';
         if(MT.prog&&MT.prog.d===d)return `<div>${lbl}: <progress id="mtProg" max="${MT.prog.total||1}" value="${MT.prog.got}"></progress><span id="mtProgText"></span></div>`;
         return MT.has[d]?`<div>${lbl}: downloaded <button type="button" class="text-btn" data-mtrm="${d}">Remove</button></div>`:`<div>${lbl}: <button type="button" class="text-btn" data-mtdl="${d}">Download${' · '+(mtBytes(d)/1e6).toFixed(0)+' MB'}</button></div>`;}).join('')}</div>`:''}
@@ -1844,8 +1899,8 @@ function renderTts(){
   };
   document.getElementById('ttsOptions').innerHTML=ENGINES.map(e=>{
     const info=ENGINE_INFO[e],needsServer=e!=='browser'&&noServer(),disabled=needsServer||(e==='wikidepia'&&ttsStatus&&!wd.ready),locked=needsServer||(e==='wikidepia-web'&&ttsStatus&&!wdState.has),sel=cfg.engine===e;   // locked: can be chosen only after the model is downloaded; its Download button stays usable
-    return `<div class="opt ${sel?'sel':''} ${disabled?'disabled':''}" role="radio" aria-checked="${sel}" aria-disabled="${disabled}" tabindex="0" data-engine="${e}" data-locked="${!!locked}">
-      <span class="radio"></span>
+    return `<div class="opt ${sel?'sel':''} ${disabled?'disabled':''}" aria-disabled="${disabled}" data-engine="${e}" data-locked="${!!locked}">
+      <button type="button" class="radio" role="radio" aria-checked="${sel}" aria-disabled="${disabled}" aria-label="${esc(info.title)}"></button>
       <div class="opt-main"><div class="opt-title">${esc(info.title)}</div><div class="opt-desc">${esc(info.desc)}</div>
         ${info.voices?`<div class="vchips">${info.voices.map(([v,l])=>`<button type="button" class="vchip ${cfg[e]===v?'on':''}" data-engine="${e}" data-voice="${v}">${esc(l)}</button>`).join('')}</div>`:''}
         <div class="opt-status">${esc(status(e))}</div>

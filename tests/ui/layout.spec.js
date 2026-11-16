@@ -70,5 +70,30 @@ test.describe('adaptive layout', () => {
       expect(w.left).toBeGreaterThanOrEqual(w.railRight); expect(w.paneVisible, 'the History pane belongs to Kamus only').toBe(false);
     });
   }
-  test.fixme('expanded/large: Anki is a list-detail layout (step 8)', async () => {});
+  for (const size of SIZES) {
+    test(`${size.name}: Anki is ${size.width >= 840 ? 'list + detail' : 'a single list with inline previews'}`, async ({ page }) => {
+      await page.setViewportSize({ width: size.width, height: size.height });
+      await openView(page, VIEWS.find(v => v.name === 'anki'));
+      const detail = page.locator('#ankiDetail');
+      if (size.width >= 840) {
+        await expect(detail).toBeVisible(); await expect(detail.locator('.face')).toHaveCount(4);          // first card is selected by default
+        const first = await detail.locator('h3').innerText();
+        await page.locator('#ankiList .crow').nth(1).click();
+        await expect(detail.locator('h3')).not.toHaveText(first); await expect(page.locator('#ankiList .crow.sel')).toHaveCount(1);
+        const b = await page.evaluate(() => { const l = document.querySelector('.ld-list').getBoundingClientRect(), d = document.getElementById('ankiDetail').getBoundingClientRect(); return { side: d.left >= l.right, listW: l.width, detW: d.width }; });
+        expect(b.side, 'detail sits beside the list').toBe(true); expect(b.listW).toBeGreaterThanOrEqual(300); expect(b.detW).toBeGreaterThanOrEqual(320);
+        await detail.locator('[data-dact=edit]').click(); await expect(page.locator('#csheet')).toHaveClass(/open/);
+      } else {
+        await expect(detail).toBeHidden();
+        await page.locator('#ankiList [data-act=prev]').first().click(); await expect(page.locator('#ankiList .crow-prev .face')).toHaveCount(4);
+      }
+    });
+    test(`${size.name}: affix lessons are ${size.width >= 840 ? 'a lesson list beside the lesson' : 'chips above the lesson'}`, async ({ page }) => {
+      await page.setViewportSize({ width: size.width, height: size.height });
+      await openView(page, VIEWS.find(v => v.name === 'affixes'));
+      const r = await page.evaluate(() => { const c = document.querySelectorAll('#affixRoot > .card'), a = c[0].getBoundingClientRect(), b = c[1].getBoundingClientRect(); return { beside: b.left >= a.right - 1, below: b.top >= a.bottom - 1 }; });
+      expect(size.width >= 840 ? r.beside : r.below).toBe(true);
+      await page.click('[data-lesson=men]'); await expect(page.locator('#affixRoot')).toContainText('menyapu');
+    });
+  }
 });
