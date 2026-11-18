@@ -1,6 +1,6 @@
 // Kamus app module 22-routing-lookup. Split from the old inline script: top-level names are exported, and also published on window
 // through bridge() for code that is not a module yet (learn.js, tests) and for references to modules that load later.
-/* global aFilter:writable, aText:writable, lastResult:writable */   // from later modules, or assigned here: reached through the window bridge
+/* global serverUp, aFilter:writable, aText:writable, lastResult:writable */   // from later modules, or assigned here: reached through the window bridge
 import { bridge } from './bridge.js';
 import { esc, ico, out, pg, q } from './01-core.js';
 import { buildToc, closeSheet, ex, fitIdle, hideSuggest, remember, say, snack, stopSpeech, syncBtn, toast } from './02-speech-history-toc.js';
@@ -121,6 +121,8 @@ out.addEventListener('click',async e=>{
   const g=e.target.closest('[data-gow]');if(g){e.preventDefault();q.value=g.dataset.gow;fitIdle();syncBtn();go(g.dataset.gow);return;}
   const f=e.target.closest('[data-wl=find]');if(f){const w=f.dataset.w;f.disabled=true;f.textContent='Getting the word list…';if(!(await wlSnapshot()))await wlDownload();if(wlState.has)go(w);else toast('Could not download the word list: '+wlState.error);}
 });
+const wordChip=w=>`<a href="#" class="morph-w" data-gow="${esc(w)}">${esc(w)}</a>`;
+const didYouMean=word=>{const sim=window.KamusStem?KamusStem.similar(word,6):[];return sim.length?`<p class="didyou">Did you mean: ${sim.map(wordChip).join(' · ')}</p>`:'';};
 async function go(word){
   pg.classList.add('on');hideChip();const minePromise=mineLoad();const oldMine=document.getElementById('mineFloat');if(oldMine)oldMine.remove();
   try{
@@ -132,7 +134,7 @@ async function go(word){
     }
     const d={word,kbbi:r.entries,kbbi_base:r.base,wiktionary:null,sentences:[],warnings:r.warnings,source:r.src,morph},wiktOnly=r.src==='wikt';
     buildToc(null);
-    const emptyHtml=`<div class="empty"><svg><use href="#i-search"/></svg><p class="h">Tidak ditemukan</p><div>No entry for “${esc(word)}”. Try the base form (makan, not memakan)${wiktOnly?'. Indonesian Wiktionary does not have every word; KBBI can be switched on in Settings → Indonesian definitions':''}.</div>${wiktOnly&&!KamusStem.hasWordlist()?`<p style="margin-top:12px"><button type="button" class="btn-tonal" data-wl="find" data-w="${esc(word)}">Look for the base word</button><br><span class="muted">Loads a word list of about 200 KB once and keeps it in this browser.</span></p>`:''}</div>`;
+    const emptyHtml=`<div class="empty"><svg><use href="#i-search"/></svg><p class="h">Tidak ditemukan</p><div>No entry for “${esc(word)}”. Try the base form (makan, not memakan)${wiktOnly?'. Indonesian Wiktionary does not have every word; KBBI can be switched on in Settings → Indonesian definitions':''}.</div>${didYouMean(word)}${wiktOnly&&!KamusStem.hasWordlist()?`<p style="margin-top:12px"><button type="button" class="btn-tonal" data-wl="find" data-w="${esc(word)}">Look for the base word</button><br><span class="muted">Loads a word list of about 200 KB once and keeps it in this browser.</span></p>`:''}</div>`;
     if(!d.kbbi.length&&!wiktOnly){out.innerHTML=emptyHtml;return;}
     lastResult=d;d.wiktionary=null;
     const warn=d.warnings.length?snack('Some sources failed: '+d.warnings.join('; '),true):'';
@@ -144,12 +146,16 @@ async function go(word){
       <ol>${e.senses.map((s,j)=>`<li class="has-add">${s.pos.length?`<span class="pos">${esc(s.pos.join(' '))}</span>`:''}<span class="def">${esc(s.definition)}</span>${s.examples.map(x=>ex(x)).join('')}<button class="icon-btn sm addcard" data-add="kb" data-e="${i}" data-s="${j}" title="Create Anki card" aria-label="Create Anki card">${ico('add')}</button></li>`).join('')}</ol>
       ${i==0?srcLine:''}</section>`).join('');
     const note=d.kbbi_base?`<div class="snack">${ico('book')}<span>${wiktOnly?`“${esc(word)}” has no entry of its own: showing its base word “${esc(d.kbbi_base)}”.`:`KBBI lists “${esc(word)}” under its base word “${esc(d.kbbi_base)}”.`}</span></div>`:'';
-    const baseHint=wiktOnly&&!d.kbbi.length&&!KamusStem.hasWordlist()?`<div class="snack">${ico('book')}<span>Indonesian Wiktionary has no definition for “${esc(word)}”. <button type="button" class="text-btn" data-wl="find" data-w="${esc(word)}">Look for the base word</button> <span class="muted">(loads a word list of about 200 KB once)</span></span></div>`:'';
+    const noDef=wiktOnly&&!d.kbbi.length&&KamusStem.hasWordlist()?`<div class="snack" id="noDef">${ico('book')}<span>Indonesian Wiktionary has no definition for “${esc(word)}” yet. ${serverUp===false?'':'KBBI (Settings → Indonesian definitions) may have it. '}<span id="noDefChips">${KamusStem.candidates(word).slice(0,3).length?'Base words: '+KamusStem.candidates(word).slice(0,3).map(c=>wordChip(c.stem)).join(' '):''}</span></span></div>`:'';
+    const baseHint0=wiktOnly&&!d.kbbi.length&&!KamusStem.hasWordlist()?`<div class="snack">${ico('book')}<span>Indonesian Wiktionary has no definition for “${esc(word)}”. <button type="button" class="text-btn" data-wl="find" data-w="${esc(word)}">Look for the base word</button> <span class="muted">(loads a word list of about 200 KB once)</span></span></div>`:'';
+    const baseHint=baseHint0||noDef;
     await minePromise;
     d.sentences=[];out.innerHTML=note+baseHint+warn+kb+wikiCardHtml(null);buildToc(d);remember(word,'');renderMine();
     const tat=tatoebaLookup(word).then(list=>{if(lastResult!==d||!list.length)return;d.sentences=list;
       out.insertAdjacentHTML('beforeend',`<section class="card" id="sec-sn"><h3>More example sentences <span class="badge">Tatoeba</span></h3>${list.map(s=>ex(s.id,s.en)).join('')}<p class="src">Tatoeba · CC BY 2.0 FR</p></section>`);buildToc(d);}).catch(()=>{});
-    const wik=wikiLookup(word).then(wk=>{if(lastResult!==d)return;d.wiktionary=wk;swapWikiCard(wikiCardHtml(wk));buildToc(d);if(wk.senses[0])remember(word,wk.senses[0].gloss);})
+    const wik=wikiLookup(word).then(wk=>{if(lastResult!==d)return;d.wiktionary=wk;swapWikiCard(wikiCardHtml(wk));buildToc(d);if(!d.kbbi.length){const box=document.getElementById('noDefChips');   // English Wiktionary says what the word is a form of ("passive of menganggap")
+        const bases=[...new Set(wk.senses.map(x=>(/\b(?:of|form of)\s+([\p{L}-]{3,})\s*$/u.exec(x.gloss)||[])[1]).filter(Boolean))].filter(b=>b!==word).slice(0,3);
+        if(box&&bases.length)box.innerHTML=(box.innerHTML?box.innerHTML+' ':'')+'Form of: '+bases.map(wordChip).join(' ');}if(wk.senses[0])remember(word,wk.senses[0].gloss);})
       .catch(()=>{if(lastResult===d)swapWikiCard(wikiCardHtml(false));});
     if(!d.kbbi.length)Promise.all([tat,wik]).then(()=>{   // Indonesian Wiktionary had nothing: if the other sources have nothing either, say so
       if(lastResult===d&&!(d.wiktionary&&d.wiktionary.senses.length)&&!d.sentences.length)out.innerHTML=emptyHtml;});

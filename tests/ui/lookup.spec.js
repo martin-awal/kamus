@@ -68,6 +68,33 @@ test.describe('lookup', () => {
     await page.click('#clearHist'); await expect(page.locator('#hist')).toContainText('No searches yet');
   });
 
+  test('a typo gets suggestions in the search box and on the not-found page', async ({ page }) => {
+    await openView(page, home); await page.waitForFunction(() => wlState.has);
+    await page.fill('#q', 'rumha');
+    await expect(page.locator('#suggest .sg', { hasText: 'rumah' })).toBeVisible();
+    await expect(page.locator('#suggest')).toContainText('did you mean');
+    await page.press('#q', 'Enter');
+    await expect(page.locator('#out .didyou')).toContainText('rumah', { timeout: 20000 });
+    await page.click('#out .didyou a >> text=rumah'); await expect(page.locator('#q')).toHaveValue('rumah');
+    await expect(page.locator('#sec-kbbi')).toContainText('tempat tinggal');
+  });
+
+  test('a word whose Indonesian Wiktionary page has no definition says so and links to its base word', async ({ page }) => {
+    await openView(page, home); await page.waitForFunction(() => wlState.has);
+    await page.route(/id\.wiktionary\.org\/w\/api\.php.*page=anggap\b/, r => r.fulfill(json({ parse: { title: 'anggap', text: '<div class="mw-parser-output"><div class="mw-heading mw-heading2"><h2 id="Bahasa_Indonesia">Bahasa Indonesia</h2></div><div class="section-header section-header-def"><dl><dt>Verba&#32;</dt></dl></div><ol><li>menganggap; memandang<br /><i>Kami anggap itu benar</i></li></ol></div>' } })));
+    await page.fill('#q', 'dianggap'); await page.press('#q', 'Enter');
+    await expect(page.locator('#sec-kbbi')).toContainText('menganggap; memandang', { timeout: 20000 });   // the base word's entry is shown
+    await expect(page.locator('#out .snack').first()).toContainText('base word “anggap”');
+  });
+
+  test('no definition anywhere: the page says so, still shows English and examples, and offers base words', async ({ page }) => {
+    await openView(page, home); await page.waitForFunction(() => wlState.has);
+    await page.route(/api\.tatoeba\.org.*q=dianggap/, r => r.fulfill(json({ data: [{ id: 3, text: 'Angka tujuh dianggap keberuntungan.', translations: [{ lang: 'eng', text: 'Seven is considered lucky.' }] }] })));
+    await page.fill('#q', 'dianggap'); await page.press('#q', 'Enter');
+    await expect(page.locator('#noDef')).toContainText('has no definition for “dianggap”');
+    await expect(page.locator('#noDef .morph-w').first()).toHaveText('anggap');
+  });
+
   test('"Your cards" appears for a word that already has a card', async ({ page }) => {
     await openView(page, home); await search(page, 'rumah');
     await expect(page.locator('#mineFloat')).toContainText('house');

@@ -59,10 +59,41 @@
     return out;
   }
   const analyze = word => candidates(word)[0] || null;
+
+  // ---- typo help: words from the list that are a small edit away (substitution, insertion, deletion, swap of neighbours)
+  function editDistance(a, b, max) {
+    const la = a.length, lb = b.length;
+    if (Math.abs(la - lb) > max) return max + 1;
+    let prev2 = null, prev = Array.from({ length: lb + 1 }, (_, j) => j);
+    for (let i = 1; i <= la; i++) {
+      const cur = [i]; let rowMin = i;
+      for (let j = 1; j <= lb; j++) {
+        let v = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+        if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) v = Math.min(v, prev2[j - 2] + 1);
+        cur[j] = v; if (v < rowMin) rowMin = v;
+      }
+      if (rowMin > max) return max + 1;
+      prev2 = prev; prev = cur;
+    }
+    return prev[lb];
+  }
+  let byLen = null, byLenFor = null;
+  function similar(word, n = 6) {
+    word = String(word || '').toLowerCase().trim();
+    if (!known || word.length < 3 || !/^[a-z-]+$/.test(word) || known.has(word)) return [];
+    if (byLenFor !== known) { byLen = new Map(); for (const w of known) { if (!byLen.has(w.length)) byLen.set(w.length, []); byLen.get(w.length).push(w); } byLenFor = known; }
+    const max = word.length <= 4 ? 1 : 2, out = [];
+    for (let len = word.length - max; len <= word.length + max; len++) for (const w of byLen.get(len) || []) {
+      const d = editDistance(word, w, max);
+      if (d <= max) { let p = 0; while (p < word.length && p < w.length && word[p] === w[p]) p++; out.push({ w, d, p }); }
+    }
+    out.sort((x, y) => x.d - y.d || y.p - x.p || Math.abs(x.w.length - word.length) - Math.abs(y.w.length - word.length) || x.w.localeCompare(y.w));
+    return out.slice(0, n).map(x => x.w);
+  }
   // "ber- + lari", "di- + makan + -nya", "buku (twice)"
   const describe = a => a ? a.steps.filter(s => s.kind === 'prefix').map(s => s.text).join(' ') + (a.steps.some(s => s.kind === 'prefix') ? ' + ' : '') + a.stem
     + a.steps.filter(s => s.kind === 'suffix').map(s => ' + ' + s.text).join('') + (a.steps.some(s => s.kind === 'redup') ? ' (repeated)' : '') : '';
 
-  window.KamusStem = { setWordlist: set => { known = set; }, hasWordlist: () => !!known, isKnown: w => !!known && known.has(w), candidates, analyze, describe, _derive: derive };
+  window.KamusStem = { setWordlist: set => { known = set; }, hasWordlist: () => !!known, isKnown: w => !!known && known.has(w), candidates, analyze, describe, similar, _derive: derive };
   if (typeof module !== 'undefined') module.exports = window.KamusStem;
 })();

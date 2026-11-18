@@ -152,7 +152,7 @@ let sugItems=[],sugActive=-1,sugTok=0,sugT;
 function hideSuggest(){sug.hidden=true;sug.innerHTML='';sugItems=[];sugActive=-1;sugTok++;}
 function drawSuggest(prefix){
   if(!sugItems.length){sug.hidden=true;sug.innerHTML='';return;}
-  sug.innerHTML=sugItems.map((s,i)=>`<div class="sg ${i===sugActive?'active':''}" role="option" data-i="${i}">${ico(s.h?'history':'search')}<span><b>${esc(s.w.slice(0,prefix.length))}</b>${esc(s.w.slice(prefix.length))}</span>${s.h?'<span class="tag">history</span>':''}</div>`).join('');
+  sug.innerHTML=sugItems.map((s,i)=>`<div class="sg ${i===sugActive?'active':''}" role="option" data-i="${i}">${ico(s.h?'history':'search')}<span>${s.t?esc(s.w):`<b>${esc(s.w.slice(0,prefix.length))}</b>${esc(s.w.slice(prefix.length))}`}</span>${s.h?'<span class="tag">history</span>':s.t?'<span class="tag">did you mean</span>':''}</div>`).join('');
   sug.hidden=false;
 }
 function pickSuggest(i){const s=sugItems[i];if(!s)return;q.value=s.w;hideSuggest();syncBtn();fitIdle();q.select();go(s.w);}
@@ -165,7 +165,9 @@ q.addEventListener('input',()=>{
   sugT=setTimeout(async()=>{
     try{const ws=await wikiSuggest(prefix);
       if(tok!==sugTok)return;
-      sugItems=[...mine,...ws.filter(w=>w!==prefix&&!mine.some(m=>m.w===w)).map(w=>({w}))].slice(0,6);drawSuggest(prefix);
+      sugItems=[...mine,...ws.filter(w=>w!==prefix&&!mine.some(m=>m.w===w)).map(w=>({w}))].slice(0,6);
+      if(sugItems.length<3&&window.KamusStem)for(const w of KamusStem.similar(prefix,4))if(sugItems.length<6&&!sugItems.some(s=>s.w===w))sugItems.push({w,t:true});   // a typo? offer words one or two letters away
+      drawSuggest(prefix);
     }catch{}
   },150);
 });

@@ -28,3 +28,16 @@ test('breakdown text', () => {
   assert.strictEqual(S.describe(S.analyze('buku-buku')), 'buku (repeated)');
 });
 test('the shortest path is reported, not a longer one to the same base', () => assert.strictEqual(S.analyze('memperbaiki').steps.length, 2));
+
+test('similar words for typos: swaps, missing and extra letters; known words and junk give nothing', () => {
+  S.setWordlist(new Set([...ROOTS, 'anggap', 'dianggap', 'rumah', 'belajar', 'terima', 'kasih']));
+  assert.strictEqual(S.similar('rumha')[0], 'rumah');          // swapped letters
+  assert.strictEqual(S.similar('blajar')[0], 'belajar');       // missing letter
+  assert.strictEqual(S.similar('terimaa')[0], 'terima');       // extra letter
+  assert.ok(S.similar('kasi').includes('kasih'));
+  assert.deepStrictEqual(S.similar('rumah'), []);               // already a word
+  assert.deepStrictEqual(S.similar('qzxwvj'), []);              // nothing close
+  assert.deepStrictEqual(S.similar('ab'), []);                  // too short to guess
+  S.setWordlist(null); assert.deepStrictEqual(S.similar('rumha'), []);
+  S.setWordlist(new Set(ROOTS));
+});
