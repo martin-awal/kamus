@@ -112,7 +112,7 @@ jobs:
       - name: "Install browsers (Chromium and WebKit full suite, Firefox smoke run)"
         run: npx playwright install --with-deps chromium webkit firefox
       - name: Restore screenshot baselines (kept out of git)
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: tests/ui/.snapshots
           key: ui-snapshots-${{ github.ref_name }}-${{ github.run_id }}
