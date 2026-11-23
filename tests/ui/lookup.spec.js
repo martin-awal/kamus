@@ -168,6 +168,27 @@ test.describe('lookup', () => {
     await page.goto('/#anki'); await expect(page.locator('#ankiList .crow-meaning[lang=zh]')).toContainText('家，房子');
   });
 
+  test('the order of the result cards can be changed in Settings, and sticks', async ({ page }) => {
+    await openView(page, home);
+    const order = () => page.evaluate(() => [...document.querySelectorAll('#out > section')].map(s => s.dataset.card === 'id' ? 'id' : s.id.replace('sec-', '').replace('kbbi', 'id')));
+    await search(page, 'rumah'); await expect(page.locator('#sec-sn')).toBeVisible(); await expect(page.locator('#sec-words')).toBeVisible(); await expect(page.locator('#sec-zh')).toBeVisible();
+    expect(await order()).toEqual(['id', 'words', 'en', 'zh', 'sn']);                       // the default
+    await page.goto('/#settings');
+    await expect(page.locator('.order-list li .order-name')).toHaveText(['Indonesian definitions', 'Related words', 'English definitions', 'Chinese definitions', 'Example sentences (Tatoeba)']);
+    await page.click('[aria-label="Move Chinese definitions up"]'); await page.click('[aria-label="Move Chinese definitions up"]');   // Chinese: 4th -> 2nd, above Related words and English
+    expect((await page.locator('.order-list li .order-name').allInnerTexts())[1]).toContain('Chinese');
+    await page.click('[aria-label="Move Indonesian definitions down"]'); await page.click('[aria-label="Move Indonesian definitions down"]');   // Indonesian: 1st -> 3rd
+    expect((await page.locator('.order-list li .order-name').first().innerText())).not.toContain('Indonesian');
+    await page.goto('/#kamus'); await search(page, 'rumah'); await expect(page.locator('#sec-sn')).toBeVisible(); await expect(page.locator('#sec-zh')).toBeVisible();
+    const got = await order(); expect(got[0]).toBe('zh'); expect(got.indexOf('id')).toBeGreaterThan(0);
+    const toc = await page.locator('#tocList a').allInnerTexts(); expect(toc[0]).toContain('中文');
+    const top = await page.evaluate(() => [...document.querySelectorAll('#out > section')].map(s => Math.round(s.getBoundingClientRect().top)));
+    expect(top).toEqual([...top].sort((a, b) => a - b));                                    // the DOM order is the visual order
+    await page.reload(); await search(page, 'rumah'); await expect(page.locator('#sec-zh')).toBeVisible(); expect((await order())[0]).toBe('zh');   // remembered
+    await page.goto('/#settings'); await page.click('#orderReset'); await page.goto('/#kamus'); await search(page, 'rumah'); await expect(page.locator('#sec-sn')).toBeVisible(); await expect(page.locator('#sec-zh')).toBeVisible(); await page.waitForTimeout(300);
+    expect(await order()).toEqual(['id', 'words', 'en', 'zh', 'sn']);
+  });
+
   test('"Your cards" appears for a word that already has a card', async ({ page }) => {
     await openView(page, home); await search(page, 'rumah');
     await expect(page.locator('#mineFloat')).toContainText('house');

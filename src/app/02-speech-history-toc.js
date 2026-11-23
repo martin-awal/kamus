@@ -1,6 +1,6 @@
 // Kamus app module 02-speech-history-toc. Split from the old inline script: top-level names are exported, and also published on window
 // through bridge() for code that is not a module yet (learn.js, tests) and for references to modules that load later.
-/* global go, idLabel, onServerKnown, wdSource:writable, webSpeak, wikiSuggest */   // from later modules, or assigned here: reached through the window bridge
+/* global go, orderOf, idLabel, onServerKnown, wdSource:writable, webSpeak, wikiSuggest */   // from later modules, or assigned here: reached through the window bridge
 import { bridge } from './bridge.js';
 import { esc, ico, out, q } from './01-core.js';
 bridge({
@@ -190,10 +190,12 @@ const setToc=o=>{tocWrap.classList.toggle('open',o);tocBtn.setAttribute('aria-ex
 function buildToc(d){
   if(!d||!d.kbbi||!d.kbbi.length){tocWrap.classList.add('notoc');setToc(false);return;}
   const items=[['sec-kbbi',idLabel(d.source)+' · '+d.kbbi[0].headword]];
-  if(d.kbbi.length>1)items.push(['sec-rel','Related words ('+(d.kbbi.length-1)+')']);
+  if(d.kbbi.length>1)items.push(['sec-rel','Related entries ('+(d.kbbi.length-1)+')']);
   if(document.getElementById('sec-en'))items.push(['sec-en','English · Wiktionary']);
   if(document.getElementById('sec-zh'))items.push(['sec-zh','中文 · Wiktionary']);
   if(document.getElementById('sec-sn'))items.push(['sec-sn','Examples · Tatoeba']);
+  const grp={'sec-kbbi':'id','sec-rel':'id','sec-en':'en','sec-zh':'zh','sec-sn':'examples'};
+  items.sort((a,b)=>window.orderOf(grp[a[0]])-window.orderOf(grp[b[0]]));   // the contents list follows the order chosen in Settings
   tocList.innerHTML=items.map(([id,l])=>`<a href="#${id}" data-t="${id}">${esc(l)}</a>`).join('');
   tocWrap.classList.remove('notoc');setToc(false);updateToc();tocPlace();
 }

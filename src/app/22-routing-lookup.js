@@ -151,7 +151,7 @@ async function go(word){
     lastResult=d;d.wiktionary=null;
     const warn=d.warnings.length?snack('Some sources failed: '+d.warnings.join('; '),true):'';
     const srcLine=r.src==='wikt'?`<p class="src"><a href="https://id.wiktionary.org/wiki/${encodeURIComponent(word)}#Bahasa_Indonesia" target="_blank" rel="noopener">Source: Wiktionary (Indonesian)</a> · CC BY-SA 4.0</p>`:r.src==='kbbi-api'?'<p class="src">Source: KBBI (via the kbbi-api server set up on this Kamus server)</p>':'<p class="src">Source: KBBI (kbbi.web.id)</p>';
-    const kb=d.kbbi.map((e,i)=>`<section class="card ${i==0?'hero':''}" ${i<2?`id="${i?'sec-rel':'sec-kbbi'}"`:''}>
+    const kb=d.kbbi.map((e,i)=>`<section class="card ${i==0?'hero':''}" data-card="id" ${i<2?`id="${i?'sec-rel':'sec-kbbi'}"`:''}>
       <div class="hero-row"><h2>${esc(e.syllables)}</h2>${say(e.headword,'tonal')}</div>
       ${i==0&&d.morph?`<p class="morph">Word parts: ${morphHtml(d.morph)}</p>`:''}
       ${e.ipa?`<p class="pron">${esc(e.ipa)}${e.exactIpa?'':' · approx.'}</p>`:''}

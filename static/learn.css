@@ -72,3 +72,8 @@ form.cmp-form:focus-within{box-shadow:none}
 @media(pointer:coarse){.rev-g{min-height:56px}}   /* the general 48px touch rules are in index.html */
 
 .didyou{margin:12px 0 0;font:400 16px/24px Roboto,sans-serif}.didyou a{margin:0 4px}
+
+.order-list{list-style:none;margin:8px 0;padding:0}
+.order-list li{counter-increment:none;display:flex;align-items:center;gap:4px;padding:2px 0 2px 12px;border:1px solid var(--outline-variant);border-radius:var(--shape-m);margin-bottom:6px}
+.order-list li::before{content:none}.order-list li.off .order-name{opacity:.6}
+.order-name{flex:1;min-width:0}

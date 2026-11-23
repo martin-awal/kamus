@@ -7,15 +7,19 @@ import { esc } from './01-core.js';
 import { idb } from './05-idb.js';
 import { fetchJSON } from './09-wiktionary.js';
 bridge({
-  getShow: [() => getShow], setShow: [() => setShow], getZh: [() => getZh], zhVariant: [() => zhVariant], zhLookup: [() => zhLookup], zhCardHtml: [() => zhCardHtml], swapZhCard: [() => swapZhCard],
+  getShow: [() => getShow], orderOf: [() => orderOf], CARD_ORDER: [() => CARD_ORDER], setShow: [() => setShow], getZh: [() => getZh], zhVariant: [() => zhVariant], zhLookup: [() => zhLookup], zhCardHtml: [() => zhCardHtml], swapZhCard: [() => swapZhCard],
   zhParse: [() => zhParse]
 });
 
 const SHOW_KEY = 'kamus-show', ZH_API = 'https://zh.wiktionary.org/w/api.php', zhMem = new Map();
 const zhAuto = () => (/^zh-(tw|hk|mo|hant)/i.test((navigator.languages && navigator.languages[0]) || navigator.language || '') ? 'zh-hant' : 'zh-hans');
 // what the result page shows (Settings -> What to show); every flag is on by default
-const SHOW_DEFAULTS = { en: true, zh: true, related: true, examples: true, script: 'auto', cardMeaning: 'en' };
-const getShow = () => {
+const CARD_ORDER = ['id', 'related', 'en', 'zh', 'examples'];   // the groups of result cards, in the default order
+const SHOW_DEFAULTS = { en: true, zh: true, related: true, examples: true, script: 'auto', cardMeaning: 'en', order: CARD_ORDER };
+const validOrder = o => (Array.isArray(o) && o.length === CARD_ORDER.length && CARD_ORDER.every(k => o.includes(k)) ? o : CARD_ORDER);
+const getShow = () => { const c = getShowRaw(); return { ...c, order: validOrder(c.order) }; };
+const orderOf = key => getShow().order.indexOf(key);
+const getShowRaw = () => {
   try {
     const saved = JSON.parse(localStorage.getItem(SHOW_KEY) || 'null');
     if (saved) return { ...SHOW_DEFAULTS, ...saved };
@@ -82,4 +86,4 @@ function zhCardHtml(zh) {
 }
 function swapZhCard(html) { const el = document.getElementById('sec-zh'); if (html) { if (el) el.outerHTML = html; } else if (el) el.remove(); }
 
-export { getShow, setShow, getZh, zhVariant, zhLookup, zhCardHtml, swapZhCard, zhParse };
+export { CARD_ORDER, orderOf, getShow, setShow, getZh, zhVariant, zhLookup, zhCardHtml, swapZhCard, zhParse };
