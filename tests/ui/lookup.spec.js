@@ -189,6 +189,19 @@ test.describe('lookup', () => {
     expect(await order()).toEqual(['id', 'words', 'en', 'zh', 'sn']);
   });
 
+  test('changing What to show applies to the result you already have, as soon as you go back to it', async ({ page }) => {
+    await openView(page, home); await search(page, 'rumah');
+    for (const c of ['#sec-en', '#sec-zh', '#sec-words', '#sec-sn']) await expect(page.locator(c)).toHaveCount(1, { timeout: 15000 });
+    await page.click('#navSettings'); await page.uncheck('#relOn'); await page.uncheck('#enOn'); await page.click('[aria-label="Move Example sentences (Tatoeba) up"]');
+    await page.click('#navKamus');                                              // no new search
+    await expect(page.locator('#sec-words')).toHaveCount(0); await expect(page.locator('#sec-en')).toHaveCount(0);
+    await expect(page.locator('#sec-zh')).toHaveCount(1); await expect(page.locator('#sec-sn')).toHaveCount(1);
+    const order = await page.evaluate(() => [...document.querySelectorAll('#out > section')].map(s => s.dataset.card === 'id' ? 'id' : s.id));
+    expect(order).toEqual(['id', 'sec-sn', 'sec-zh']);
+    await page.click('#navSettings'); await page.check('#enOn'); await page.click('#navKamus');
+    await expect(page.locator('#sec-en')).toHaveCount(1, { timeout: 15000 });
+  });
+
   test('"Your cards" appears for a word that already has a card', async ({ page }) => {
     await openView(page, home); await search(page, 'rumah');
     await expect(page.locator('#mineFloat')).toContainText('house');

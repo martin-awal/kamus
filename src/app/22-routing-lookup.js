@@ -10,7 +10,7 @@ import { idLookup, idwiktLookup } from './07-id-source.js';
 import { wlDownload, wlSnapshot, wlState } from './08-wordlist.js';
 import { wikiLookup } from './09-wiktionary.js';
 import { swapWikiCard, tatoebaLookup, wikiCardHtml } from './10-tatoeba.js';
-import { getShow, swapZhCard, zhCardHtml, zhLookup } from './10b-chinese.js';
+import { getShow, swapZhCard, takeShowDirty, zhCardHtml, zhLookup } from './10b-chinese.js';
 import { renderShow, showRelated } from './10c-display.js';
 import { wdWarm } from './11-wikidepia-web.js';
 import { renderTheme, showSpeed } from './12-appearance.js';
@@ -56,6 +56,7 @@ function route(){
   document.getElementById('pageTitle').innerHTML=v==='kamus'?'Kamus <small>Indonesian ⇄ English</small>':TITLES[v];
   document.title=v==='kamus'?'Kamus':TITLES[v]+' · Kamus';
   stopSpeech();closeSheet();closeQuick();hideChip();closeCard();
+  if(v==='kamus'&&lastResult&&takeShowDirty())go(lastResult.word);   // 'What to show' changed since this result was drawn: draw it again
   if(v==='settings'){renderShow();onServerKnown();loadIdSrc();renderSync();renderStorage();renderInstall();loadTrStatus();renderTheme();showSpeed();renderTts();loadStatus();loadCredits();}
   if(v==='legal')loadCredits();
   if(window.KamusLearn&&(v==='learn'||v==='affix'||(v==='kamus'&&!lastResult)))cardsReady.then(()=>KamusLearn.enter(v));

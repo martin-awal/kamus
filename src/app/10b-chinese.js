@@ -27,7 +27,9 @@ const getShowRaw = () => {
     return { ...SHOW_DEFAULTS, ...(old ? { zh: old.on !== false, script: old.script || 'auto' } : {}) };
   } catch { return { ...SHOW_DEFAULTS }; }
 };
-const setShow = patch => { try { localStorage.setItem(SHOW_KEY, JSON.stringify({ ...getShow(), ...patch })); } catch { /* storage blocked */ } };
+let showDirty = false;   // a setting that changes the result page was edited: the page you left is stale until it is shown again
+const setShow = patch => { try { localStorage.setItem(SHOW_KEY, JSON.stringify({ ...getShow(), ...patch })); } catch { /* storage blocked */ } if (Object.keys(patch).some(k => k !== 'cardMeaning')) showDirty = true; };
+const takeShowDirty = () => { const d = showDirty; showDirty = false; return d; };
 const getZh = () => ({ on: getShow().zh, script: getShow().script });
 const zhVariant = () => { const s = getShow().script; return s === 'hans' ? 'zh-hans' : s === 'hant' ? 'zh-hant' : zhAuto(); };
 
@@ -86,4 +88,4 @@ function zhCardHtml(zh) {
 }
 function swapZhCard(html) { const el = document.getElementById('sec-zh'); if (html) { if (el) el.outerHTML = html; } else if (el) el.remove(); }
 
-export { CARD_ORDER, orderOf, getShow, setShow, getZh, zhVariant, zhLookup, zhCardHtml, swapZhCard, zhParse };
+export { takeShowDirty, CARD_ORDER, orderOf, getShow, setShow, getZh, zhVariant, zhLookup, zhCardHtml, swapZhCard, zhParse };
