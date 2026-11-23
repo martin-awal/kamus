@@ -38,6 +38,7 @@ function selectedWord(){
   const s=getSelection();if(!s||s.isCollapsed||!s.rangeCount)return null;
   const r=s.getRangeAt(0),n=r.commonAncestorContainer,el=n.nodeType===1?n:n.parentElement;
   if(!el||!el.closest('#out,#qsheet,#ankiList,#viewLegal'))return null;
+  if(el.closest('[lang^=zh]'))return null;   // Chinese text: nothing to look up in the Indonesian dictionaries
   const t=s.toString().replace(/·/g,'').replace(/\s+/g,' ').trim().replace(/^[^\p{L}]+|[^\p{L}]+$/gu,'').toLowerCase();
   if(t.length<2||t.length>40||t.split(' ').length>3||!/^[\p{L}\- ]+$/u.test(t))return null;
   return {t,r,lang:(el.closest('#out [lang],#qsheet [lang],#ankiList [lang],#viewLegal [lang]')||{getAttribute:()=>'id'}).getAttribute('lang')==='en'?'en':'id'   /* the page's own lang=en must not count */};

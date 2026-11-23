@@ -192,6 +192,7 @@ function buildToc(d){
   const items=[['sec-kbbi',idLabel(d.source)+' · '+d.kbbi[0].headword]];
   if(d.kbbi.length>1)items.push(['sec-rel','Related words ('+(d.kbbi.length-1)+')']);
   if(document.getElementById('sec-en'))items.push(['sec-en','English · Wiktionary']);
+  if(document.getElementById('sec-zh'))items.push(['sec-zh','中文 · Wiktionary']);
   if(document.getElementById('sec-sn'))items.push(['sec-sn','Examples · Tatoeba']);
   tocList.innerHTML=items.map(([id,l])=>`<a href="#${id}" data-t="${id}">${esc(l)}</a>`).join('');
   tocWrap.classList.remove('notoc');setToc(false);updateToc();tocPlace();

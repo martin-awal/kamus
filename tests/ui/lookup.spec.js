@@ -15,7 +15,7 @@ test.describe('lookup', () => {
     await expect(hero).toContainText('ru·mah'); await expect(hero).toContainText('tempat tinggal'); await expect(hero).toContainText('Rumah itu besar');
     await expect(hero.locator('.src')).toContainText('Wiktionary (Indonesian)');
     await expect(page.locator('#sec-en')).toContainText('house'); await expect(page.locator('#sec-sn')).toContainText('My house is big.');
-    await expect(page.locator('#tocList a')).toHaveText(['Wiktionary (id) · rumah', 'English · Wiktionary', 'Examples · Tatoeba']);
+    await expect(page.locator('#tocList a')).toHaveText(['Wiktionary (id) · rumah', 'English · Wiktionary', '中文 · Wiktionary', 'Examples · Tatoeba']);
     expect(api, 'KBBI is opt-in: no server lookup without choosing it').toEqual([]);
   });
 
@@ -104,6 +104,31 @@ test.describe('lookup', () => {
     await expect(page.locator('#sec-base-atur')).toContainText('to arrange', { timeout: 20000 });
     await expect(page.locator('#sec-base-atur')).toContainText('“diatur” is a form of it');
     await page.click('#sec-base-atur .morph-w'); await expect(page.locator('#q')).toHaveValue('atur');
+  });
+
+  test('Chinese definitions sit just below the English ones, on by default, and Settings changes them', async ({ page }) => {
+    await openView(page, home); await search(page, 'rumah');
+    const zh = page.locator('#sec-zh');
+    await expect(zh).toContainText('家，房子'); await expect(zh).toContainText('名词'); await expect(zh).toContainText('[ˈrumah]'); await expect(zh).toContainText('ru‧mah');
+    await expect(zh).not.toContainText('不该出现'); await expect(zh).not.toContainText('别的语言');   // derived words and other languages are left out
+    await expect(zh).toHaveAttribute('lang', 'zh-Hans'); await expect(zh.locator('.src a')).toHaveAttribute('href', /zh\.wiktionary\.org\/wiki\/rumah/);
+    const order = await page.evaluate(() => [...document.querySelectorAll('#out > section')].map(s => s.id));
+    expect(order.indexOf('sec-zh')).toBe(order.indexOf('sec-en') + 1);
+    await expect(page.locator('#tocList a')).toContainText(['English · Wiktionary', '中文 · Wiktionary']);
+    await page.goto('/#settings'); await expect(page.locator('#zhOn')).toBeChecked();
+    await page.click('[data-zhs=hant]'); await expect(page.locator('[data-zhs=hant]')).toHaveClass(/on/);
+    await page.goto('/#kamus'); await search(page, 'rumah'); await expect(page.locator('#sec-zh')).toContainText('名詞'); await expect(page.locator('#sec-zh')).toHaveAttribute('lang', 'zh-Hant');
+    await page.goto('/#settings'); await page.uncheck('#zhOn'); await expect(page.locator('[data-zhs=hant]')).toBeHidden();
+    await page.goto('/#kamus'); await search(page, 'rumah'); await expect(page.locator('#sec-en')).toContainText('house'); await expect(page.locator('#sec-zh')).toHaveCount(0);
+  });
+
+  test('a word without a Chinese page simply has no Chinese card; selecting Chinese text offers no lookup', async ({ page }) => {
+    await openView(page, home); await search(page, 'pagi');
+    await expect(page.locator('#sec-sn, #sec-en, #sec-kbbi, #noDef').first()).toBeVisible({ timeout: 20000 });
+    await page.waitForTimeout(800); await expect(page.locator('#sec-zh')).toHaveCount(0);
+    await search(page, 'rumah'); await expect(page.locator('#sec-zh')).toContainText('家');
+    await page.evaluate(() => { const n = document.querySelector('#sec-zh .def').firstChild, r = document.createRange(); r.setStart(n, 0); r.setEnd(n, 2); const s = getSelection(); s.removeAllRanges(); s.addRange(r); });
+    await page.waitForTimeout(700); await expect(page.locator('.qchip')).toBeHidden();
   });
 
   test('"Your cards" appears for a word that already has a card', async ({ page }) => {

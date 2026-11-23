@@ -5,7 +5,7 @@
 Source: https://github.com/martin-awal/kamus · Licence: AGPL-3.0 · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
 
 A personal Indonesian dictionary for learners, run on your own computer. Look up a word and get Indonesian definitions (Indonesian Wiktionary by default, KBBI optional),
-English glosses from Wiktionary, example sentences, pronunciation (several text-to-speech engines), and turn what you
+English and Chinese glosses from Wiktionary, example sentences, pronunciation (several text-to-speech engines), and turn what you
 find into Anki flashcards. It is a Material Design 3 web app (installable as a PWA); the server is plain Python.
 
 > Status: a personal learning tool, published as-is. See [Legal notes](#legal-notes) about KBBI, which is optional and off by default.
@@ -79,6 +79,7 @@ details in it, so set `KAMUS_CONTACT="you@example.com"` (or a URL) before starti
 
 | Source / model | Runs on | Licence / terms | Notes |
 |---|---|---|---|
+| Wiktionary, Chinese edition | browser, directly | CC BY-SA 4.0 | Chinese definitions under the English card (on by default) |
 | Wiktionary, Indonesian edition | browser, directly | CC BY-SA 4.0 | the default source of Indonesian definitions |
 | KBBI (optional, off by default) | via the Kamus server: kbbi.web.id, or a kbbi-api server you configure | No open licence (Badan Bahasa); personal use only | **Unresolved**, see below |
 | Wiktionary | browser, directly | CC BY-SA 4.0 | attribution shown in the app |

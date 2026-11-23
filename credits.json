@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-17",
+  "updated": "2026-11-23",
   "items": [
     {
       "kind": "data",
@@ -9,6 +9,15 @@
       "role": "Default source of Indonesian definitions, examples and syllable breaks.",
       "note": "Text is available under CC BY-SA 4.0 (and GFDL). Read straight from the browser through the Action API (it allows cross-origin reads), with the last answer kept in the browser for offline use. Community-written: coverage is uneven.",
       "attribution": "Definitions from id.wiktionary.org contributors, CC BY-SA 4.0; each entry links to its source page."
+    },
+    {
+      "kind": "data",
+      "name": "Wiktionary (Chinese edition)",
+      "url": "https://zh.wiktionary.org/",
+      "license": "CC BY-SA 4.0",
+      "role": "Chinese definitions of Indonesian words, shown under the English ones (on by default, switch in Settings).",
+      "note": "Text is available under CC BY-SA 4.0 (and GFDL). Read straight from the browser through the Action API; the site converts between Simplified and Traditional itself (variant parameter). Coverage is uneven and derived forms are often missing.",
+      "attribution": "Definitions from zh.wiktionary.org contributors, CC BY-SA 4.0; each card links to its source page."
     },
     {
       "kind": "data",

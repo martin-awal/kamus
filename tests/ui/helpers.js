@@ -26,6 +26,8 @@ const CARDS = [
   { Word: 'pagi', POS: 'n.', KBBI: 'bagian awal hari', Wiki: 'morning', Example: 'Selamat pagi semua', ExampleEN: 'Good morning everyone' },
   { Word: 'makan', POS: 'v.', KBBI: 'memasukkan makanan ke mulut', Wiki: 'to eat', Example: 'Saya mau makan nasi', ExampleEN: 'I want to eat rice' },
 ];
+// a trimmed copy of the Chinese Wiktionary's Indonesian section (heading id is always the traditional spelling)
+const zhPage = (gloss, pos) => `<div class="mw-parser-output"><div class="mw-heading mw-heading2"><h2 id="印尼語">印尼語</h2></div><div class="mw-heading mw-heading3"><h3 id="發音">发音</h3></div><ul><li>国际音标: <span class="IPA">[ˈrumah]</span></li><li>断字：<span>ru‧mah</span></li></ul><div class="mw-heading mw-heading3"><h3 id="名詞">${pos}</h3></div><p><b>rumah</b></p><ol><li><a>${gloss.split('，')[0]}</a>，<a>${gloss.split('，')[1]}</a></li></ol><div class="mw-heading mw-heading4"><h4>派生词</h4></div><ol><li>不该出现</li></ol><div class="mw-heading mw-heading2"><h2 id="马来语">马来语</h2></div><ol><li>别的语言</li></ol></div>`;
 const json = body => ({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: typeof body === 'string' ? body : JSON.stringify(body) });
 
 async function mockNetwork(page, { offline = false } = {}) {
@@ -37,6 +39,8 @@ async function mockNetwork(page, { offline = false } = {}) {
     ? r.fulfill(json({ id: [{ partOfSpeech: 'Noun', definitions: [{ definition: 'house', parsedExamples: [{ example: 'Kemarin aku pergi ke rumah teman.', translation: 'I went to a friend’s home yesterday.' }] }, { definition: 'home' }] }] }))
     : r.fulfill({ status: 404, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '{}' }));
   await page.route(/en\.wiktionary\.org\/w\/api\.php/, r => r.fulfill(json({ parse: { text: '<p></p>' }, query: { search: [] } })));
+  await page.route(/zh\.wiktionary\.org\/w\/api\.php/, r => { const u = r.request().url(), hant = /variant=zh-hant/.test(u);
+    r.fulfill(json(/page=rumah/.test(u) ? { parse: { title: 'rumah', text: zhPage(hant ? '家，房子' : '家，房子', hant ? '名詞' : '名词') } } : { error: { code: 'missingtitle' } })); });
   await page.route(/api\.tatoeba\.org/, r => /q=rumah/.test(r.request().url()) ? r.fulfill(json({ data: [{ id: 1, text: 'Rumah saya besar.', translations: [{ lang: 'eng', text: 'My house is big.' }] }, { id: 2, text: 'Kamu di rumah.', translations: [{ lang: 'eng', text: "You're at home." }] }] })) : r.fulfill(json({ data: [] })));
   await page.route(/api\.mymemory/, r => r.fulfill(json({ responseStatus: 200, responseData: { translatedText: 'house' } })));
 }
