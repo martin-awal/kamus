@@ -116,6 +116,18 @@ def stem_candidates(word):
     return out
 
 
+def inflectional_base(word):
+    """'diatur' -> 'atur', 'bukunya' -> 'buku', 'dimakannya' -> 'makan': only clitics and the passive prefix, nothing risky."""
+    w = word
+    for suf in ("lah", "kah", "pun", "nya", "ku", "mu"):
+        if w.endswith(suf) and len(w) - len(suf) >= 3:
+            w = w[: -len(suf)]
+            break
+    if w.startswith("di") and len(w) >= 5:
+        w = w[2:]
+    return w if w != word and len(w) >= 3 else ""
+
+
 def lookup(word):
     """Returns (entries, base_word). base_word is set when the entry was found under another word."""
     entries = parse(fetch(word))
@@ -130,4 +142,14 @@ def lookup(word):
         hit = next((e for e in found if e["headword"] == word), None)
         if hit:
             return [hit] + [e for e in found if e is not hit], base
+    # regular inflections (passive di-, -lah/-kah/-pun, -ku/-mu/-nya) are not entries of their own: show the base word's entries
+    base = inflectional_base(word)
+    if base:
+        try:
+            found = parse(fetch(base))
+        except requests.RequestException:
+            found = []
+        if found:   # the page may list only derived entries (beratur, mengatur ...) when the base word is not an entry itself: still the right place to look
+            exact = [e for e in found if e["headword"] == base]
+            return exact + [e for e in found if e not in exact], base
     return [], None

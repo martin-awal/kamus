@@ -121,6 +121,16 @@ out.addEventListener('click',async e=>{
   const g=e.target.closest('[data-gow]');if(g){e.preventDefault();q.value=g.dataset.gow;fitIdle();syncBtn();go(g.dataset.gow);return;}
   const f=e.target.closest('[data-wl=find]');if(f){const w=f.dataset.w;f.disabled=true;f.textContent='Getting the word list…';if(!(await wlSnapshot()))await wlDownload();if(wlState.has)go(w);else toast('Could not download the word list: '+wlState.error);}
 });
+// A derived form with no definition of its own (diatur, dianggap): show what its base word means, from English Wiktionary, under the English card
+async function baseMeaning(d,bases){
+  for(const b of bases){
+    let wk;try{wk=await wikiLookup(b);}catch{continue;}
+    if(lastResult!==d||!wk||!wk.senses.length||document.getElementById('sec-base-'+b))continue;
+    const html=`<section class="card" id="sec-base-${esc(b)}"><h3>Base word: <a href="#" class="morph-w" data-gow="${esc(b)}">${esc(b)}</a> <span class="badge">Wiktionary</span></h3><ol>${wk.senses.slice(0,4).map(x=>`<li><span class="pos">${esc(x.pos)}</span> <span class="def" lang="en">${esc(x.gloss)}</span></li>`).join('')}</ol><p class="src">The meaning of the base word; “${esc(d.word)}” is a form of it. <a href="${esc(wk.url)}" target="_blank" rel="noopener">View on Wiktionary</a> · CC BY-SA</p></section>`;
+    const en=document.getElementById('sec-en');if(en)en.insertAdjacentHTML('afterend',html);else out.insertAdjacentHTML('beforeend',html);
+    break;   // one base word is enough
+  }
+}
 const wordChip=w=>`<a href="#" class="morph-w" data-gow="${esc(w)}">${esc(w)}</a>`;
 const didYouMean=word=>{const sim=window.KamusStem?KamusStem.similar(word,6):[];return sim.length?`<p class="didyou">Did you mean: ${sim.map(wordChip).join(' · ')}</p>`:'';};
 async function go(word){
@@ -155,7 +165,8 @@ async function go(word){
       out.insertAdjacentHTML('beforeend',`<section class="card" id="sec-sn"><h3>More example sentences <span class="badge">Tatoeba</span></h3>${list.map(s=>ex(s.id,s.en)).join('')}<p class="src">Tatoeba · CC BY 2.0 FR</p></section>`);buildToc(d);}).catch(()=>{});
     const wik=wikiLookup(word).then(wk=>{if(lastResult!==d)return;d.wiktionary=wk;swapWikiCard(wikiCardHtml(wk));buildToc(d);if(!d.kbbi.length){const box=document.getElementById('noDefChips');   // English Wiktionary says what the word is a form of ("passive of menganggap")
         const bases=[...new Set(wk.senses.map(x=>(/\b(?:of|form of)\s+([\p{L}-]{3,})\s*$/u.exec(x.gloss)||[])[1]).filter(Boolean))].filter(b=>b!==word).slice(0,3);
-        if(box&&bases.length)box.innerHTML=(box.innerHTML?box.innerHTML+' ':'')+'Form of: '+bases.map(wordChip).join(' ');}if(wk.senses[0])remember(word,wk.senses[0].gloss);})
+        if(box&&bases.length)box.innerHTML=(box.innerHTML?box.innerHTML+' ':'')+'Form of: '+bases.map(wordChip).join(' ');}if(wk.senses[0])remember(word,wk.senses[0].gloss);
+      if(!d.kbbi.length)baseMeaning(d,[...new Set([...(KamusStem.hasWordlist()?KamusStem.candidates(word).map(c=>c.stem):[]),...wk.senses.map(x=>(/\b(?:of|form of)\s+([\p{L}-]{3,})\s*$/u.exec(x.gloss)||[])[1]).filter(Boolean)])].filter(b=>b!==word).slice(0,2));})
       .catch(()=>{if(lastResult===d)swapWikiCard(wikiCardHtml(false));});
     if(!d.kbbi.length)Promise.all([tat,wik]).then(()=>{   // Indonesian Wiktionary had nothing: if the other sources have nothing either, say so
       if(lastResult===d&&!(d.wiktionary&&d.wiktionary.senses.length)&&!d.sentences.length)out.innerHTML=emptyHtml;});

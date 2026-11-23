@@ -95,6 +95,17 @@ test.describe('lookup', () => {
     await expect(page.locator('#noDef .morph-w').first()).toHaveText('anggap');
   });
 
+  test('a derived form without an entry shows what its base word means (English Wiktionary)', async ({ page }) => {
+    await openView(page, home); await page.waitForFunction(() => wlState.has);
+    await page.route(/en\.wiktionary\.org\/api\/rest_v1\/page\/definition\/(diatur|atur)/, r => r.request().url().includes('/diatur')
+      ? r.fulfill(json({ id: [{ partOfSpeech: 'Verb', definitions: [{ definition: 'passive of <a>mengatur</a>' }] }] }))
+      : r.fulfill(json({ id: [{ partOfSpeech: 'Verb', definitions: [{ definition: 'to arrange; to put in order' }, { definition: 'to set' }] }] })));
+    await page.fill('#q', 'diatur'); await page.press('#q', 'Enter');
+    await expect(page.locator('#sec-base-atur')).toContainText('to arrange', { timeout: 20000 });
+    await expect(page.locator('#sec-base-atur')).toContainText('“diatur” is a form of it');
+    await page.click('#sec-base-atur .morph-w'); await expect(page.locator('#q')).toHaveValue('atur');
+  });
+
   test('"Your cards" appears for a word that already has a card', async ({ page }) => {
     await openView(page, home); await search(page, 'rumah');
     await expect(page.locator('#mineFloat')).toContainText('house');
