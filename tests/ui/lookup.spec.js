@@ -115,7 +115,7 @@ test.describe('lookup', () => {
     const order = await page.evaluate(() => [...document.querySelectorAll('#out > section')].map(s => s.id));
     expect(order.indexOf('sec-zh')).toBe(order.indexOf('sec-en') + 1);
     await expect(page.locator('#tocList a')).toContainText(['English · Wiktionary', '中文 · Wiktionary']);
-    await page.goto('/#settings'); await expect(page.locator('#zhOn')).toBeChecked();
+    await page.goto('/#settings'); await expect(page.locator('#zhOn')).toBeChecked(); await expect(page.locator('#enOn')).toBeChecked();
     await page.click('[data-zhs=hant]'); await expect(page.locator('[data-zhs=hant]')).toHaveClass(/on/);
     await page.goto('/#kamus'); await search(page, 'rumah'); await expect(page.locator('#sec-zh')).toContainText('名詞'); await expect(page.locator('#sec-zh')).toHaveAttribute('lang', 'zh-Hant');
     await page.goto('/#settings'); await page.uncheck('#zhOn'); await expect(page.locator('[data-zhs=hant]')).toBeHidden();
@@ -129,6 +129,43 @@ test.describe('lookup', () => {
     await search(page, 'rumah'); await expect(page.locator('#sec-zh')).toContainText('家');
     await page.evaluate(() => { const n = document.querySelector('#sec-zh .def').firstChild, r = document.createRange(); r.setStart(n, 0); r.setEnd(n, 2); const s = getSelection(); s.removeAllRanges(); s.addRange(r); });
     await page.waitForTimeout(700); await expect(page.locator('.qchip')).toBeHidden();
+  });
+
+  test('What to show: English, Chinese, related words and Tatoeba can each be switched off', async ({ page }) => {
+    await openView(page, home); await search(page, 'rumah');
+    await expect(page.locator('#sec-words')).toContainText('Related words');   // from the word list (berumah, perumahan ...)
+    const rel = await page.locator('#sec-words .morph-w').allInnerTexts(); expect(rel.length).toBeGreaterThan(2); expect(rel).not.toContain('rumah');
+    expect(rel.every(w => w.includes('rumah'))).toBe(true);
+    await page.click('#sec-words .morph-w >> nth=0'); await expect(page.locator('#q')).toHaveValue(rel[0]);
+    await page.goto('/#settings');
+    for (const [id, card] of [['enOn', '#sec-en'], ['zhOn', '#sec-zh'], ['relOn', '#sec-words'], ['exOn', '#sec-sn']]) {
+      await page.uncheck('#' + id);
+      await page.goto('/#kamus'); await search(page, 'rumah'); await expect(page.locator('#sec-kbbi')).toContainText('tempat tinggal'); await page.waitForTimeout(1200);
+      await expect(page.locator(card), card + ' is hidden').toHaveCount(0);
+      for (const other of ['#sec-kbbi']) await expect(page.locator(other)).toHaveCount(1);
+      await page.goto('/#settings'); await page.check('#' + id);
+    }
+    await page.goto('/#kamus'); await search(page, 'rumah'); for (const c of ['#sec-en', '#sec-zh', '#sec-words', '#sec-sn']) await expect(page.locator(c)).toHaveCount(1, { timeout: 15000 });
+  });
+
+  test('a new card can take its meaning from the Chinese Wiktionary', async ({ page }) => {
+    await openView(page, home, { cards: false }); await search(page, 'rumah'); await expect(page.locator('#sec-zh')).toContainText('家，房子');
+    // 1. the + next to a Chinese meaning
+    await page.click('#sec-zh [data-add=zh]'); await expect(page.locator('#csheet')).toHaveClass(/open/);
+    await expect(page.locator('#csheet [data-f=Wiki]')).toHaveValue('家，房子');
+    await page.click('#csave'); await expect.poll(() => page.evaluate(async () => (await KamusCards.list()).map(c => c.meaning))).toEqual(['家，房子']);
+    // 2. the picker in the sheet lists both languages
+    await page.click('#sec-kbbi .addcard >> nth=0'); await expect(page.locator('#csheet [data-f=Wiki]')).toHaveValue('house');
+    const opts = await page.locator('#csheet select[data-pick=wk] option').allInnerTexts();
+    expect(opts.some(o => /house/.test(o) && !o.startsWith('中文'))).toBe(true); expect(opts.some(o => o.startsWith('中文 ') && o.includes('家，房子'))).toBe(true);
+    await page.selectOption('#csheet select[data-pick=wk]', { label: opts.find(o => o.startsWith('中文 ')) }); await expect(page.locator('#csheet [data-f=Wiki]')).toHaveValue('家，房子');
+    await page.click('#ccancel');
+    // 3. the setting makes Chinese the starting meaning
+    await page.goto('/#settings'); await page.click('[data-cm=zh]'); await expect(page.locator('[data-cm=zh]')).toHaveClass(/on/);
+    await page.goto('/#kamus'); await search(page, 'rumah'); await expect(page.locator('#sec-zh')).toBeVisible();
+    await page.click('#sec-kbbi .addcard >> nth=0'); await expect(page.locator('#csheet [data-f=Wiki]')).toHaveValue('家，房子');
+    // the Chinese meaning shows as Chinese text in the card list (so the selection chip leaves it alone)
+    await page.goto('/#anki'); await expect(page.locator('#ankiList .crow-meaning[lang=zh]')).toContainText('家，房子');
   });
 
   test('"Your cards" appears for a word that already has a card', async ({ page }) => {

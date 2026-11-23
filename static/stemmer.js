@@ -94,6 +94,6 @@
   const describe = a => a ? a.steps.filter(s => s.kind === 'prefix').map(s => s.text).join(' ') + (a.steps.some(s => s.kind === 'prefix') ? ' + ' : '') + a.stem
     + a.steps.filter(s => s.kind === 'suffix').map(s => ' + ' + s.text).join('') + (a.steps.some(s => s.kind === 'redup') ? ' (repeated)' : '') : '';
 
-  window.KamusStem = { setWordlist: set => { known = set; }, hasWordlist: () => !!known, isKnown: w => !!known && known.has(w), candidates, analyze, describe, similar, _derive: derive };
+  window.KamusStem = { setWordlist: set => { known = set; }, hasWordlist: () => !!known, _words: () => known, isKnown: w => !!known && known.has(w), candidates, analyze, describe, similar, _derive: derive };
   if (typeof module !== 'undefined') module.exports = window.KamusStem;
 })();

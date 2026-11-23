@@ -11,6 +11,7 @@ find into Anki flashcards. It is a Material Design 3 web app (installable as a P
 > Status: a personal learning tool, published as-is. See [Legal notes](#legal-notes) about KBBI, which is optional and off by default.
 
 ## Features
+- **What to show** (Settings): English definitions, Chinese definitions (Simplified or Traditional), related words, example sentences, and which language a new card's meaning starts in. Everything is on by default.
 - **Lookup**: Indonesian Wiktionary (default) or optionally KBBI, English Wiktionary, Tatoeba, with history, a quick-look chip for any word you select, and suggestions.
 - **Base words**: a rule-based Indonesian stemmer (berlari → ber- + lari) in the browser, checked against a word list of Wiktionary titles (a snapshot ships with Kamus; Settings can update it). It finds the entry for derived words and shows their word parts.
 - **Learn** (its own page, plus tiles on the Kamus home page): spaced review of your cards with Kamus' own schedule (separate from Anki's), five words of the day, Malay vs Indonesian (live Wiktionary comparison, common differences, false friends, a quiz), and pronunciation practice (record yourself, listen back, and a match score where the browser understands Indonesian speech).

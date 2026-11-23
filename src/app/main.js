@@ -10,6 +10,7 @@ import './08-wordlist.js';
 import './09-wiktionary.js';
 import './10-tatoeba.js';
 import './10b-chinese.js';
+import './10c-display.js';
 import './11-wikidepia-web.js';
 import './12-appearance.js';
 import './13-install.js';

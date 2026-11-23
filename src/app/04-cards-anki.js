@@ -1,6 +1,6 @@
 // Kamus app module 04-cards-anki. Split from the old inline script: top-level names are exported, and also published on window
 // through bridge() for code that is not a module yet (learn.js, tests) and for references to modules that load later.
-/* global ankiFocusIds:writable, autoFill, cleanIpa, mineLoad, openEditCard, pushEditToAnki, pushNoteUpdate, renderMine, trHint, trT:writable, wavEncode, wdHasModel, webSynth, webWavBase64 */   // from later modules, or assigned here: reached through the window bridge
+/* global ankiFocusIds:writable, autoFill, cleanIpa, getShow, mineLoad, openEditCard, pushEditToAnki, pushNoteUpdate, renderMine, trHint, trT:writable, wavEncode, wdHasModel, webSynth, webWavBase64 */   // from later modules, or assigned here: reached through the window bridge
 import { bridge } from './bridge.js';
 import { esc, ico, out } from './01-core.js';
 import { getTts, noServer, say, speak, toast } from './02-speech-history-toc.js';
@@ -118,7 +118,9 @@ const closeCard=()=>{csheet.classList.remove('open');csheet.inert=true;csheet.se
 function openCard(kind,ei,si){
   const d=lastResult;if(!d)return;const wk=d.wiktionary||{senses:[],ipa:[]};
   let entry,ks,ws,word;
-  if(kind==='kb'){entry=d.kbbi[ei];ks=entry.senses[si];word=entry.headword;const pos=kbPos(ks);ws=wk.senses.find(w=>pos&&wkPos(w)===pos)||wk.senses[0];}
+  const zhs=(d.zh&&d.zh.senses)||[];
+  if(kind==='zh'){word=d.word;entry=d.kbbi.find(e=>e.headword===word)||d.kbbi[0];ks=entry&&entry.senses[0];ws=wk.senses[0];}
+  else if(kind==='kb'){entry=d.kbbi[ei];ks=entry.senses[si];word=entry.headword;const pos=kbPos(ks);ws=wk.senses.find(w=>pos&&wkPos(w)===pos)||wk.senses[0];}
   else{ws=wk.senses[si];word=d.word;entry=d.kbbi.find(e=>e.headword===word)||d.kbbi[0];const pos=wkPos(ws);ks=entry&&(entry.senses.find(s=>pos&&kbPos(s)===pos)||entry.senses[0]);}
   const exs=[];const addEx=(id,en,src)=>{id=id&&capFirst(id);if(id&&!exs.some(x=>x.id===id))exs.push({id,en:en||'',src});};
   if(ws)ws.examples.forEach(x=>addEx(x.id,x.en,'Wiktionary'));
@@ -126,15 +128,15 @@ function openCard(kind,ei,si){
   (d.sentences||[]).forEach(s=>addEx(s.id,s.en,'Tatoeba'));
   if(ks)ks.examples.forEach(x=>addEx(x,'','KBBI'));
   const ex=exs.find(x=>hasWord(x.id,word))||exs[0]||{id:'',en:''};
-  draft={word,fields:{Word:word,IPA:(wk.ipa&&wk.ipa[0])||(entry&&entry.ipa)||'',POS:(ks&&kbPos(ks))||(ws&&wkPos(ws))||'',KBBI:ks?ks.definition:'',Wiki:ws?shortGloss(ws.gloss):'',Example:ex.id,ExampleEN:ex.en,Skip1:'',Skip2:'',Skip3:'',Skip4:''},
+  draft={word,fields:{Word:word,IPA:(wk.ipa&&wk.ipa[0])||(entry&&entry.ipa)||'',POS:(ks&&kbPos(ks))||(ws&&wkPos(ws))||'',KBBI:ks?ks.definition:'',Wiki:kind==='zh'?zhs[si].gloss:(getShow().cardMeaning==='zh'&&zhs.length?zhs[0].gloss:(ws?shortGloss(ws.gloss):'')),Example:ex.id,ExampleEN:ex.en,Skip1:'',Skip2:'',Skip3:'',Skip4:''},
     kb:(entry?entry.senses:[]).map(s=>({label:(kbPos(s)?kbPos(s)+' ':'')+s.definition,val:s.definition})),
-    wk:wk.senses.map(w=>({label:(wkPos(w)?wkPos(w)+' ':'')+w.gloss,val:w.gloss})),ex:exs,auto:{}};
+    wk:[...wk.senses.map(w=>({label:(wkPos(w)?wkPos(w)+' ':'')+w.gloss,val:w.gloss})),...zhs.map(z=>({label:'中文 '+(z.pos?z.pos+' ':'')+z.gloss,val:z.gloss}))],ex:exs,auto:{}};
   renderDraft();
 }
 const POS_LIST=['n.','v.','adj.','adv.','pron.','num.','part.','prep.','conj.','interj.'];
 async function renderDraft(){
   await getModel();const f=draft.fields;
-  const opts=(list,key)=>draft.mode==='edit'?'':`<span class="pick-wrap"><select class="pick" data-pick="${key}" aria-label="Choose another ${key==='kb'?'Indonesian meaning':key==='wk'?'English meaning':'example'}"><option value="">Choose another…</option>${list.map((o,i)=>`<option value="${i}">${esc(clip(key==='ex'?(o.src+': '+o.id):o.label,70))}</option>`).join('')}</select>${ico('drop')}</span>`;
+  const opts=(list,key)=>draft.mode==='edit'?'':`<span class="pick-wrap"><select class="pick" data-pick="${key}" aria-label="Choose another ${key==='kb'?'Indonesian meaning':key==='wk'?'meaning, English or Chinese':'example'}"><option value="">Choose another…</option>${list.map((o,i)=>`<option value="${i}">${esc(clip(key==='ex'?(o.src+': '+o.id):o.label,70))}</option>`).join('')}</select>${ico('drop')}</span>`;
   const posList=f.POS&&!POS_LIST.includes(f.POS)?[f.POS,...POS_LIST]:POS_LIST;
   const posPick=`<span class="pick-wrap"><select class="pick" data-pick="pos" aria-label="Part of speech"><option value=""${f.POS?'':' selected'}>Part of speech</option>${posList.map(x=>`<option value="${esc(x)}"${x===f.POS?' selected':''}>${esc(x)}</option>`).join('')}</select>${ico('drop')}</span>`;
   cbody.innerHTML=`<div class="frow top"><label class="fld w2"><input data-f="Word" value="${esc(f.Word)}" placeholder="Word" aria-label="Word"></label><div class="fld">${posPick}</div></div>
@@ -142,7 +144,7 @@ async function renderDraft(){
     <hr class="sdiv">
     <h4>Meaning</h4>
     <div class="fld"><div class="fld-head"><span>Indonesian</span>${opts(draft.kb,'kb')}</div><textarea data-f="KBBI" rows="2" placeholder="Meaning in Indonesian" aria-label="Indonesian meaning">${esc(f.KBBI)}</textarea><span class="trhint" id="trh-KBBI"></span></div>
-    <div class="fld"><div class="fld-head"><span>WIKI</span>${opts(draft.wk,'wk')}</div><input data-f="Wiki" value="${esc(f.Wiki)}" placeholder="Meaning in English" aria-label="WIKI meaning"><span class="trhint" id="trh-Wiki"></span></div>
+    <div class="fld"><div class="fld-head"><span>WIKI</span>${opts(draft.wk,'wk')}</div><input data-f="Wiki" value="${esc(f.Wiki)}" placeholder="Meaning (English or Chinese)" aria-label="WIKI meaning"><span class="trhint" id="trh-Wiki"></span></div>
     <hr class="sdiv">
     <div class="fld-head sect"><h4>Example</h4>${opts(draft.ex,'ex')}</div>
     <label class="fld"><textarea data-f="Example" rows="2" placeholder="Sentence in Indonesian" aria-label="Example sentence in Indonesian">${esc(f.Example)}</textarea><span class="trhint" id="trh-Example"></span></label>
@@ -177,7 +179,7 @@ document.getElementById('csave').onclick=async()=>{
   }catch(err){toast(err.message||'Could not save the card');}
 };
 out.addEventListener('click',e=>{const b=e.target.closest('[data-add]');if(!b)return;
-  b.dataset.add==='kb'?openCard('kb',+b.dataset.e,+b.dataset.s):openCard('wk',0,+b.dataset.s);});
+  b.dataset.add==='kb'?openCard('kb',+b.dataset.e,+b.dataset.s):b.dataset.add==='zh'?openCard('zh',0,+b.dataset.s):openCard('wk',0,+b.dataset.s);});
 
 // -- AnkiConnect (talks from THIS browser to the Anki desktop app on THIS device)
 const ankiCfg=()=>{let url='http://127.0.0.1:8765',key='';try{url=localStorage.getItem(ANKI_URL_KEY)||url;key=localStorage.getItem(ANKI_KEY_KEY)||'';}catch{}return {url,key};};
@@ -381,7 +383,7 @@ function renderCards(){
     :!list.length?'<p class="muted" style="padding:16px 0">No cards match.</p>':list.map(c=>{const f=c.fields,p=c.progress,st=stateOf(c);
       return `<article class="crow${ankiFocusIds&&ankiFocusIds.has(c.id)?' focus':''}" data-id="${esc(c.id)}"><div class="crow-top"><div class="crow-main">
         <div class="crow-head">${say(c.word,'sm')}<span role="button" tabindex="0" class="cw" data-word="${esc(c.word)}" title="Look this word up in the side sheet">${esc(c.word)}</span><span class="pron" style="display:inline;margin:0">${esc(cleanIpa(f.IPA||''))}</span>${f.POS?`<span class="pos" style="margin:0">${esc(f.POS)}</span>`:''}</div>
-        <div class="crow-meaning" lang="en">${esc(c.meaning)}</div>${f.Wiki&&f.KBBI?`<div class="crow-kbbi">${esc(clip(f.KBBI,160))}</div>`:''}
+        <div class="crow-meaning" lang="${/[\u3400-\u9fff]/.test(c.meaning)?'zh':'en'}">${esc(c.meaning)}</div>${f.Wiki&&f.KBBI?`<div class="crow-kbbi">${esc(clip(f.KBBI,160))}</div>`:''}
         ${f.Example?`<hr class="crow-div"><div class="crow-ex">${say(f.Example,'sm')}<div class="crow-kbbi"><i lang="id">${esc(capFirst(f.Example))}</i></div></div>`:''}</div>
         <div class="crow-side">${c.dirty&&c.note_id?'<span class="badge warn" title="Changed here; the next Sync updates Anki">Desynced</span>':''}${p&&p.cards?`<span class="statwrap"><button type="button" class="badge ok stat" aria-describedby="stat-${esc(c.id)}">${STATE_LABEL[st]}</button><div class="statpop" role="tooltip" id="stat-${esc(c.id)}">${p.dueNow?`<b>${p.dueNow} due</b> · `:''}${p.reps} reviews · ${p.lapses} lapses${p.interval?` · interval ${p.interval}d`:''}<br>cards: ${p.new} new, ${p.learning} learning, ${p.review} review${c.progress_at?`<br>progress ${new Date(c.progress_at*1000).toLocaleDateString()}`:''}</div></span>`:`<span class="badge ${c.note_id?'ok':''}">${STATE_LABEL[st]}</span>`}
           <div class="crow-act"><button class="icon-btn sm" data-act="prev" title="Show the cards" aria-label="Show the cards" aria-expanded="false"><svg><use href="#i-expand"/></svg></button>

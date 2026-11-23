@@ -10,7 +10,8 @@ import { idLookup, idwiktLookup } from './07-id-source.js';
 import { wlDownload, wlSnapshot, wlState } from './08-wordlist.js';
 import { wikiLookup } from './09-wiktionary.js';
 import { swapWikiCard, tatoebaLookup, wikiCardHtml } from './10-tatoeba.js';
-import { getZh, renderZh, swapZhCard, zhCardHtml, zhLookup } from './10b-chinese.js';
+import { getShow, swapZhCard, zhCardHtml, zhLookup } from './10b-chinese.js';
+import { renderShow, showRelated } from './10c-display.js';
 import { wdWarm } from './11-wikidepia-web.js';
 import { renderTheme, showSpeed } from './12-appearance.js';
 import { renderInstall } from './13-install.js';
@@ -55,7 +56,7 @@ function route(){
   document.getElementById('pageTitle').innerHTML=v==='kamus'?'Kamus <small>Indonesian ⇄ English</small>':TITLES[v];
   document.title=v==='kamus'?'Kamus':TITLES[v]+' · Kamus';
   stopSpeech();closeSheet();closeQuick();hideChip();closeCard();
-  if(v==='settings'){renderZh();onServerKnown();loadIdSrc();renderSync();renderStorage();renderInstall();loadTrStatus();renderTheme();showSpeed();renderTts();loadStatus();loadCredits();}
+  if(v==='settings'){renderShow();onServerKnown();loadIdSrc();renderSync();renderStorage();renderInstall();loadTrStatus();renderTheme();showSpeed();renderTts();loadStatus();loadCredits();}
   if(v==='legal')loadCredits();
   if(window.KamusLearn&&(v==='learn'||v==='affix'||(v==='kamus'&&!lastResult)))cardsReady.then(()=>KamusLearn.enter(v));
   if(v==='anki')loadAnki();if(v!=='kamus')closeCard();
@@ -161,17 +162,17 @@ async function go(word){
     const baseHint0=wiktOnly&&!d.kbbi.length&&!KamusStem.hasWordlist()?`<div class="snack">${ico('book')}<span>Indonesian Wiktionary has no definition for “${esc(word)}”. <button type="button" class="text-btn" data-wl="find" data-w="${esc(word)}">Look for the base word</button> <span class="muted">(loads a word list of about 200 KB once)</span></span></div>`:'';
     const baseHint=baseHint0||noDef;
     await minePromise;
-    d.sentences=[];out.innerHTML=note+baseHint+warn+kb+wikiCardHtml(null)+zhCardHtml(null);buildToc(d);remember(word,'');renderMine();
+    d.sentences=[];out.innerHTML=note+baseHint+warn+kb+(getShow().en?wikiCardHtml(null):'')+zhCardHtml(null);showRelated(word);buildToc(d);remember(word,'');renderMine();
     const tat=tatoebaLookup(word).then(list=>{if(lastResult!==d||!list.length)return;d.sentences=list;
-      out.insertAdjacentHTML('beforeend',`<section class="card" id="sec-sn"><h3>More example sentences <span class="badge">Tatoeba</span></h3>${list.map(s=>ex(s.id,s.en)).join('')}<p class="src">Tatoeba · CC BY 2.0 FR</p></section>`);buildToc(d);}).catch(()=>{});
-    if(getZh().on)zhLookup(word).then(zh=>{if(lastResult===d){swapZhCard(zhCardHtml(zh));buildToc(d);}}).catch(()=>{if(lastResult===d){swapZhCard('');buildToc(d);}});
-    const wik=wikiLookup(word).then(wk=>{if(lastResult!==d)return;d.wiktionary=wk;swapWikiCard(wikiCardHtml(wk));buildToc(d);if(!d.kbbi.length){const box=document.getElementById('noDefChips');   // English Wiktionary says what the word is a form of ("passive of menganggap")
+      if(getShow().examples)out.insertAdjacentHTML('beforeend',`<section class="card" id="sec-sn"><h3>More example sentences <span class="badge">Tatoeba</span></h3>${list.map(s=>ex(s.id,s.en)).join('')}<p class="src">Tatoeba · CC BY 2.0 FR</p></section>`);buildToc(d);}).catch(()=>{});
+    if(getShow().zh)zhLookup(word).then(zh=>{if(lastResult===d){d.zh=zh;swapZhCard(zhCardHtml(zh));if(zh.derived&&zh.derived.length)showRelated(word,zh.derived);buildToc(d);}}).catch(()=>{if(lastResult===d){swapZhCard('');buildToc(d);}});
+    const wik=wikiLookup(word).then(wk=>{if(lastResult!==d)return;d.wiktionary=wk;if(getShow().en)swapWikiCard(wikiCardHtml(wk));buildToc(d);if(!d.kbbi.length){const box=document.getElementById('noDefChips');   // English Wiktionary says what the word is a form of ("passive of menganggap")
         const bases=[...new Set(wk.senses.map(x=>(/\b(?:of|form of)\s+([\p{L}-]{3,})\s*$/u.exec(x.gloss)||[])[1]).filter(Boolean))].filter(b=>b!==word).slice(0,3);
         if(box&&bases.length)box.innerHTML=(box.innerHTML?box.innerHTML+' ':'')+'Form of: '+bases.map(wordChip).join(' ');}if(wk.senses[0])remember(word,wk.senses[0].gloss);
       if(!d.kbbi.length)baseMeaning(d,[...new Set([...(KamusStem.hasWordlist()?KamusStem.candidates(word).map(c=>c.stem):[]),...wk.senses.map(x=>(/\b(?:of|form of)\s+([\p{L}-]{3,})\s*$/u.exec(x.gloss)||[])[1]).filter(Boolean)])].filter(b=>b!==word).slice(0,2));})
-      .catch(()=>{if(lastResult===d)swapWikiCard(wikiCardHtml(false));});
+      .catch(()=>{if(lastResult===d&&getShow().en)swapWikiCard(wikiCardHtml(false));});
     if(!d.kbbi.length)Promise.all([tat,wik]).then(()=>{   // Indonesian Wiktionary had nothing: if the other sources have nothing either, say so
-      if(lastResult===d&&!(d.wiktionary&&d.wiktionary.senses.length)&&!d.sentences.length)out.innerHTML=emptyHtml;});
+      if(lastResult===d&&!(d.wiktionary&&d.wiktionary.senses.length)&&!d.sentences.length&&!(d.zh&&d.zh.senses.length))out.innerHTML=emptyHtml;});
   }catch(err){buildToc(null);out.innerHTML=snack('Error: '+err.message,true);}
   finally{pg.classList.remove('on');}
 }
